@@ -205,10 +205,25 @@ class SupplyController extends Controller
             ->where('type', 'supply')
             ->value('name') ?? $report->category;
 
+        $scopeName = '';
+        if ($report->report_type === 'Division') {
+            $division = \App\Models\Division::find($report->scope_id);
+            if ($division) {
+                $scopeName = "Division: {$division->div_name}";
+            }
+        } elseif ($report->report_type === 'Area') {
+            $area = \App\Models\Area::with('division')->find($report->scope_id);
+            if ($area) {
+                $divName = $area->division ? $area->division->div_name : '';
+                $scopeName = "Division: {$divName} | Area: {$area->area_name}";
+            }
+        }
+
         return Inertia::render('Inventory/Supplies/Report', [
             'report' => $report,
             'supplies' => $supplies,
             'categoryName' => $categoryName,
+            'scopeName' => $scopeName,
         ]);
     }
 }

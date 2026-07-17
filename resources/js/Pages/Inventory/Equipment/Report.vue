@@ -6,6 +6,7 @@ const props = defineProps({
     report: Object,
     equipment: Array,
     categoryName: String,
+    scopeName: String,
 });
 
 const totalAmount = computed(() => {
@@ -80,7 +81,8 @@ onMounted(() => {
                         <th colspan="10" class="border-[3px] border-black p-2 text-center">
                             <div class="text-[15px] font-bold uppercase">REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT</div>
                             <div class="text-[14px] font-bold uppercase">{{ categoryName }}</div>
-                            <div class="text-[13px] font-normal">As of December 31, {{ report.year_of_report }}</div>
+                            <div v-if="scopeName" class="text-[14px] font-bold uppercase mt-1">{{ scopeName }}</div>
+                            <div class="text-[13px] font-normal mt-1 mb-2">As of December 31, {{ report.year_of_report }}</div>
                         </th>
                     </tr>
                     <!-- Accountability Row -->
