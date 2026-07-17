@@ -20,7 +20,9 @@ class EquipmentDTO
         public ?float $shortage_overage_value,
         public ?string $remarks,
         public ?string $end_user,
-        public ?string $status
+        public ?string $status,
+        public ?int $division_id,
+        public ?int $area_id
     ) {}
 
     public static function fromArray(array $data): self
@@ -41,7 +43,9 @@ class EquipmentDTO
             isset($data['shortage_overage_value']) ? (float)$data['shortage_overage_value'] : null,
             $data['remarks'] ?? null,
             $data['end_user'] ?? null,
-            $data['status'] ?? null
+            $data['status'] ?? null,
+            isset($data['division_id']) ? (int)$data['division_id'] : null,
+            isset($data['area_id']) ? (int)$data['area_id'] : null
         );
     }
 
@@ -64,6 +68,8 @@ class EquipmentDTO
             'remarks' => $this->remarks,
             'end_user' => $this->end_user,
             'status' => $this->status,
+            'division_id' => $this->division_id,
+            'area_id' => $this->area_id,
         ];
     }
 }

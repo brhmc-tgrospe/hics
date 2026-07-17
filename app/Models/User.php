@@ -24,7 +24,8 @@ class User extends Authenticatable
         'contact_number',
         'email',
         'password',
-        'department_id',
+        'division_id',
+        'area_id',
     ];
 
     /**
@@ -50,8 +51,13 @@ class User extends Authenticatable
         ];
     }
 
-    public function department()
+    public function division()
     {
-        return $this->belongsTo(Department::class);
+        return $this->belongsTo(Division::class);
+    }
+
+    public function area()
+    {
+        return $this->belongsTo(Area::class);
     }
 }

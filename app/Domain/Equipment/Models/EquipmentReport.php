@@ -11,6 +11,8 @@ class EquipmentReport extends Model
         'date_of_accountability',
         'year_of_report',
         'file_path',
+        'report_type',
+        'scope_id',
     ];
 
     protected $casts = [

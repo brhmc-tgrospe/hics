@@ -17,16 +17,22 @@ class EquipmentController extends Controller
     {
         $equipment = app(GetEquipmentAction::class)->execute($request->all());
         $categories = \App\Domain\Shared\Models\Category::where('type', 'equipment')->get()->toArray();
+        $divisions = \App\Models\Division::select('id', 'div_name as name')->get()->toArray();
+        $areas = \App\Models\Area::select('id', 'area_name as name', 'division_id')->get()->toArray();
 
         return Inertia::render('Inventory/Equipment/Index', [
             'equipment' => $equipment,
-            'filters' => $request->only(['search', 'category', 'status']),
+            'filters' => $request->only(['search', 'category', 'status', 'my_division_only', 'my_area_only']),
             'categories' => $categories,
+            'divisions' => $divisions,
+            'areas' => $areas,
         ]);
     }
 
     public function store(Request $request, CreateEquipmentAction $action)
     {
+        \Illuminate\Support\Facades\Gate::authorize('create', Equipment::class);
+
         $validated = $request->validate([
             'category' => 'nullable|string',
             'article' => 'nullable|string',
@@ -44,6 +50,8 @@ class EquipmentController extends Controller
             'remarks' => 'nullable|string',
             'end_user' => 'nullable|string',
             'status' => 'nullable|string',
+            'division_id' => 'required|integer|exists:divisions,id',
+            'area_id' => 'required|integer|exists:areas,id',
         ]);
 
         $dto = EquipmentDTO::fromArray($validated);
@@ -54,6 +62,8 @@ class EquipmentController extends Controller
 
     public function update(Request $request, Equipment $equipment, UpdateEquipmentAction $action)
     {
+        \Illuminate\Support\Facades\Gate::authorize('update', $equipment);
+
         $validated = $request->validate([
             'category' => 'nullable|string',
             'article' => 'nullable|string',
@@ -71,6 +81,8 @@ class EquipmentController extends Controller
             'remarks' => 'nullable|string',
             'end_user' => 'nullable|string',
             'status' => 'nullable|string',
+            'division_id' => 'required|integer|exists:divisions,id',
+            'area_id' => 'required|integer|exists:areas,id',
         ]);
 
         $dto = EquipmentDTO::fromArray($validated);
@@ -81,6 +93,8 @@ class EquipmentController extends Controller
 
     public function destroy(Equipment $equipment, DeleteEquipmentAction $action)
     {
+        \Illuminate\Support\Facades\Gate::authorize('delete', $equipment);
+
         $action->execute($equipment);
         return redirect()->route('equipment.index')->with('success', 'Equipment deleted.');
     }
@@ -96,7 +110,8 @@ class EquipmentController extends Controller
             'category', 'article', 'description', 'date_acquired', 'property_number', 
             'serial_number', 'unit_of_measure', 'unit_value', 'total_value', 
             'quantity_per_property_card', 'quantity_per_physical_count', 
-            'shortage_overage_qty', 'shortage_overage_value', 'remarks', 'end_user', 'status'
+            'shortage_overage_qty', 'shortage_overage_value', 'remarks', 'end_user', 'status',
+            'division_id', 'area_id'
         ];
 
         $callback = function () use ($columns) {
@@ -110,6 +125,8 @@ class EquipmentController extends Controller
 
     public function import(Request $request, CreateEquipmentAction $action)
     {
+        \Illuminate\Support\Facades\Gate::authorize('create', Equipment::class);
+
         $request->validate([
             'file' => 'required|file|mimes:csv,txt'
         ]);
@@ -151,9 +168,19 @@ class EquipmentController extends Controller
             'category' => 'required|string',
             'date_of_accountability' => 'required|date',
             'year_of_report' => 'required|integer',
+            'report_type' => 'required|string|in:General,Division,Area',
+            'scope_id' => 'nullable|integer',
         ]);
 
-        $equipment = \App\Domain\Equipment\Models\Equipment::where('category', $validated['category'])->get();
+        $query = \App\Domain\Equipment\Models\Equipment::where('category', $validated['category']);
+
+        if ($validated['report_type'] === 'Division') {
+            $query->where('division_id', $validated['scope_id']);
+        } elseif ($validated['report_type'] === 'Area') {
+            $query->where('area_id', $validated['scope_id']);
+        }
+
+        $equipment = $query->get();
         
         $filename = 'equipment_report_' . time() . '_' . uniqid() . '.json';
         \Illuminate\Support\Facades\Storage::disk('local')->put("reports/{$filename}", $equipment->toJson());
@@ -163,6 +190,8 @@ class EquipmentController extends Controller
             'date_of_accountability' => $validated['date_of_accountability'],
             'year_of_report' => $validated['year_of_report'],
             'file_path' => "reports/{$filename}",
+            'report_type' => $validated['report_type'],
+            'scope_id' => $validated['scope_id'] ?? null,
         ]);
 
         return response()->json(['id' => $report->id]);

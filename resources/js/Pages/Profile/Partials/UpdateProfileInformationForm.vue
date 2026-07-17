@@ -12,12 +12,21 @@ defineProps({
     status: {
         type: String,
     },
+    divisionName: {
+        type: String,
+    },
+    roleName: {
+        type: String,
+    },
 });
 
 const user = usePage().props.auth.user;
 
 const form = useForm({
-    name: user.name,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    username: user.username,
+    contact_number: user.contact_number,
     email: user.email,
 });
 </script>
@@ -39,19 +48,88 @@ const form = useForm({
             class="mt-6 space-y-6"
         >
             <div>
-                <InputLabel for="name" value="Name" />
+                <InputLabel for="first_name" value="First Name" />
 
                 <TextInput
-                    id="name"
+                    id="first_name"
                     type="text"
                     class="mt-1 block w-full"
-                    v-model="form.name"
+                    v-model="form.first_name"
                     required
                     autofocus
-                    autocomplete="name"
+                    autocomplete="given-name"
                 />
 
-                <InputError class="mt-2" :message="form.errors.name" />
+                <InputError class="mt-2" :message="form.errors.first_name" />
+            </div>
+
+            <div>
+                <InputLabel for="last_name" value="Last Name" />
+
+                <TextInput
+                    id="last_name"
+                    type="text"
+                    class="mt-1 block w-full"
+                    v-model="form.last_name"
+                    required
+                    autocomplete="family-name"
+                />
+
+                <InputError class="mt-2" :message="form.errors.last_name" />
+            </div>
+
+            <div>
+                <InputLabel for="username" value="Username" />
+
+                <TextInput
+                    id="username"
+                    type="text"
+                    class="mt-1 block w-full disabled:opacity-50 disabled:bg-gray-100"
+                    v-model="form.username"
+                    :disabled="user.username_changed"
+                    autocomplete="username"
+                />
+                <p v-if="user.username_changed" class="mt-1 text-xs text-gray-500">Username can only be edited once.</p>
+
+                <InputError class="mt-2" :message="form.errors.username" />
+            </div>
+
+            <div>
+                <InputLabel for="contact_number" value="Contact Number" />
+
+                <TextInput
+                    id="contact_number"
+                    type="text"
+                    class="mt-1 block w-full"
+                    v-model="form.contact_number"
+                    autocomplete="tel"
+                />
+
+                <InputError class="mt-2" :message="form.errors.contact_number" />
+            </div>
+
+            <div>
+                <InputLabel for="division" value="Division" />
+
+                <input
+                    id="division"
+                    type="text"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm opacity-50 bg-gray-100"
+                    :value="divisionName"
+                    disabled
+                />
+            </div>
+
+            <div>
+                <InputLabel for="role" value="Role" />
+
+                <input
+                    id="role"
+                    type="text"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm opacity-50 bg-gray-100"
+                    :value="roleName"
+                    disabled
+                />
             </div>
 
             <div>

@@ -6,6 +6,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\SupplyController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\ImpersonationController;
 
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -45,6 +47,27 @@ Route::middleware('auth')->group(function () {
     Route::post('users', [UserController::class, 'store'])->name('users.store')->middleware('permission:create_users');
     Route::put('users/{user}', [UserController::class, 'update'])->name('users.update')->middleware('permission:edit_users');
     Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy')->middleware('permission:delete_users');
+    
+    // Division Routes
+    Route::get('divisions', [DivisionController::class, 'index'])->name('divisions.index')->middleware('permission:view_divisions');
+    Route::post('divisions', [DivisionController::class, 'store'])->name('divisions.store')->middleware('permission:create_divisions');
+    Route::put('divisions/{division}', [DivisionController::class, 'update'])->name('divisions.update')->middleware('permission:edit_divisions');
+    Route::delete('divisions/{division}', [DivisionController::class, 'destroy'])->name('divisions.destroy')->middleware('permission:delete_divisions');
+    
+    // Area Routes
+    Route::get('areas', [\App\Http\Controllers\AreaController::class, 'index'])->name('areas.index')->middleware('permission:view_areas');
+    Route::post('areas', [\App\Http\Controllers\AreaController::class, 'store'])->name('areas.store')->middleware('permission:create_areas');
+    Route::put('areas/{area}', [\App\Http\Controllers\AreaController::class, 'update'])->name('areas.update')->middleware('permission:edit_areas');
+    Route::delete('areas/{area}', [\App\Http\Controllers\AreaController::class, 'destroy'])->name('areas.destroy')->middleware('permission:delete_areas');
+    
+    // Impersonation Routes
+    Route::get('impersonate/leave', [ImpersonationController::class, 'leave'])->name('impersonate.leave');
+    Route::get('impersonate/{user}', [ImpersonationController::class, 'start'])->name('impersonate.start');
+
+    // Profile Routes
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 require __DIR__.'/auth.php';

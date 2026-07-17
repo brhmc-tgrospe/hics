@@ -49,7 +49,7 @@ onMounted(() => {
                                 </div>
                                 <div class="text-center font-sans flex flex-col justify-center py-1">
                                     <div class="font-normal text-[13px]">Republic of the Philippines</div>
-                                    <div class="font-normal text-[13px]">Department of Health</div>
+                                    <div class="font-normal text-[13px]">Division of Health</div>
                                     <div class="font-bold text-[15px]">BICOL REGIONAL HOSPITAL AND MEDICAL CENTER</div>
                                     <div class="font-normal text-[13px]">Daraga, Albay</div>
                                 </div>
@@ -132,7 +132,7 @@ onMounted(() => {
             </table>
 
             <!-- Signatories -->
-            <div class="mt-8 grid grid-cols-3 gap-8 text-[13px]">
+            <div v-if="!report.report_type || report.report_type === 'General'" class="mt-8 grid grid-cols-3 gap-8 text-[13px]">
                 <div>
                     <p class="mb-8 font-semibold">Certified Correct by:</p>
                     <div class="w-11/12">

@@ -34,13 +34,13 @@
               </span>
             </td>
             <td class="px-6 py-4 text-right">
-              <button v-if="$page.props.auth.user.permissions.includes('view_supplies')" @click="$emit('view', item)" class="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors" title="View">
+              <button @click="$emit('view', item)" class="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors" title="View">
                 <EyeIcon class="w-4 h-4" />
               </button>
-              <button v-if="$page.props.auth.user.permissions.includes('edit_supplies')" @click="$emit('edit', item)" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors ml-1" title="Edit">
+              <button v-if="canEditItem(item)" @click="$emit('edit', item)" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors ml-1" title="Edit">
                 <Edit2Icon class="w-4 h-4" />
               </button>
-              <button v-if="$page.props.auth.user.permissions.includes('delete_supplies')" @click="$emit('delete', item.id)" class="p-1.5 text-slate-400 hover:text-red-600 transition-colors ml-1" title="Delete">
+              <button v-if="canDeleteItem(item)" @click="$emit('delete', item.id)" class="p-1.5 text-slate-400 hover:text-red-600 transition-colors ml-1" title="Delete">
                 <Trash2Icon class="w-4 h-4" />
               </button>
             </td>
@@ -85,20 +85,64 @@
 
 <script setup>
 import { Edit2Icon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, EyeIcon } from 'lucide-vue-next';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { formatCurrency } from '@/utils/formatters.js';
 
 const props = defineProps({
   supplies: Object,
   categories: Array,
-  canEdit: Boolean,
+  isSuperadmin: {
+    type: Boolean,
+    default: false
+  },
+  isSecretary: {
+    type: Boolean,
+    default: false
+  },
+  userDivisionId: {
+    type: Number,
+    default: null
+  },
+  userAreaId: {
+    type: Number,
+    default: null
+  },
   filters: Object,
 });
 
 defineEmits(['edit', 'delete', 'update-per-page', 'view']);
 
+const page = usePage();
+const userPermissions = computed(() => page.props.auth.user?.permissions || []);
+const userRoles = computed(() => page.props.auth.user?.roles || []);
+const isAdmin = computed(() => userRoles.value.includes('Admin'));
+const isEncoder = computed(() => userRoles.value.includes('Encoder'));
+
 const getCategoryName = (catId) => {
   const cat = props.categories.find(c => c.id === catId);
   return cat ? cat.name : catId;
+};
+
+const canEditItem = (item) => {
+    if (props.isSuperadmin) return true;
+    if (props.isSecretary) return false;
+    if (!userPermissions.value.includes('edit_supplies')) return false;
+
+    if (isAdmin.value) return item.division_id === props.userDivisionId;
+    if (isEncoder.value) return item.division_id === props.userDivisionId && item.area_id === props.userAreaId;
+    
+    return false;
+};
+
+const canDeleteItem = (item) => {
+    if (props.isSuperadmin) return true;
+    if (props.isSecretary) return false;
+    if (!userPermissions.value.includes('delete_supplies')) return false;
+
+    if (isAdmin.value) return item.division_id === props.userDivisionId;
+    if (isEncoder.value) return item.division_id === props.userDivisionId && item.area_id === props.userAreaId;
+    
+    return false;
 };
 </script>

@@ -13,6 +13,10 @@
         <p class="text-sm font-semibold text-slate-800">{{ getCategoryName(data.category) || '-' }}</p>
       </div>
       <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Division</p>
+        <p class="text-sm font-semibold text-slate-800">{{ getDivisionName(data.division_id) || '-' }}</p>
+      </div>
+      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Article</p>
         <p class="text-sm font-semibold text-slate-800">{{ data.article || '-' }}</p>
       </div>
@@ -91,6 +95,10 @@ const props = defineProps({
   categories: {
     type: Array,
     required: true
+  },
+  divisions: {
+    type: Array,
+    required: true
   }
 });
 
@@ -99,5 +107,10 @@ defineEmits(['close']);
 const getCategoryName = (id) => {
   const cat = props.categories.find(c => c.id === id);
   return cat ? cat.name : id;
+};
+
+const getDivisionName = (id) => {
+  const dept = props.divisions.find(d => d.id === id);
+  return dept ? dept.name : id;
 };
 </script>

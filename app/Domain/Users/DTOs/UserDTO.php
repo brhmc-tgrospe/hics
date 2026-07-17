@@ -10,7 +10,8 @@ class UserDTO
         public readonly string $username,
         public readonly string $email,
         public readonly ?string $contact_number,
-        public readonly ?int $department_id,
+        public readonly ?int $division_id,
+        public readonly ?int $area_id = null,
         public readonly ?string $password = null,
         public readonly ?string $role = null,
     ) {}
@@ -23,7 +24,8 @@ class UserDTO
             username: $data['username'],
             email: $data['email'],
             contact_number: $data['contact_number'] ?? null,
-            department_id: $data['department_id'] ?? null,
+            division_id: $data['division_id'] ?? null,
+            area_id: $data['area_id'] ?? null,
             password: $data['password'] ?? null,
             role: $data['role'] ?? null,
         );
@@ -37,7 +39,8 @@ class UserDTO
             'username' => $this->username,
             'email' => $this->email,
             'contact_number' => $this->contact_number,
-            'department_id' => $this->department_id,
+            'division_id' => $this->division_id,
+            'area_id' => $this->area_id,
         ];
 
         if ($this->password) {

@@ -1,9 +1,18 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import Dropdown from '@/Components/Dropdown.vue';
+import DropdownLink from '@/Components/DropdownLink.vue';
+import { User, Settings, LogOut, ChevronDown } from 'lucide-vue-next';
 </script>
 
 <template>
     <div class="min-h-screen flex flex-col font-sans relative text-slate-800" style="background: radial-gradient(at top left, #e0f2fe 0%, #f1f5f9 50%, #dcfce7 100%)">
+        <div v-if="$page.props.auth.is_impersonating" class="bg-red-600 text-white px-4 py-2 text-center text-sm font-bold shadow-md relative z-50 flex justify-center items-center gap-4">
+            <span>You are currently impersonating {{ $page.props.auth.user.first_name }} {{ $page.props.auth.user.last_name }}.</span>
+            <a :href="route('impersonate.leave')" class="bg-white text-red-600 px-3 py-1 rounded-md text-xs hover:bg-red-50 transition-colors shadow-sm uppercase tracking-wide">
+                Leave Impersonation
+            </a>
+        </div>
         <header class="h-20 bg-white/30 backdrop-blur-lg border-b border-white/60 sticky top-0 z-10">
             <div class="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -21,9 +30,27 @@ import { Link } from '@inertiajs/vue3';
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-2 bg-white/50 backdrop-blur border border-white/80 px-3 py-1.5 rounded-xl">
-                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                        <span class="text-sm font-bold text-slate-700 outline-none">{{ $page.props.auth?.user?.name || 'Viewer' }}</span>
+                    <div class="relative">
+                        <Dropdown align="right" width="48">
+                            <template #trigger>
+                                <button type="button" class="flex items-center gap-2 bg-white/50 backdrop-blur border border-white/80 px-3 py-1.5 rounded-xl hover:bg-white/70 transition-colors">
+                                    <User class="w-4 h-4 text-slate-500" />
+                                    <span class="text-sm font-bold text-slate-700 outline-none">{{ $page.props.auth?.user?.first_name || 'Viewer' }}</span>
+                                    <ChevronDown class="w-4 h-4 text-slate-400" />
+                                </button>
+                            </template>
+
+                            <template #content>
+                                <DropdownLink :href="route('profile.edit')" class="flex items-center gap-2 text-slate-700">
+                                    <Settings class="w-4 h-4" />
+                                    Settings
+                                </DropdownLink>
+                                <DropdownLink :href="route('logout')" method="post" as="button" class="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50">
+                                    <LogOut class="w-4 h-4" />
+                                    Log Out
+                                </DropdownLink>
+                            </template>
+                        </Dropdown>
                     </div>
                 </div>
             </div>
@@ -63,6 +90,24 @@ import { Link } from '@inertiajs/vue3';
                     >
                         <svg :class="['w-5 h-5', route().current('users.index') ? 'text-blue-700' : 'text-slate-400']" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         Users
+                    </Link>
+
+                    <Link 
+                        v-if="$page.props.auth.user?.permissions?.includes('view_divisions')"
+                        :href="route('divisions.index')" 
+                        :class="['w-full flex items-center gap-3 px-3 py-2 text-sm font-medium transition-colors', route().current('divisions.index') ? 'text-blue-700 bg-blue-100/50 rounded-lg' : 'text-slate-600 hover:bg-white/40 rounded-lg']"
+                    >
+                        <svg :class="['w-5 h-5', route().current('divisions.index') ? 'text-blue-700' : 'text-slate-400']" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        Divisions
+                    </Link>
+
+                    <Link 
+                        v-if="$page.props.auth.user?.permissions?.includes('view_areas')"
+                        :href="route('areas.index')" 
+                        :class="['w-full flex items-center gap-3 px-3 py-2 text-sm font-medium transition-colors', route().current('areas.index') ? 'text-blue-700 bg-blue-100/50 rounded-lg' : 'text-slate-600 hover:bg-white/40 rounded-lg']"
+                    >
+                        <svg :class="['w-5 h-5', route().current('areas.index') ? 'text-blue-700' : 'text-slate-400']" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        Areas
                     </Link>
                 </nav>
             </aside>

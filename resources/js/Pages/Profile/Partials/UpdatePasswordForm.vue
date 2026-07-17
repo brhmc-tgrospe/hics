@@ -5,6 +5,11 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { Eye, EyeOff } from 'lucide-vue-next';
+
+const showCurrentPassword = ref(false);
+const showNewPassword = ref(false);
+const showConfirmPassword = ref(false);
 
 const passwordInput = ref(null);
 const currentPasswordInput = ref(null);
@@ -49,16 +54,20 @@ const updatePassword = () => {
         <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
             <div>
                 <InputLabel for="current_password" value="Current Password" />
-
-                <TextInput
-                    id="current_password"
-                    ref="currentPasswordInput"
-                    v-model="form.current_password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    autocomplete="current-password"
-                />
-
+                <div class="relative mt-1">
+                    <TextInput
+                        id="current_password"
+                        ref="currentPasswordInput"
+                        v-model="form.current_password"
+                        :type="showCurrentPassword ? 'text' : 'password'"
+                        class="block w-full pr-10"
+                        autocomplete="current-password"
+                    />
+                    <button type="button" @click="showCurrentPassword = !showCurrentPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                        <Eye v-if="!showCurrentPassword" class="w-5 h-5" />
+                        <EyeOff v-else class="w-5 h-5" />
+                    </button>
+                </div>
                 <InputError
                     :message="form.errors.current_password"
                     class="mt-2"
@@ -67,16 +76,20 @@ const updatePassword = () => {
 
             <div>
                 <InputLabel for="password" value="New Password" />
-
-                <TextInput
-                    id="password"
-                    ref="passwordInput"
-                    v-model="form.password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    autocomplete="new-password"
-                />
-
+                <div class="relative mt-1">
+                    <TextInput
+                        id="password"
+                        ref="passwordInput"
+                        v-model="form.password"
+                        :type="showNewPassword ? 'text' : 'password'"
+                        class="block w-full pr-10"
+                        autocomplete="new-password"
+                    />
+                    <button type="button" @click="showNewPassword = !showNewPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                        <Eye v-if="!showNewPassword" class="w-5 h-5" />
+                        <EyeOff v-else class="w-5 h-5" />
+                    </button>
+                </div>
                 <InputError :message="form.errors.password" class="mt-2" />
             </div>
 
@@ -85,15 +98,19 @@ const updatePassword = () => {
                     for="password_confirmation"
                     value="Confirm Password"
                 />
-
-                <TextInput
-                    id="password_confirmation"
-                    v-model="form.password_confirmation"
-                    type="password"
-                    class="mt-1 block w-full"
-                    autocomplete="new-password"
-                />
-
+                <div class="relative mt-1">
+                    <TextInput
+                        id="password_confirmation"
+                        v-model="form.password_confirmation"
+                        :type="showConfirmPassword ? 'text' : 'password'"
+                        class="block w-full pr-10"
+                        autocomplete="new-password"
+                    />
+                    <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                        <Eye v-if="!showConfirmPassword" class="w-5 h-5" />
+                        <EyeOff v-else class="w-5 h-5" />
+                    </button>
+                </div>
                 <InputError
                     :message="form.errors.password_confirmation"
                     class="mt-2"

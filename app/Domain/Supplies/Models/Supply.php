@@ -12,4 +12,18 @@ class Supply extends Model
     protected $table = 'supplies';
 
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'expiry_date' => 'date',
+    ];
+
+    public function division()
+    {
+        return $this->belongsTo(\App\Models\Division::class);
+    }
+
+    public function area()
+    {
+        return $this->belongsTo(\App\Models\Area::class);
+    }
 }

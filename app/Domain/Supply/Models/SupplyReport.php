@@ -16,5 +16,9 @@ class SupplyReport extends Model
         'year_of_report',
         'fund_cluster',
         'file_path',
+        'report_type',
+        'report_period',
+        'custom_month',
+        'scope_id',
     ];
 }

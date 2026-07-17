@@ -18,9 +18,13 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user()->load(['division', 'roles']);
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'division_name' => $user->division ? "({$user->division->div_code}) - {$user->division->div_name}" : 'No Division',
+            'role_name' => $user->roles->first() ? $user->roles->first()->name : 'No Role',
         ]);
     }
 
@@ -29,13 +33,23 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $validated = $request->validated();
+        $user = $request->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // If username was already changed, prevent it from being updated
+        if ($user->username_changed && isset($validated['username'])) {
+            unset($validated['username']);
+        } elseif (isset($validated['username']) && $validated['username'] !== $user->username) {
+            $user->username_changed = true;
         }
 
-        $request->user()->save();
+        $user->fill($validated);
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
 
         return Redirect::route('profile.edit');
     }

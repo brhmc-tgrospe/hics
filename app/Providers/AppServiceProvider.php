@@ -25,5 +25,14 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
             return $user->hasRole('Developer') ? true : null;
         });
+
+        \Illuminate\Support\Facades\Gate::policy(
+            \App\Domain\Equipment\Models\Equipment::class,
+            \App\Policies\EquipmentPolicy::class
+        );
+        \Illuminate\Support\Facades\Gate::policy(
+            \App\Domain\Supplies\Models\Supply::class,
+            \App\Policies\SupplyPolicy::class
+        );
     }
 }

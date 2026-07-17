@@ -34,6 +34,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'create_users',
             'edit_users',
             'delete_users',
+            
+            // Divisions
+            'view_divisions',
+            'create_divisions',
+            'edit_divisions',
+            'delete_divisions',
         ];
 
         foreach ($permissions as $permission) {
@@ -58,11 +64,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'generate_reports'
         ]);
 
-        // 3. Admin (Department Scoped)
+        // 3. Admin (Division Scoped)
         $adminRole = Role::firstOrCreate(['name' => 'Admin']);
-        // Admins can manage users within their department
+        // Admins can manage users within their division
         $adminRole->givePermissionTo(Permission::all());
-        $adminRole->revokePermissionTo(['view_activity_logs', 'create_admin']); // Admin has everything except these 2
+        $adminRole->revokePermissionTo(['view_activity_logs', 'create_admin', 'create_divisions', 'edit_divisions', 'delete_divisions']); // Admin has everything except these
 
         // 4. Superadmin (Can manage all Admins and below)
         $superadminRole = Role::firstOrCreate(['name' => 'Superadmin']);

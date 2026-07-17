@@ -12,4 +12,14 @@ class Equipment extends Model
     protected $table = 'equipment';
 
     protected $guarded = ['id'];
+
+    public function division()
+    {
+        return $this->belongsTo(\App\Models\Division::class);
+    }
+
+    public function area()
+    {
+        return $this->belongsTo(\App\Models\Area::class);
+    }
 }

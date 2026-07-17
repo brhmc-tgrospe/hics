@@ -17,16 +17,22 @@ class SupplyController extends Controller
     {
         $supplies = app(GetSuppliesAction::class)->execute($request->all());
         $categories = \App\Domain\Shared\Models\Category::where('type', 'supply')->get()->toArray();
+        $divisions = \App\Models\Division::select('id', 'div_name as name')->get()->toArray();
+        $areas = \App\Models\Area::select('id', 'area_name as name', 'division_id')->get()->toArray();
 
         return Inertia::render('Inventory/Supplies/Index', [
             'supplies' => $supplies,
-            'filters' => $request->only(['search', 'category']),
+            'filters' => $request->only(['search', 'category', 'my_division_only', 'my_area_only']),
             'categories' => $categories,
+            'divisions' => $divisions,
+            'areas' => $areas,
         ]);
     }
 
     public function store(Request $request, CreateSupplyAction $action)
     {
+        \Illuminate\Support\Facades\Gate::authorize('create', Supply::class);
+
         $validated = $request->validate([
             'category' => 'nullable|string',
             'article' => 'nullable|string',
@@ -38,8 +44,10 @@ class SupplyController extends Controller
             'on_hand_per_count' => 'nullable|integer',
             'shortage_overage_qty' => 'nullable|integer',
             'shortage_overage_value' => 'nullable|numeric',
-            'total_amount' => 'nullable|numeric',
             'status' => 'nullable|string',
+            'division_id' => 'required|integer|exists:divisions,id',
+            'area_id' => 'required|integer|exists:areas,id',
+            'expiry_date' => 'required_unless:category,ictsupply,officesup,hksupp|nullable|date',
         ]);
 
         $dto = SupplyDTO::fromArray($validated);
@@ -50,6 +58,8 @@ class SupplyController extends Controller
 
     public function update(Request $request, Supply $supply, UpdateSupplyAction $action)
     {
+        \Illuminate\Support\Facades\Gate::authorize('update', $supply);
+
         $validated = $request->validate([
             'category' => 'nullable|string',
             'article' => 'nullable|string',
@@ -61,8 +71,10 @@ class SupplyController extends Controller
             'on_hand_per_count' => 'nullable|integer',
             'shortage_overage_qty' => 'nullable|integer',
             'shortage_overage_value' => 'nullable|numeric',
-            'total_amount' => 'nullable|numeric',
             'status' => 'nullable|string',
+            'division_id' => 'required|integer|exists:divisions,id',
+            'area_id' => 'required|integer|exists:areas,id',
+            'expiry_date' => 'required_unless:category,ictsupply,officesup,hksupp|nullable|date',
         ]);
 
         $dto = SupplyDTO::fromArray($validated);
@@ -73,6 +85,8 @@ class SupplyController extends Controller
 
     public function destroy(Supply $supply, DeleteSupplyAction $action)
     {
+        \Illuminate\Support\Facades\Gate::authorize('delete', $supply);
+
         $action->execute($supply);
         return redirect()->route('supplies.index')->with('success', 'Supply deleted.');
     }
@@ -85,9 +99,10 @@ class SupplyController extends Controller
         ];
 
         $columns = [
-            'category', 'article', 'description', 'stock_number', 'unit_of_measure', 
+            'category', 'article', 'description', 'stock_number', 'expiry_date', 'unit_of_measure', 
             'unit_value', 'balance_per_card', 'on_hand_per_count', 
-            'shortage_overage_qty', 'shortage_overage_value', 'total_amount', 'status'
+            'shortage_overage_qty', 'shortage_overage_value', 'total_amount', 'status',
+            'division_id', 'area_id'
         ];
 
         $callback = function () use ($columns) {
@@ -101,6 +116,8 @@ class SupplyController extends Controller
 
     public function import(Request $request, CreateSupplyAction $action)
     {
+        \Illuminate\Support\Facades\Gate::authorize('create', Supply::class);
+
         $request->validate([
             'file' => 'required|file|mimes:csv,txt'
         ]);
@@ -143,9 +160,21 @@ class SupplyController extends Controller
             'date_of_accountability' => 'required|date',
             'year_of_report' => 'required|integer',
             'fund_cluster' => 'nullable|string',
+            'report_type' => 'required|string|in:General,Division,Area',
+            'report_period' => 'nullable|string',
+            'custom_month' => 'nullable|integer',
+            'scope_id' => 'nullable|integer',
         ]);
 
-        $supplies = \App\Domain\Supplies\Models\Supply::where('category', $validated['category'])->get();
+        $query = \App\Domain\Supplies\Models\Supply::where('category', $validated['category']);
+
+        if ($validated['report_type'] === 'Division') {
+            $query->where('division_id', $validated['scope_id']);
+        } elseif ($validated['report_type'] === 'Area') {
+            $query->where('area_id', $validated['scope_id']);
+        }
+
+        $supplies = $query->get();
         
         $filename = 'supply_report_' . time() . '_' . uniqid() . '.json';
         \Illuminate\Support\Facades\Storage::disk('local')->put("reports/{$filename}", $supplies->toJson());
@@ -156,6 +185,10 @@ class SupplyController extends Controller
             'year_of_report' => $validated['year_of_report'],
             'fund_cluster' => $validated['fund_cluster'],
             'file_path' => "reports/{$filename}",
+            'report_type' => $validated['report_type'],
+            'report_period' => $validated['report_period'] ?? null,
+            'custom_month' => $validated['custom_month'] ?? null,
+            'scope_id' => $validated['scope_id'] ?? null,
         ]);
 
         return response()->json(['id' => $report->id]);

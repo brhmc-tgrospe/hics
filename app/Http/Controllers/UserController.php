@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Department;
+use App\Models\Division;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Domain\Users\Actions\GetUsersAction;
@@ -21,6 +21,7 @@ class UserController extends Controller
         $users = $action->execute([
             'search' => $request->search,
             'per_page' => $request->per_page,
+            'division_only' => $request->division_only,
         ]);
         
         $roles = Role::whereNotIn('name', ['Developer'])->get();
@@ -28,20 +29,22 @@ class UserController extends Controller
              if (auth()->user()->hasRole('Superadmin')) {
                  // Superadmin can assign anything except Developer
              } else {
-                 // Admin can only assign Encoder, Secretary, Admin
-                 $roles = Role::whereIn('name', ['Admin', 'Encoder', 'Secretary'])->get();
+                 // Admin can only assign Encoder, Secretary
+                 $roles = Role::whereIn('name', ['Encoder', 'Secretary'])->get();
              }
         } else {
              $roles = Role::all();
         }
 
-        $departments = Department::all();
+        $divisions = Division::all();
+        $areas = \App\Models\Area::all();
 
         return Inertia::render('Users/Index', [
             'users' => $users,
             'filters' => $request->only(['search', 'per_page']),
             'roles' => $roles,
-            'departments' => $departments,
+            'divisions' => $divisions,
+            'areas' => $areas,
         ]);
     }
 
@@ -53,9 +56,10 @@ class UserController extends Controller
             'username' => 'required|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
             'contact_number' => 'nullable|string|max:20',
-            'department_id' => 'nullable|exists:departments,id',
+            'division_id' => 'required|exists:divisions,id',
+            'area_id' => 'required|exists:areas,id',
             'role' => 'required|exists:roles,name',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         DB::transaction(function () use ($validated, $action) {
@@ -73,9 +77,10 @@ class UserController extends Controller
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'contact_number' => 'nullable|string|max:20',
-            'department_id' => 'nullable|exists:departments,id',
+            'division_id' => 'required|exists:divisions,id',
+            'area_id' => 'required|exists:areas,id',
             'role' => 'required|exists:roles,name',
-            'password' => 'nullable|string|min:6',
+            'password' => 'nullable|string|min:6|confirmed',
         ]);
 
         DB::transaction(function () use ($user, $validated, $action) {

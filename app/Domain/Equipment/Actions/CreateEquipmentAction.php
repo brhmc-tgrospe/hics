@@ -12,7 +12,7 @@ class CreateEquipmentAction
         $data = $dto->toArray();
         if (auth()->check()) {
             $data['user_id'] = auth()->id();
-            $data['department_id'] = auth()->user()->department_id;
+            $data['division_id'] = $data['division_id'] ?? auth()->user()->division_id;
         }
         return Equipment::create($data);
     }

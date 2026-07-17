@@ -12,6 +12,18 @@ const totalAmount = computed(() => {
     return props.supplies.reduce((sum, item) => sum + (Number(item.unit_value) * Number(item.on_hand_per_count)), 0);
 });
 
+const reportPeriodText = computed(() => {
+    if (props.report.report_period === '1st Qtr') return `As of March ${props.report.year_of_report}`;
+    if (props.report.report_period === '2nd Qtr') return `As of June ${props.report.year_of_report}`;
+    if (props.report.report_period === '3rd Qtr') return `As of September ${props.report.year_of_report}`;
+    if (props.report.report_period === '4th Qtr') return `As of December ${props.report.year_of_report}`;
+    if (props.report.report_period === 'Custom Month' && props.report.custom_month) {
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        return `As of ${months[props.report.custom_month - 1]} ${props.report.year_of_report}`;
+    }
+    return `As of December 31, ${props.report.year_of_report}`;
+});
+
 const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -51,7 +63,7 @@ onMounted(() => {
                                 </div>
                                 <div class="text-center font-sans flex flex-col justify-center py-1">
                                     <div class="font-normal text-[13px]">Republic of the Philippines</div>
-                                    <div class="font-normal text-[13px]">Department of Health</div>
+                                    <div class="font-normal text-[13px]">Division of Health</div>
                                     <div class="font-bold text-[15px]">BICOL REGIONAL HOSPITAL AND MEDICAL CENTER</div>
                                     <div class="font-normal text-[13px]">Daraga, Albay</div>
                                 </div>
@@ -66,7 +78,7 @@ onMounted(() => {
                         <th colspan="7" class="border-[3px] border-black p-2 text-center relative">
                             <div class="text-[15px] font-bold uppercase">REPORT ON THE PHYSICAL COUNT OF Inventories</div>
                             <div class="text-[14px] font-bold mt-1 uppercase">{{ categoryName }}</div>
-                            <div class="text-[14px] font-bold mt-1 mb-4">As of December 31, {{ report.year_of_report }}</div>
+                            <div class="text-[14px] font-bold mt-1 mb-4">{{ reportPeriodText }}</div>
                             
                             <div class="mt-4 flex justify-start font-bold text-[13px]">
                                 <div class="flex items-end pl-2">
@@ -118,7 +130,7 @@ onMounted(() => {
             </table>
 
             <!-- Signatories -->
-            <div class="mt-10 grid grid-cols-3 gap-8 text-[13px]">
+            <div v-if="!report.report_type || report.report_type === 'General'" class="mt-10 grid grid-cols-3 gap-8 text-[13px]">
                 <div class="flex flex-col items-center text-center">
                     <p class="mb-10 font-semibold w-full text-left pl-6">Certified Correct by:</p>
                     <div class="w-10/12">

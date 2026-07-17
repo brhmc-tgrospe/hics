@@ -17,6 +17,11 @@ class UpdateUserAction
             if ($targetUser->hasRole(['Admin', 'Superadmin', 'Developer'])) {
                 throw ValidationException::withMessages(['error' => 'You do not have permission to edit this user.']);
             }
+            
+            // Admins can only edit users in their own division
+            if ($targetUser->division_id !== $user->division_id) {
+                throw ValidationException::withMessages(['error' => 'You do not have permission to edit users outside your division.']);
+            }
         }
         
         // Superadmins cannot edit Developers
@@ -28,9 +33,13 @@ class UpdateUserAction
 
         $data = $dto->toArray();
 
-        // Admins cannot change department
+        // Admins cannot change division and cannot assign Admin/Superadmin/Developer roles
         if ($user->hasRole('Admin') && !$user->hasRole(['Developer', 'Superadmin'])) {
-            $data['department_id'] = $user->department_id;
+            $data['division_id'] = $user->division_id;
+            
+            if ($dto->role && in_array($dto->role, ['Admin', 'Superadmin', 'Developer'])) {
+                throw ValidationException::withMessages(['error' => 'You do not have permission to assign this role.']);
+            }
         }
 
         $targetUser->update($data);

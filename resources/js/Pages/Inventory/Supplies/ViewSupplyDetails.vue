@@ -13,12 +13,20 @@
         <p class="text-sm font-semibold text-slate-800">{{ getCategoryName(data.category) || '-' }}</p>
       </div>
       <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Division</p>
+        <p class="text-sm font-semibold text-slate-800">{{ getDivisionName(data.division_id) || '-' }}</p>
+      </div>
+      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Article</p>
         <p class="text-sm font-semibold text-slate-800">{{ data.article || '-' }}</p>
       </div>
-      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm sm:col-span-2">
+      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm" :class="{'sm:col-span-2': isExpiryExempt}">
         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Stock Number</p>
         <p class="text-sm font-semibold text-slate-800">{{ data.stock_number || '-' }}</p>
+      </div>
+      <div v-if="!isExpiryExempt" class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Expiry Date</p>
+        <p class="text-sm font-semibold text-slate-800" :class="{'text-red-500': isExpired(data.expiry_date)}">{{ formatDate(data.expiry_date) || '-' }}</p>
       </div>
       <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm sm:col-span-2">
         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Description</p>
@@ -66,6 +74,7 @@
 
 <script setup>
 import { formatCurrency } from '@/utils/formatters.js';
+import { computed } from 'vue';
 
 const props = defineProps({
   data: {
@@ -73,6 +82,10 @@ const props = defineProps({
     required: true
   },
   categories: {
+    type: Array,
+    required: true
+  },
+  divisions: {
     type: Array,
     required: true
   }
@@ -83,5 +96,26 @@ defineEmits(['close']);
 const getCategoryName = (id) => {
   const cat = props.categories.find(c => c.id === id);
   return cat ? cat.name : id;
+};
+
+const getDivisionName = (id) => {
+  const dept = props.divisions.find(d => d.id === id);
+  return dept ? dept.name : id;
+};
+
+const exemptCategories = ['ictsupply', 'officesup', 'hksupp'];
+const isExpiryExempt = computed(() => {
+  return exemptCategories.includes(props.data.category);
+});
+
+const formatDate = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+};
+
+const isExpired = (date) => {
+    if (!date) return false;
+    return new Date(date) < new Date();
 };
 </script>

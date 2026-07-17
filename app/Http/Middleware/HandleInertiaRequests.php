@@ -38,11 +38,15 @@ class HandleInertiaRequests extends Middleware
                     'last_name' => $request->user()->last_name,
                     'username' => $request->user()->username,
                     'email' => $request->user()->email,
+                    'division_id' => $request->user()->division_id,
+                    'area_id' => $request->user()->area_id,
                     'roles' => $request->user()->getRoleNames(),
                     'permissions' => $request->user()->hasRole('Developer') 
                         ? \Spatie\Permission\Models\Permission::pluck('name') 
                         : $request->user()->getAllPermissions()->pluck('name'),
                 ] : null,
+                'is_impersonating' => $request->session()->has('impersonator_id'),
+                'impersonator_name' => $request->session()->get('impersonator_name'),
             ],
         ];
     }

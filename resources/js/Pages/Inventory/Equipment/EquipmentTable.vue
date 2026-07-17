@@ -1,8 +1,9 @@
 <script setup>
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { formatCurrency } from '@/utils/formatters.js';
 
-defineProps({
+const props = defineProps({
     equipment: {
         type: Object,
         required: true
@@ -10,14 +11,58 @@ defineProps({
     categories: {
         type: Array,
         required: true
+    },
+    isSuperadmin: {
+        type: Boolean,
+        default: false
+    },
+    isSecretary: {
+        type: Boolean,
+        default: false
+    },
+    userDivisionId: {
+        type: Number,
+        default: null
+    },
+    userAreaId: {
+        type: Number,
+        default: null
     }
 });
 
 const emit = defineEmits(['edit', 'view', 'update-per-page']);
 
+const page = usePage();
+const userPermissions = computed(() => page.props.auth.user?.permissions || []);
+const userRoles = computed(() => page.props.auth.user?.roles || []);
+const isAdmin = computed(() => userRoles.value.includes('Admin'));
+const isEncoder = computed(() => userRoles.value.includes('Encoder'));
+
 const getCategoryName = (id, categories) => {
     const cat = categories.find(c => c.id === id);
     return cat ? cat.name : id;
+};
+
+const canEditItem = (item) => {
+    if (props.isSuperadmin) return true;
+    if (props.isSecretary) return false;
+    if (!userPermissions.value.includes('edit_equipment')) return false;
+    
+    if (isAdmin.value) return item.division_id === props.userDivisionId;
+    if (isEncoder.value) return item.division_id === props.userDivisionId && item.area_id === props.userAreaId;
+    
+    return false;
+};
+
+const canDeleteItem = (item) => {
+    if (props.isSuperadmin) return true;
+    if (props.isSecretary) return false;
+    if (!userPermissions.value.includes('delete_equipment')) return false;
+
+    if (isAdmin.value) return item.division_id === props.userDivisionId;
+    if (isEncoder.value) return item.division_id === props.userDivisionId && item.area_id === props.userAreaId;
+    
+    return false;
 };
 
 const handleDelete = (id) => {
@@ -58,13 +103,13 @@ const handleDelete = (id) => {
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <button v-if="$page.props.auth.user.permissions.includes('view_equipment')" @click="$emit('view', item)" class="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors" title="View">
+                            <button @click="$emit('view', item)" class="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors" title="View">
                                 <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                             </button>
-                            <button v-if="$page.props.auth.user.permissions.includes('edit_equipment')" @click="$emit('edit', item)" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors ml-1" title="Edit">
+                            <button v-if="canEditItem(item)" @click="$emit('edit', item)" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors ml-1" title="Edit">
                                 <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                             </button>
-                            <button v-if="$page.props.auth.user.permissions.includes('delete_equipment')" @click="handleDelete(item.id)" class="p-1.5 text-slate-400 hover:text-red-600 transition-colors ml-1" title="Delete">
+                            <button v-if="canDeleteItem(item)" @click="handleDelete(item.id)" class="p-1.5 text-slate-400 hover:text-red-600 transition-colors ml-1" title="Delete">
                                 <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         </td>

@@ -9,22 +9,26 @@ class GetUsersAction
 {
     public function execute(array $filters = []): LengthAwarePaginator
     {
-        $query = User::query()->with(['department', 'roles']);
+        $query = User::query()->with(['division', 'roles']);
 
         $user = auth()->user();
 
-        // Security scoping
-        if ($user->hasRole('Admin')) {
-            // Admin can see users in their department, EXCEPT developers. Wait, Superadmin should also be hidden from Admin
-            $query->where('department_id', $user->department_id)
-                  ->whereDoesntHave('roles', function ($q) {
-                      $q->whereIn('name', ['Developer', 'Superadmin']);
-                  });
-        } elseif ($user->hasRole('Superadmin')) {
+        if ($user->hasRole('Admin') && !$user->hasRole(['Developer', 'Superadmin'])) {
+            // Admin can see all users EXCEPT Developers and Superadmins
+            $query->whereDoesntHave('roles', function ($q) {
+                $q->whereIn('name', ['Developer', 'Superadmin']);
+            });
+        } elseif ($user->hasRole('Superadmin') && !$user->hasRole('Developer')) {
             // Superadmin can see everyone EXCEPT Developer
             $query->whereDoesntHave('roles', function ($q) {
                 $q->where('name', 'Developer');
             });
+        }
+
+        $divisionOnly = $filters['division_only'] ?? ($user->hasRole('Admin') && !$user->hasRole(['Developer', 'Superadmin']));
+        
+        if ($divisionOnly === true || $divisionOnly === 'true') {
+            $query->where('division_id', $user->division_id);
         }
 
         if (!empty($filters['search'])) {

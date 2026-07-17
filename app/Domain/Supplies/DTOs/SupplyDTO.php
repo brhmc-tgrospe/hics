@@ -16,7 +16,10 @@ class SupplyDTO
         public ?int $shortage_overage_qty,
         public ?float $shortage_overage_value,
         public ?float $total_amount,
-        public ?string $status
+        public ?string $status,
+        public ?int $division_id,
+        public ?int $area_id,
+        public ?string $expiry_date
     ) {}
 
     public static function fromArray(array $data): self
@@ -33,7 +36,10 @@ class SupplyDTO
             isset($data['shortage_overage_qty']) ? (int)$data['shortage_overage_qty'] : null,
             isset($data['shortage_overage_value']) ? (float)$data['shortage_overage_value'] : null,
             isset($data['total_amount']) ? (float)$data['total_amount'] : null,
-            $data['status'] ?? null
+            $data['status'] ?? null,
+            isset($data['division_id']) ? (int)$data['division_id'] : null,
+            isset($data['area_id']) ? (int)$data['area_id'] : null,
+            $data['expiry_date'] ?? null
         );
     }
 
@@ -52,6 +58,9 @@ class SupplyDTO
             'shortage_overage_value' => $this->shortage_overage_value,
             'total_amount' => $this->total_amount,
             'status' => $this->status,
+            'division_id' => $this->division_id,
+            'area_id' => $this->area_id,
+            'expiry_date' => $this->expiry_date,
         ];
     }
 }

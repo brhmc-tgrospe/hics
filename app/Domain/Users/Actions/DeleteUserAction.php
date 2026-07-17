@@ -16,6 +16,11 @@ class DeleteUserAction
             if ($targetUser->hasRole(['Admin', 'Superadmin', 'Developer'])) {
                 throw ValidationException::withMessages(['error' => 'You do not have permission to delete this user.']);
             }
+            
+            // Admins can only delete users in their own division
+            if ($targetUser->division_id !== $user->division_id) {
+                throw ValidationException::withMessages(['error' => 'You do not have permission to delete users outside your division.']);
+            }
         }
         
         // Superadmins cannot delete Developers

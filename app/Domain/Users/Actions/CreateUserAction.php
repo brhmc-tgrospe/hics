@@ -12,9 +12,13 @@ class CreateUserAction
         $data = $dto->toArray();
         $user = auth()->user();
 
-        // If Admin is creating a user, force the department_id to the admin's department
+        // If Admin is creating a user, force the division_id to the admin's division
         if ($user->hasRole('Admin') && !$user->hasRole(['Developer', 'Superadmin'])) {
-            $data['department_id'] = $user->department_id;
+            $data['division_id'] = $user->division_id;
+            
+            if (in_array($dto->role, ['Admin', 'Superadmin', 'Developer'])) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['error' => 'You do not have permission to assign this role.']);
+            }
         }
 
         $newUser = User::create($data);

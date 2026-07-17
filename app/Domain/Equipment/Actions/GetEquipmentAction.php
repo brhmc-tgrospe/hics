@@ -11,10 +11,16 @@ class GetEquipmentAction
     {
         $query = Equipment::query();
 
-        if (auth()->check()) {
-            $user = auth()->user();
-            if (!$user->hasRole(['Developer', 'Superadmin'])) {
-                $query->where('department_id', $user->department_id);
+        if (!empty($filters['my_division_only']) && filter_var($filters['my_division_only'], FILTER_VALIDATE_BOOLEAN)) {
+            if (auth()->check()) {
+                $query->where('division_id', auth()->user()->division_id);
+            }
+        }
+
+        if (!empty($filters['my_area_only']) && filter_var($filters['my_area_only'], FILTER_VALIDATE_BOOLEAN)) {
+            if (auth()->check()) {
+                $query->where('division_id', auth()->user()->division_id)
+                      ->where('area_id', auth()->user()->area_id);
             }
         }
 
