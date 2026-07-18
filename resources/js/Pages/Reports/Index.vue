@@ -6,6 +6,7 @@ import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import { FileText, Eye, Trash2 } from 'lucide-vue-next';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
 
 const props = defineProps({
     reports: {
@@ -141,21 +142,10 @@ const formatDateForPicker = (date) => {
                     </h2>
                     <p class="text-sm text-slate-500 mt-1">Manage and view your generated reports across all categories.</p>
                 </div>
-                
-                <div class="flex gap-2">
-                    <button 
-                        @click="deleteSelected"
-                        :disabled="selectedReports.length === 0"
-                        class="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 focus:ring-2 focus:ring-red-200 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                        <Trash2 class="w-4 h-4" />
-                        Delete Selected
-                    </button>
-                </div>
             </div>
 
             <!-- Filters Section -->
-            <div class="bg-white/50 backdrop-blur-xl rounded-2xl border border-white/80 shadow-sm p-4 flex flex-wrap gap-4 items-center">
+            <div class="bg-white/50 backdrop-blur-xl rounded-2xl border border-white/80 shadow-sm p-4 flex flex-wrap gap-4 items-center relative z-20">
                 <!-- Category Filter -->
                 <div class="w-full sm:w-auto">
                     <select 
@@ -218,7 +208,7 @@ const formatDateForPicker = (date) => {
             </div>
 
             <!-- Table Section -->
-            <div class="bg-white/70 backdrop-blur-xl border border-white/80 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+            <div class="bg-white/70 backdrop-blur-xl border border-white/80 rounded-2xl shadow-sm overflow-hidden flex flex-col relative z-10">
                 <div class="overflow-x-auto min-h-[400px]">
                     <table class="w-full text-left text-sm whitespace-nowrap">
                         <thead class="bg-slate-50/50 backdrop-blur border-b border-slate-200/60 sticky top-0 z-10 text-slate-600 font-semibold">
@@ -321,5 +311,7 @@ const formatDateForPicker = (date) => {
                 </div>
             </div>
         </div>
+
+        <FloatingBulkDeleteButton :count="selectedReports.length" @delete="deleteSelected" />
     </InventoryLayout>
 </template>

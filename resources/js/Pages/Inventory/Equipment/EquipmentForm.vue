@@ -179,7 +179,7 @@ const submit = () => {
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Area <span class="text-red-500">*</span></label>
                 <select v-model="form.area_id" class="w-full bg-white border border-slate-300 shadow-sm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" :disabled="$page.props.auth.user?.area_id && !($page.props.auth.user?.roles?.includes('Developer') || $page.props.auth.user?.roles?.includes('Superadmin') || $page.props.auth.user?.roles?.includes('Admin'))">
                     <option value="">Select Area</option>
-                    <option v-for="a in areas.filter(a => a.division_id === form.division_id)" :key="a.id" :value="a.id">{{ a.area_name }}</option>
+                    <option v-for="a in areas.filter(a => a.division_id == form.division_id)" :key="a.id" :value="a.id">{{ a.name || a.area_name }}</option>
                 </select>
                 <div v-if="form.errors.area_id" class="text-red-500 text-xs mt-1">{{ form.errors.area_id }}</div>
             </div>

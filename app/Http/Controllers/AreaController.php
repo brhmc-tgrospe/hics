@@ -100,4 +100,30 @@ class AreaController extends Controller
 
         return redirect()->back()->with('success', 'Area deleted successfully.');
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        Gate::authorize('delete_areas');
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:areas,id',
+        ]);
+
+        $areas = Area::whereIn('id', $request->ids)->get();
+        $authUser = auth()->user();
+
+        DB::transaction(function () use ($areas, $authUser) {
+            foreach ($areas as $area) {
+                if (!$authUser->hasRole(['Superadmin', 'Developer'])) {
+                    if ($area->division_id != $authUser->division_id) {
+                        continue;
+                    }
+                }
+                $area->delete();
+            }
+        });
+
+        return redirect()->back()->with('success', 'Selected areas deleted successfully.');
+    }
 }

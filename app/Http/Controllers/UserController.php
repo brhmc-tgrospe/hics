@@ -98,4 +98,28 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', 'User deleted successfully.');
     }
+
+    public function bulkDestroy(Request $request, DeleteUserAction $action)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:users,id',
+        ]);
+
+        $users = User::whereIn('id', $request->ids)->get();
+        $authUser = auth()->user();
+
+        DB::transaction(function () use ($users, $action, $authUser) {
+            foreach ($users as $user) {
+                if (!$authUser->hasRole(['Superadmin', 'Developer'])) {
+                    if ($user->division_id != $authUser->division_id) {
+                        continue;
+                    }
+                }
+                $action->execute($user);
+            }
+        });
+
+        return redirect()->back()->with('success', 'Selected users deleted successfully.');
+    }
 }

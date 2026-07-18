@@ -63,4 +63,22 @@ class DivisionController extends Controller
 
         return redirect()->back()->with('success', 'Division deleted successfully.');
     }
+
+    public function bulkDestroy(Request $request, DeleteDivisionAction $action)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:divisions,id',
+        ]);
+
+        $divisions = Division::whereIn('id', $request->ids)->get();
+
+        DB::transaction(function () use ($divisions, $action) {
+            foreach ($divisions as $division) {
+                $action->execute($division);
+            }
+        });
+
+        return redirect()->back()->with('success', 'Selected divisions deleted successfully.');
+    }
 }

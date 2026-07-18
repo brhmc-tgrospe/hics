@@ -3,9 +3,31 @@
 namespace App\Domain\Equipment\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class EquipmentReport extends Model
 {
+    use LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
+    
+    public function tapActivity($activity, string $eventName)
+    {
+        // Infer division_id and area_id from the user who generated the report
+        if ($this->user) {
+            $activity->properties = $activity->properties->merge([
+                'division_id' => $this->user->division_id,
+                'area_id' => $this->user->area_id,
+            ]);
+        }
+    }
     protected $fillable = [
         'category',
         'date_of_accountability',

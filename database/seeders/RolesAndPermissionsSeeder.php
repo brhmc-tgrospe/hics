@@ -27,6 +27,7 @@ class RolesAndPermissionsSeeder extends Seeder
             
             'generate_reports',
             'view_activity_logs',
+            'delete_activity_logs',
             'create_admin',
 
             // Users
@@ -68,7 +69,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $adminRole = Role::firstOrCreate(['name' => 'Admin']);
         // Admins can manage users within their division
         $adminRole->givePermissionTo(Permission::all());
-        $adminRole->revokePermissionTo(['view_activity_logs', 'create_admin', 'create_divisions', 'edit_divisions', 'delete_divisions']); // Admin has everything except these
+        $adminRole->revokePermissionTo(['delete_activity_logs', 'create_admin', 'create_divisions', 'edit_divisions', 'delete_divisions']); // Admin has everything except these
 
         // 4. Superadmin (Can manage all Admins and below)
         $superadminRole = Role::firstOrCreate(['name' => 'Superadmin']);

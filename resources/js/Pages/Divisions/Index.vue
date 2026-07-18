@@ -1,16 +1,18 @@
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref, watch, computed } from 'vue';
 import { debounce } from 'lodash';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import { PlusCircle, Search, Edit, Trash2 } from 'lucide-vue-next';
+import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
 
 const props = defineProps({
     divisions: Object,
     filters: Object,
 });
 
+const page = usePage();
 const search = ref(props.filters?.search || '');
 const per_page = ref(props.filters?.per_page || 10);
 const isAdding = ref(false);
@@ -71,6 +73,42 @@ const deleteDivision = (division) => {
     }
 };
 
+const selectedItems = ref([]);
+
+watch(() => props.divisions.data, () => {
+    selectedItems.value = [];
+}, { deep: true });
+
+const canDeleteDivision = () => {
+    return page.props.auth.user?.permissions?.includes('delete_divisions');
+};
+
+const selectAll = computed({
+    get: () => {
+        if (!canDeleteDivision()) return false;
+        return props.divisions.data.length > 0 && props.divisions.data.every(item => selectedItems.value.includes(item.id));
+    },
+    set: (val) => {
+        if (val && canDeleteDivision()) {
+            selectedItems.value = props.divisions.data.map(item => item.id);
+        } else {
+            selectedItems.value = [];
+        }
+    }
+});
+
+const handleBulkDelete = () => {
+    if (selectedItems.value.length === 0) return;
+    if (confirm(`Are you sure you want to delete ${selectedItems.value.length} divisions?`)) {
+        router.delete(route('divisions.bulk_delete'), {
+            data: { ids: selectedItems.value },
+            onSuccess: () => {
+                selectedItems.value = [];
+            }
+        });
+    }
+};
+
 </script>
 
 <template>
@@ -116,6 +154,13 @@ const deleteDivision = (division) => {
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200/60 text-sm text-slate-500 font-bold bg-slate-50/50">
+                                <th class="px-6 py-4 w-12 text-center">
+                                    <input 
+                                        type="checkbox" 
+                                        v-model="selectAll"
+                                        class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                </th>
                                 <th class="px-6 py-4">ID</th>
                                 <th class="px-6 py-4">Code</th>
                                 <th class="px-6 py-4">Name</th>
@@ -124,6 +169,15 @@ const deleteDivision = (division) => {
                         </thead>
                         <tbody class="divide-y divide-slate-200/60">
                             <tr v-for="division in divisions.data" :key="division.id" class="hover:bg-blue-50/30 transition-colors">
+                                <td class="px-6 py-4 text-center">
+                                    <input 
+                                        v-if="canDeleteDivision()"
+                                        type="checkbox" 
+                                        :value="division.id" 
+                                        v-model="selectedItems"
+                                        class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                </td>
                                 <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ division.id }}</td>
                                 <td class="px-6 py-4 text-sm font-bold text-slate-700">{{ division.div_code }}</td>
                                 <td class="px-6 py-4 text-sm text-slate-600">{{ division.div_name }}</td>
@@ -149,7 +203,7 @@ const deleteDivision = (division) => {
                                 </td>
                             </tr>
                             <tr v-if="divisions.data.length === 0">
-                                <td colspan="4" class="px-6 py-12 text-center text-slate-500">
+                                <td colspan="5" class="px-6 py-12 text-center text-slate-500">
                                     No divisions found.
                                 </td>
                             </tr>
@@ -189,6 +243,8 @@ const deleteDivision = (division) => {
                 </div>
             </div>
         </div>
+
+        <FloatingBulkDeleteButton :count="selectedItems.length" @delete="handleBulkDelete" />
 
         <!-- Add/Edit Modal -->
         <Modal :show="isAdding" @close="closeForm">

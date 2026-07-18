@@ -50,18 +50,21 @@ Route::middleware('auth')->group(function () {
     Route::delete('supplies/{supply}', [SupplyController::class, 'destroy'])->name('supplies.destroy')->middleware('permission:delete_supplies');
 
     // User Routes
+    Route::delete('users/bulk-delete', [UserController::class, 'bulkDestroy'])->name('users.bulk_delete')->middleware('permission:delete_users');
     Route::get('users', [UserController::class, 'index'])->name('users.index')->middleware('permission:view_users');
     Route::post('users', [UserController::class, 'store'])->name('users.store')->middleware('permission:create_users');
     Route::put('users/{user}', [UserController::class, 'update'])->name('users.update')->middleware('permission:edit_users');
     Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy')->middleware('permission:delete_users');
     
     // Division Routes
+    Route::delete('divisions/bulk-delete', [DivisionController::class, 'bulkDestroy'])->name('divisions.bulk_delete')->middleware('permission:delete_divisions');
     Route::get('divisions', [DivisionController::class, 'index'])->name('divisions.index')->middleware('permission:view_divisions');
     Route::post('divisions', [DivisionController::class, 'store'])->name('divisions.store')->middleware('permission:create_divisions');
     Route::put('divisions/{division}', [DivisionController::class, 'update'])->name('divisions.update')->middleware('permission:edit_divisions');
     Route::delete('divisions/{division}', [DivisionController::class, 'destroy'])->name('divisions.destroy')->middleware('permission:delete_divisions');
     
     // Area Routes
+    Route::delete('areas/bulk-delete', [\App\Http\Controllers\AreaController::class, 'bulkDestroy'])->name('areas.bulk_delete')->middleware('permission:delete_areas');
     Route::get('areas', [\App\Http\Controllers\AreaController::class, 'index'])->name('areas.index')->middleware('permission:view_areas');
     Route::post('areas', [\App\Http\Controllers\AreaController::class, 'store'])->name('areas.store')->middleware('permission:create_areas');
     Route::put('areas/{area}', [\App\Http\Controllers\AreaController::class, 'update'])->name('areas.update')->middleware('permission:edit_areas');
@@ -75,6 +78,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Activity Logs Routes
+    Route::get('activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('permission:view_activity_logs');
+    Route::delete('activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'destroy'])->name('activity-logs.destroy')->middleware('permission:delete_activity_logs');
 });
 
 require __DIR__.'/auth.php';

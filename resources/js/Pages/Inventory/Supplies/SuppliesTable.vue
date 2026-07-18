@@ -77,15 +77,6 @@
           <option v-for="size in [10, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
         </select>
       </div>
-
-      <button 
-        v-if="selectedItems.length > 0" 
-        @click="handleBulkDelete"
-        class="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 ml-4"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-        Delete Selected ({{ selectedItems.length }})
-      </button>
       
       <div class="flex items-center justify-end flex-1">
         <div class="flex items-center gap-1">
@@ -105,6 +96,8 @@
         </div>
       </div>
     </div>
+
+    <FloatingBulkDeleteButton :count="selectedItems.length" @delete="handleBulkDelete" />
   </div>
 </template>
 
@@ -113,6 +106,7 @@ import { Edit2Icon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, EyeIcon } fro
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { formatCurrency } from '@/utils/formatters.js';
+import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
 
 const props = defineProps({
   supplies: Object,
@@ -154,8 +148,8 @@ const canEditItem = (item) => {
     if (props.isSecretary) return false;
     if (!userPermissions.value.includes('edit_supplies')) return false;
 
-    if (isAdmin.value) return item.division_id === props.userDivisionId;
-    if (isEncoder.value) return item.division_id === props.userDivisionId && item.area_id === props.userAreaId;
+    if (isAdmin.value) return item.division_id == props.userDivisionId;
+    if (isEncoder.value) return item.division_id == props.userDivisionId && item.area_id == props.userAreaId;
     
     return false;
 };
@@ -165,8 +159,8 @@ const canDeleteItem = (item) => {
     if (props.isSecretary) return false;
     if (!userPermissions.value.includes('delete_supplies')) return false;
 
-    if (isAdmin.value) return item.division_id === props.userDivisionId;
-    if (isEncoder.value) return item.division_id === props.userDivisionId && item.area_id === props.userAreaId;
+    if (isAdmin.value) return item.division_id == props.userDivisionId;
+    if (isEncoder.value) return item.division_id == props.userDivisionId && item.area_id == props.userAreaId;
     
     return false;
 };

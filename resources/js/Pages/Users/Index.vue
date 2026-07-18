@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { debounce } from 'lodash';
 import axios from 'axios';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
@@ -8,6 +8,7 @@ import Modal from '@/Components/Modal.vue';
 import { PlusCircle, Search, Edit, Trash2, VenetianMask, Eye, EyeOff } from 'lucide-vue-next';
 import Toggle from '@vueform/toggle';
 import '@vueform/toggle/themes/default.css';
+import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
 
 const props = defineProps({
     users: Object,
@@ -113,6 +114,44 @@ const deleteUser = (user) => {
     }
 };
 
+const selectedItems = ref([]);
+
+watch(() => props.users.data, () => {
+    selectedItems.value = [];
+}, { deep: true });
+
+const canDeleteUser = (user) => {
+    return page.props.auth.user?.permissions?.includes('delete_users') && 
+        (page.props.auth.user?.roles?.some(r => ['Superadmin', 'Developer'].includes(r)) || 
+        user.division_id === page.props.auth.user?.division_id);
+};
+
+const selectAll = computed({
+    get: () => {
+        const deletableItems = props.users.data.filter(canDeleteUser);
+        return deletableItems.length > 0 && deletableItems.every(item => selectedItems.value.includes(item.id));
+    },
+    set: (val) => {
+        if (val) {
+            selectedItems.value = props.users.data.filter(canDeleteUser).map(item => item.id);
+        } else {
+            selectedItems.value = [];
+        }
+    }
+});
+
+const handleBulkDelete = () => {
+    if (selectedItems.value.length === 0) return;
+    if (confirm(`Are you sure you want to delete ${selectedItems.value.length} users?`)) {
+        router.delete(route('users.bulk_delete'), {
+            data: { ids: selectedItems.value },
+            onSuccess: () => {
+                selectedItems.value = [];
+            }
+        });
+    }
+};
+
 </script>
 
 <template>
@@ -164,6 +203,13 @@ const deleteUser = (user) => {
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200/60 text-sm text-slate-500 font-bold bg-slate-50/50">
+                                <th class="px-6 py-4 w-12 text-center">
+                                    <input 
+                                        type="checkbox" 
+                                        v-model="selectAll"
+                                        class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                </th>
                                 <th class="px-6 py-4">First Name</th>
                                 <th class="px-6 py-4">Last Name</th>
                                 <th class="px-6 py-4">Username</th>
@@ -176,6 +222,15 @@ const deleteUser = (user) => {
                         </thead>
                         <tbody class="divide-y divide-slate-200/60">
                             <tr v-for="user in users.data" :key="user.id" class="hover:bg-blue-50/30 transition-colors">
+                                <td class="px-6 py-4 text-center">
+                                    <input 
+                                        v-if="canDeleteUser(user)"
+                                        type="checkbox" 
+                                        :value="user.id" 
+                                        v-model="selectedItems"
+                                        class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                </td>
                                 <td class="px-6 py-4 text-sm font-semibold text-blue-600 cursor-pointer hover:underline" @click="openView(user)">{{ user.first_name }}</td>
                                 <td class="px-6 py-4 text-sm font-semibold text-blue-600 cursor-pointer hover:underline" @click="openView(user)">{{ user.last_name }}</td>
                                 <td class="px-6 py-4 text-sm text-slate-600">{{ user.username }}</td>
@@ -221,7 +276,7 @@ const deleteUser = (user) => {
                                 </td>
                             </tr>
                             <tr v-if="users.data.length === 0">
-                                <td colspan="8" class="px-6 py-12 text-center text-slate-500">
+                                <td colspan="9" class="px-6 py-12 text-center text-slate-500">
                                     No users found.
                                 </td>
                             </tr>
@@ -261,6 +316,8 @@ const deleteUser = (user) => {
                 </div>
             </div>
         </div>
+
+        <FloatingBulkDeleteButton :count="selectedItems.length" @delete="handleBulkDelete" />
 
         <!-- Add/Edit Modal -->
         <Modal :show="isAdding" @close="closeForm">
@@ -310,7 +367,7 @@ const deleteUser = (user) => {
                                 required
                             >
                                 <option value="">Select Area</option>
-                                <option v-for="a in areas.filter(a => a.division_id === form.division_id)" :key="a.id" :value="a.id">{{ a.area_name }}</option>
+                                <option v-for="a in areas.filter(a => a.division_id == form.division_id)" :key="a.id" :value="a.id">{{ a.area_name }}</option>
                             </select>
                         </div>
 

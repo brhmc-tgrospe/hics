@@ -4,11 +4,31 @@ namespace App\Domain\Supply\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class SupplyReport extends Model
 {
     /** @use HasFactory<\Database\Factories\Domain\Supply\Models\SupplyReportFactory> */
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
+    
+    public function tapActivity($activity, string $eventName)
+    {
+        if ($this->user) {
+            $activity->properties = $activity->properties->merge([
+                'division_id' => $this->user->division_id,
+                'area_id' => $this->user->area_id,
+            ]);
+        }
+    }
 
     protected $fillable = [
         'category',

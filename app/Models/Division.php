@@ -4,10 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Division extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
+    
+    public function tapActivity($activity, string $eventName)
+    {
+        $activity->properties = $activity->properties->merge([
+            'division_id' => $this->id,
+            'area_id' => null,
+        ]);
+    }
 
     protected $fillable = ['div_code', 'div_name'];
 
