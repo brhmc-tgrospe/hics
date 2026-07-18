@@ -30,6 +30,8 @@ class CategoryController extends Controller
             'code' => 'required|string|unique:categories,code',
             'name' => 'required|string',
             'type' => 'required|string|in:equipment,supply',
+        ], [
+            'code.unique' => 'An existing category is still in the database. Contact the system developer.'
         ]);
 
         Category::create($validated);

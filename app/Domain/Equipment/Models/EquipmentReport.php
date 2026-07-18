@@ -5,10 +5,11 @@ namespace App\Domain\Equipment\Models;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EquipmentReport extends Model
 {
-    use LogsActivity;
+    use LogsActivity, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {

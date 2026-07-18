@@ -6,6 +6,7 @@ use App\Models\Area;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 
 class AreaController extends Controller
 {

@@ -32,6 +32,9 @@ class DivisionController extends Controller
         $validated = $request->validate([
             'div_code' => 'required|string|max:255|unique:divisions',
             'div_name' => 'required|string|max:255|unique:divisions',
+        ], [
+            'div_code.unique' => 'An existing division is still in the database. Contact the system developer.',
+            'div_name.unique' => 'An existing division is still in the database. Contact the system developer.'
         ]);
 
         DB::transaction(function () use ($validated, $action) {
@@ -46,6 +49,9 @@ class DivisionController extends Controller
         $validated = $request->validate([
             'div_code' => 'required|string|max:255|unique:divisions,div_code,' . $division->id,
             'div_name' => 'required|string|max:255|unique:divisions,div_name,' . $division->id,
+        ], [
+            'div_code.unique' => 'An existing division is still in the database. Contact the system developer.',
+            'div_name.unique' => 'An existing division is still in the database. Contact the system developer.'
         ]);
 
         DB::transaction(function () use ($division, $validated, $action) {

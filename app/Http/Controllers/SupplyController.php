@@ -174,7 +174,7 @@ class SupplyController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function import(\App\Http\Requests\SupplyImportRequest $request, CreateSupplyAction $action)
+    public function import(\App\Http\Requests\SupplyImportRequest $request, \App\Domain\Supplies\Actions\ImportSupplyAction $action)
     {
         \Illuminate\Support\Facades\Gate::authorize('create', Supply::class);
 

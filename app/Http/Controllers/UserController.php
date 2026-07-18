@@ -60,6 +60,9 @@ class UserController extends Controller
             'area_id' => 'required|exists:areas,id',
             'role' => 'required|exists:roles,name',
             'password' => 'required|string|min:6|confirmed',
+        ], [
+            'username.unique' => 'An existing user is still in the database. Contact the system developer.',
+            'email.unique' => 'An existing user is still in the database. Contact the system developer.'
         ]);
 
         DB::transaction(function () use ($validated, $action) {
@@ -81,6 +84,9 @@ class UserController extends Controller
             'area_id' => 'required|exists:areas,id',
             'role' => 'required|exists:roles,name',
             'password' => 'nullable|string|min:6|confirmed',
+        ], [
+            'username.unique' => 'An existing user is still in the database. Contact the system developer.',
+            'email.unique' => 'An existing user is still in the database. Contact the system developer.'
         ]);
 
         DB::transaction(function () use ($user, $validated, $action) {

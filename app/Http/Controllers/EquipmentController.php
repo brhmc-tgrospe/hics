@@ -160,7 +160,7 @@ class EquipmentController extends Controller
         ];
 
         $hints = [
-            'Hint: Category Code (e.g. fandf, itequip) (Required)',
+            'Hint: Category Code (e.g. fandf, ictequip) (Required)',
             'Name of the item (Required)',
             'Detailed description (Required)',
             'YYYY-MM-DD',
@@ -187,7 +187,7 @@ class EquipmentController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function import(\App\Http\Requests\EquipmentImportRequest $request, CreateEquipmentAction $action)
+    public function import(\App\Http\Requests\EquipmentImportRequest $request, \App\Domain\Equipment\Actions\ImportEquipmentAction $action)
     {
         \Illuminate\Support\Facades\Gate::authorize('create', Equipment::class);
 

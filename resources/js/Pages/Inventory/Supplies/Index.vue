@@ -257,6 +257,7 @@
         />
       </div>
     </div>
+  </InventoryLayout>
 </template>
 
 <script setup>

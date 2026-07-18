@@ -88,6 +88,13 @@ Route::middleware('auth')->group(function () {
     Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
     Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::delete('categories/bulk-delete', [CategoryController::class, 'bulkDestroy'])->name('categories.bulk_delete');
+
+    // Recycle Bin Routes
+    Route::middleware('role:Developer')->group(function () {
+        Route::get('recycle-bin', [\App\Http\Controllers\RecycleBinController::class, 'index'])->name('recycle-bin.index');
+        Route::post('recycle-bin/restore', [\App\Http\Controllers\RecycleBinController::class, 'restore'])->name('recycle-bin.restore');
+        Route::delete('recycle-bin/force-delete', [\App\Http\Controllers\RecycleBinController::class, 'forceDelete'])->name('recycle-bin.force-delete');
+    });
 });
 
 require __DIR__.'/auth.php';
