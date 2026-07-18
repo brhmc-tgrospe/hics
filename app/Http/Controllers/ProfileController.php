@@ -18,12 +18,15 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
-        $user = $request->user()->load(['division', 'roles']);
+        $user = $request->user()->load(['division', 'area', 'roles']);
+
+        $showArea = !$user->hasAnyRole(['Admin', 'Superadmin', 'Developer']);
 
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
             'division_name' => $user->division ? "({$user->division->div_code}) - {$user->division->div_name}" : 'No Division',
+            'area_name' => ($showArea && $user->area) ? "({$user->area->id}) - {$user->area->area_name}" : null,
             'role_name' => $user->roles->first() ? $user->roles->first()->name : 'No Role',
         ]);
     }

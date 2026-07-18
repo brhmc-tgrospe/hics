@@ -15,6 +15,9 @@ defineProps({
     division_name: {
         type: String,
     },
+    area_name: {
+        type: String,
+    },
     role_name: {
         type: String,
     },
@@ -42,6 +45,7 @@ defineProps({
                         :must-verify-email="mustVerifyEmail"
                         :status="status"
                         :division-name="division_name"
+                        :area-name="area_name"
                         :role-name="role_name"
                         class="max-w-xl"
                     />

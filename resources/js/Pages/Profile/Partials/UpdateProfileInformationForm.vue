@@ -15,6 +15,9 @@ defineProps({
     divisionName: {
         type: String,
     },
+    areaName: {
+        type: String,
+    },
     roleName: {
         type: String,
     },
@@ -116,6 +119,18 @@ const form = useForm({
                     type="text"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm opacity-50 bg-gray-100"
                     :value="divisionName"
+                    disabled
+                />
+            </div>
+
+            <div v-if="areaName">
+                <InputLabel for="area" value="Area" />
+
+                <input
+                    id="area"
+                    type="text"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm opacity-50 bg-gray-100"
+                    :value="areaName"
                     disabled
                 />
             </div>
