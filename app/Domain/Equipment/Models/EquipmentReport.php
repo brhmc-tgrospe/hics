@@ -13,10 +13,16 @@ class EquipmentReport extends Model
         'file_path',
         'report_type',
         'scope_id',
+        'user_id',
     ];
 
     protected $casts = [
         'date_of_accountability' => 'date',
         'year_of_report' => 'integer',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
 }

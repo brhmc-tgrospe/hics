@@ -8,15 +8,21 @@ use App\Http\Controllers\SupplyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\ReportController;
 
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Reports Routes
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index')->middleware('permission:generate_reports');
+    Route::post('reports/bulk-delete', [ReportController::class, 'destroyMultiple'])->name('reports.bulk_delete')->middleware('permission:generate_reports');
 
     // Equipment Routes
     Route::get('equipment/template', [EquipmentController::class, 'template'])->name('equipment.template')->middleware('permission:create_equipment');
     Route::post('equipment/import', [EquipmentController::class, 'import'])->name('equipment.import')->middleware('permission:create_equipment');
     Route::post('equipment/report', [EquipmentController::class, 'generateReport'])->name('equipment.report.generate')->middleware('permission:generate_reports');
     Route::get('equipment/report/{id}', [EquipmentController::class, 'showReport'])->name('equipment.report.show')->middleware('permission:generate_reports');
+    Route::delete('equipment/bulk-delete', [EquipmentController::class, 'bulkDestroy'])->name('equipment.bulk_delete')->middleware('permission:delete_equipment');
     
     Route::resource('equipment', EquipmentController::class)->except(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::get('equipment', [EquipmentController::class, 'index'])->name('equipment.index')->middleware('permission:view_equipment');
@@ -32,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::post('supplies/import', [SupplyController::class, 'import'])->name('supplies.import')->middleware('permission:create_supplies');
     Route::post('supplies/report', [SupplyController::class, 'generateReport'])->name('supplies.report.generate')->middleware('permission:generate_reports');
     Route::get('supplies/report/{id}', [SupplyController::class, 'showReport'])->name('supplies.report.show')->middleware('permission:generate_reports');
+    Route::delete('supplies/bulk-delete', [SupplyController::class, 'bulkDestroy'])->name('supplies.bulk_delete')->middleware('permission:delete_supplies');
     
     Route::resource('supplies', SupplyController::class)->except(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::get('supplies', [SupplyController::class, 'index'])->name('supplies.index')->middleware('permission:view_supplies');

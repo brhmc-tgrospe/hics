@@ -99,6 +99,25 @@ class EquipmentController extends Controller
         return redirect()->route('equipment.index')->with('success', 'Equipment deleted.');
     }
 
+    public function bulkDestroy(Request $request, DeleteEquipmentAction $action)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:equipment,id'
+        ]);
+
+        $count = 0;
+        foreach ($validated['ids'] as $id) {
+            $equipment = Equipment::find($id);
+            if ($equipment && \Illuminate\Support\Facades\Gate::allows('delete', $equipment)) {
+                $action->execute($equipment);
+                $count++;
+            }
+        }
+
+        return redirect()->route('equipment.index')->with('success', "{$count} equipment records deleted.");
+    }
+
     public function template()
     {
         $headers = [
@@ -192,6 +211,7 @@ class EquipmentController extends Controller
             'file_path' => "reports/{$filename}",
             'report_type' => $validated['report_type'],
             'scope_id' => $validated['scope_id'] ?? null,
+            'user_id' => \Illuminate\Support\Facades\Auth::id(),
         ]);
 
         return response()->json(['id' => $report->id]);

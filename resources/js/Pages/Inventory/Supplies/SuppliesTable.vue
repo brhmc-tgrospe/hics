@@ -4,6 +4,13 @@
       <table class="w-full text-left text-sm whitespace-nowrap">
         <thead>
           <tr class="bg-slate-900/5 border-b border-white/60">
+            <th class="px-6 py-4 w-12 text-center">
+                <input 
+                    type="checkbox" 
+                    v-model="selectAll"
+                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+            </th>
             <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Article</th>
             <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Category</th>
             <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Stock No.</th>
@@ -15,11 +22,20 @@
         </thead>
         <tbody class="divide-y divide-white/40">
           <tr v-if="supplies.data.length === 0">
-            <td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500 font-medium">
+            <td colspan="8" class="px-6 py-8 text-center text-sm text-slate-500 font-medium">
               No supplies found matching criteria.
             </td>
           </tr>
           <tr v-for="item in supplies.data" :key="item.id" class="hover:bg-white/40 transition-colors">
+            <td class="px-6 py-4 text-center">
+                <input 
+                    v-if="canDeleteItem(item)"
+                    type="checkbox" 
+                    :value="item.id" 
+                    v-model="selectedItems"
+                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+            </td>
             <td class="px-6 py-4 text-sm font-bold text-slate-800">{{ item.article }}</td>
             <td class="px-6 py-4 text-xs text-slate-600 font-medium">{{ getCategoryName(item.category) }}</td>
             <td class="px-6 py-4 text-xs font-mono font-bold text-blue-700">{{ item.stock_number }}</td>
@@ -61,6 +77,15 @@
           <option v-for="size in [10, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
         </select>
       </div>
+
+      <button 
+        v-if="selectedItems.length > 0" 
+        @click="handleBulkDelete"
+        class="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 ml-4"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        Delete Selected ({{ selectedItems.length }})
+      </button>
       
       <div class="flex items-center justify-end flex-1">
         <div class="flex items-center gap-1">
@@ -85,8 +110,8 @@
 
 <script setup>
 import { Edit2Icon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, EyeIcon } from 'lucide-vue-next';
-import { Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Link, usePage, router } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 import { formatCurrency } from '@/utils/formatters.js';
 
 const props = defineProps({
@@ -144,5 +169,38 @@ const canDeleteItem = (item) => {
     if (isEncoder.value) return item.division_id === props.userDivisionId && item.area_id === props.userAreaId;
     
     return false;
+};
+
+const selectedItems = ref([]);
+
+// Clear selection when data changes (e.g., page change)
+watch(() => props.supplies.data, () => {
+    selectedItems.value = [];
+}, { deep: true });
+
+const selectAll = computed({
+    get: () => {
+        const deletableItems = props.supplies.data.filter(canDeleteItem);
+        return deletableItems.length > 0 && deletableItems.every(item => selectedItems.value.includes(item.id));
+    },
+    set: (val) => {
+        if (val) {
+            selectedItems.value = props.supplies.data.filter(canDeleteItem).map(item => item.id);
+        } else {
+            selectedItems.value = [];
+        }
+    }
+});
+
+const handleBulkDelete = () => {
+    if (selectedItems.value.length === 0) return;
+    if (confirm(`Are you sure you want to delete ${selectedItems.value.length} supplies?`)) {
+        router.delete(route('supplies.bulk_delete'), {
+            data: { ids: selectedItems.value },
+            onSuccess: () => {
+                selectedItems.value = [];
+            }
+        });
+    }
 };
 </script>

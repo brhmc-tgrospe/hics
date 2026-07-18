@@ -20,5 +20,11 @@ class SupplyReport extends Model
         'report_period',
         'custom_month',
         'scope_id',
+        'user_id',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
 }

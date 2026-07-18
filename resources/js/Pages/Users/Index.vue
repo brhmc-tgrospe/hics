@@ -230,17 +230,14 @@ const deleteUser = (user) => {
                 </div>
 
                 <!-- Pagination -->
-                <div class="px-6 py-4 border-t border-slate-200/60 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="px-6 py-4 border-t border-white/60 bg-slate-900/5 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium text-slate-500">Rows per page:</span>
-                        <select 
+                        <span class="text-xs font-medium text-slate-500">Rows per page:</span>
+                        <select
                             v-model="per_page"
-                            class="bg-white border border-slate-200 rounded-lg pl-2 pr-8 py-1 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            class="bg-white/50 backdrop-blur border border-white/80 rounded-lg pl-2 pr-8 py-1 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         >
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
+                            <option v-for="size in [10, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
                         </select>
                     </div>
 
@@ -250,12 +247,12 @@ const deleteUser = (user) => {
                                 <Link
                                     v-if="link.url"
                                     :href="link.url"
-                                    :class="['px-3 py-1.5 rounded-lg text-sm font-medium transition-colors', link.active ? 'bg-blue-600 text-white' : 'hover:bg-slate-200 text-slate-600']"
+                                    :class="['px-3 py-1 rounded-lg text-xs font-medium transition-colors', link.active ? 'bg-blue-600 text-white' : 'hover:bg-white/50 text-slate-600']"
                                     v-html="link.label"
                                 />
                                 <span
                                     v-else
-                                    class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400"
+                                    class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400"
                                     v-html="link.label"
                                 ></span>
                             </template>

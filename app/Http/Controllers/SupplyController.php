@@ -91,6 +91,25 @@ class SupplyController extends Controller
         return redirect()->route('supplies.index')->with('success', 'Supply deleted.');
     }
 
+    public function bulkDestroy(Request $request, DeleteSupplyAction $action)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:supplies,id'
+        ]);
+
+        $count = 0;
+        foreach ($validated['ids'] as $id) {
+            $supply = Supply::find($id);
+            if ($supply && \Illuminate\Support\Facades\Gate::allows('delete', $supply)) {
+                $action->execute($supply);
+                $count++;
+            }
+        }
+
+        return redirect()->route('supplies.index')->with('success', "{$count} supplies deleted.");
+    }
+
     public function template()
     {
         $headers = [
@@ -189,6 +208,7 @@ class SupplyController extends Controller
             'report_period' => $validated['report_period'] ?? null,
             'custom_month' => $validated['custom_month'] ?? null,
             'scope_id' => $validated['scope_id'] ?? null,
+            'user_id' => \Illuminate\Support\Facades\Auth::id(),
         ]);
 
         return response()->json(['id' => $report->id]);

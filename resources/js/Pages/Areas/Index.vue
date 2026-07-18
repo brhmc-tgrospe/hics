@@ -128,18 +128,6 @@ const canManageArea = (area) => {
                         <span class="text-sm text-slate-500 font-medium">My Division Only</span>
                         <Toggle v-model="my_division_only" class="toggle-blue" />
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm text-slate-500 font-medium">Show:</span>
-                        <select 
-                            v-model="per_page"
-                            class="bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm py-2 pl-3 pr-8"
-                        >
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
                 </div>
             </div>
 
@@ -191,19 +179,34 @@ const canManageArea = (area) => {
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="areas.links && areas.links.length > 3" class="px-6 py-4 border-t border-slate-200/60 bg-slate-50/50 flex flex-wrap justify-center gap-1">
-                    <Link
-                        v-for="(link, i) in areas.links"
-                        :key="i"
-                        :href="link.url"
-                        v-html="link.label"
-                        class="px-3 py-1.5 text-sm rounded-lg border transition-colors"
-                        :class="[
-                            link.active ? 'bg-blue-600 text-white border-blue-600 font-bold' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50',
-                            !link.url && 'opacity-50 cursor-not-allowed'
-                        ]"
-                        :disabled="!link.url"
-                    />
+                <div class="px-6 py-4 border-t border-white/60 bg-slate-900/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-medium text-slate-500">Rows per page:</span>
+                        <select
+                            v-model="per_page"
+                            class="bg-white/50 backdrop-blur border border-white/80 rounded-lg pl-2 pr-8 py-1 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        >
+                            <option v-for="size in [10, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center justify-end flex-1">
+                        <div class="flex items-center gap-1">
+                            <template v-for="(link, index) in areas.links" :key="index">
+                                <Link
+                                    v-if="link.url"
+                                    :href="link.url"
+                                    :class="['px-3 py-1 rounded-lg text-xs font-medium transition-colors', link.active ? 'bg-blue-600 text-white' : 'hover:bg-white/50 text-slate-600']"
+                                    v-html="link.label"
+                                />
+                                <span
+                                    v-else
+                                    class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400"
+                                    v-html="link.label"
+                                ></span>
+                            </template>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
