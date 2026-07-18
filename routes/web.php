@@ -9,6 +9,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\CategoryController;
 
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -82,6 +83,11 @@ Route::middleware('auth')->group(function () {
     // Activity Logs Routes
     Route::get('activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('permission:view_activity_logs');
     Route::delete('activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'destroy'])->name('activity-logs.destroy')->middleware('permission:delete_activity_logs');
+
+    // Category Routes
+    Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::delete('categories/bulk-delete', [CategoryController::class, 'bulkDestroy'])->name('categories.bulk_delete');
 });
 
 require __DIR__.'/auth.php';

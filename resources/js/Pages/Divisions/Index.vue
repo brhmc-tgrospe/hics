@@ -6,6 +6,7 @@ import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import { PlusCircle, Search, Edit, Trash2 } from 'lucide-vue-next';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
+import ConfirmModal from '@/Components/ConfirmModal.vue';
 
 const props = defineProps({
     divisions: Object,
@@ -67,9 +68,22 @@ const submit = () => {
     }
 };
 
+const isConfirmDeleteOpen = ref(false);
+const divisionToDelete = ref(null);
+
 const deleteDivision = (division) => {
-    if (confirm('Are you sure you want to delete this division?')) {
-        router.delete(route('divisions.destroy', division.id));
+    divisionToDelete.value = division;
+    isConfirmDeleteOpen.value = true;
+};
+
+const executeDelete = () => {
+    if (divisionToDelete.value) {
+        router.delete(route('divisions.destroy', divisionToDelete.value.id), {
+            onSuccess: () => {
+                isConfirmDeleteOpen.value = false;
+                divisionToDelete.value = null;
+            }
+        });
     }
 };
 
@@ -97,16 +111,21 @@ const selectAll = computed({
     }
 });
 
+const isConfirmBulkDeleteOpen = ref(false);
+
 const handleBulkDelete = () => {
     if (selectedItems.value.length === 0) return;
-    if (confirm(`Are you sure you want to delete ${selectedItems.value.length} divisions?`)) {
-        router.delete(route('divisions.bulk_delete'), {
-            data: { ids: selectedItems.value },
-            onSuccess: () => {
-                selectedItems.value = [];
-            }
-        });
-    }
+    isConfirmBulkDeleteOpen.value = true;
+};
+
+const executeBulkDelete = () => {
+    router.delete(route('divisions.bulk_delete'), {
+        data: { ids: selectedItems.value },
+        onSuccess: () => {
+            selectedItems.value = [];
+            isConfirmBulkDeleteOpen.value = false;
+        }
+    });
 };
 
 </script>
@@ -271,5 +290,24 @@ const handleBulkDelete = () => {
                 </form>
             </div>
         </Modal>
+
+        <!-- Delete Confirm Modals -->
+        <ConfirmModal 
+            :show="isConfirmDeleteOpen" 
+            title="Delete Division" 
+            description="Are you sure you want to delete this division?" 
+            confirmText="Delete"
+            @close="isConfirmDeleteOpen = false; divisionToDelete = null" 
+            @confirm="executeDelete" 
+        />
+
+        <ConfirmModal 
+            :show="isConfirmBulkDeleteOpen" 
+            title="Delete Selected Divisions" 
+            :description="`Are you sure you want to delete ${selectedItems.length} divisions?`" 
+            confirmText="Delete Selected"
+            @close="isConfirmBulkDeleteOpen = false" 
+            @confirm="executeBulkDelete" 
+        />
     </InventoryLayout>
 </template>

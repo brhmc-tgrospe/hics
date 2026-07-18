@@ -9,6 +9,7 @@ import { PlusCircle, Search, Edit, Trash2, VenetianMask, Eye, EyeOff } from 'luc
 import Toggle from '@vueform/toggle';
 import '@vueform/toggle/themes/default.css';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
+import ConfirmModal from '@/Components/ConfirmModal.vue';
 
 const props = defineProps({
     users: Object,
@@ -108,9 +109,22 @@ const submit = () => {
     }
 };
 
+const isConfirmDeleteOpen = ref(false);
+const userToDelete = ref(null);
+
 const deleteUser = (user) => {
-    if (confirm('Are you sure you want to delete this user?')) {
-        router.delete(route('users.destroy', user.id));
+    userToDelete.value = user;
+    isConfirmDeleteOpen.value = true;
+};
+
+const executeDelete = () => {
+    if (userToDelete.value) {
+        router.delete(route('users.destroy', userToDelete.value.id), {
+            onSuccess: () => {
+                isConfirmDeleteOpen.value = false;
+                userToDelete.value = null;
+            }
+        });
     }
 };
 
@@ -140,16 +154,21 @@ const selectAll = computed({
     }
 });
 
+const isConfirmBulkDeleteOpen = ref(false);
+
 const handleBulkDelete = () => {
     if (selectedItems.value.length === 0) return;
-    if (confirm(`Are you sure you want to delete ${selectedItems.value.length} users?`)) {
-        router.delete(route('users.bulk_delete'), {
-            data: { ids: selectedItems.value },
-            onSuccess: () => {
-                selectedItems.value = [];
-            }
-        });
-    }
+    isConfirmBulkDeleteOpen.value = true;
+};
+
+const executeBulkDelete = () => {
+    router.delete(route('users.bulk_delete'), {
+        data: { ids: selectedItems.value },
+        onSuccess: () => {
+            selectedItems.value = [];
+            isConfirmBulkDeleteOpen.value = false;
+        }
+    });
 };
 
 </script>
@@ -464,5 +483,24 @@ const handleBulkDelete = () => {
                 </div>
             </div>
         </Modal>
+
+        <!-- Delete Confirm Modals -->
+        <ConfirmModal 
+            :show="isConfirmDeleteOpen" 
+            title="Delete User" 
+            description="Are you sure you want to delete this user?" 
+            confirmText="Delete"
+            @close="isConfirmDeleteOpen = false; userToDelete = null" 
+            @confirm="executeDelete" 
+        />
+
+        <ConfirmModal 
+            :show="isConfirmBulkDeleteOpen" 
+            title="Delete Selected Users" 
+            :description="`Are you sure you want to delete ${selectedItems.length} users?`" 
+            confirmText="Delete Selected"
+            @close="isConfirmBulkDeleteOpen = false" 
+            @confirm="executeBulkDelete" 
+        />
     </InventoryLayout>
 </template>

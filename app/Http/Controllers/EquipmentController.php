@@ -35,23 +35,49 @@ class EquipmentController extends Controller
 
         $validated = $request->validate([
             'category' => 'nullable|string',
-            'article' => 'nullable|string',
-            'description' => 'nullable|string',
+            'article' => 'required|string',
+            'description' => 'required|string',
             'date_acquired' => 'nullable|string',
             'property_number' => 'nullable|string',
-            'serial_number' => 'nullable|string',
+            'serial_number' => 'required|string',
             'unit_of_measure' => 'nullable|string',
-            'unit_value' => 'nullable|numeric',
+            'unit_value' => 'required|numeric|gt:0',
             'total_value' => 'nullable|numeric',
-            'quantity_per_property_card' => 'nullable|integer',
-            'quantity_per_physical_count' => 'nullable|integer',
+            'quantity_per_property_card' => 'required|integer|gt:0',
+            'quantity_per_physical_count' => 'required|integer|gt:0',
             'shortage_overage_qty' => 'nullable|integer',
             'shortage_overage_value' => 'nullable|numeric',
             'remarks' => 'nullable|string',
             'end_user' => 'nullable|string',
             'status' => 'nullable|string',
-            'division_id' => 'required|integer|exists:divisions,id',
-            'area_id' => 'required|integer|exists:areas,id',
+            'division_id' => [
+                'required',
+                'integer',
+                'exists:divisions,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $user = $request->user();
+                    if ($user->hasRole('Superadmin') || $user->hasRole('Developer')) {
+                        return;
+                    }
+                    if ($value != $user->division_id) {
+                        $fail("You are only allowed to add data for your assigned division.");
+                    }
+                }
+            ],
+            'area_id' => [
+                'required',
+                'integer',
+                'exists:areas,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $user = $request->user();
+                    if ($user->hasRole('Superadmin') || $user->hasRole('Developer') || $user->hasRole('Admin')) {
+                        return;
+                    }
+                    if ($user->hasRole('Encoder') && $value != $user->area_id) {
+                        $fail("You are only allowed to add data for your assigned area.");
+                    }
+                }
+            ],
         ]);
 
         $dto = EquipmentDTO::fromArray($validated);
@@ -88,7 +114,7 @@ class EquipmentController extends Controller
         $dto = EquipmentDTO::fromArray($validated);
         $action->execute($equipment, $dto);
 
-        return redirect()->route('equipment.index')->with('success', 'Equipment updated.');
+        return redirect()->route('equipment.index')->with('success', "{$equipment->article} has been successfully updated.");
     }
 
     public function destroy(Equipment $equipment, DeleteEquipmentAction $action)
@@ -96,7 +122,7 @@ class EquipmentController extends Controller
         \Illuminate\Support\Facades\Gate::authorize('delete', $equipment);
 
         $action->execute($equipment);
-        return redirect()->route('equipment.index')->with('success', 'Equipment deleted.');
+        return redirect()->route('equipment.index')->with('success', "{$equipment->article} has been successfully deleted.");
     }
 
     public function bulkDestroy(Request $request, DeleteEquipmentAction $action)
@@ -115,7 +141,7 @@ class EquipmentController extends Controller
             }
         }
 
-        return redirect()->route('equipment.index')->with('success', "{$count} equipment records deleted.");
+        return redirect()->route('equipment.index')->with('success', "{$count} have been deleted.");
     }
 
     public function template()
@@ -127,56 +153,55 @@ class EquipmentController extends Controller
 
         $columns = [
             'category', 'article', 'description', 'date_acquired', 'property_number', 
-            'serial_number', 'unit_of_measure', 'unit_value', 'total_value', 
+            'serial_number', 'unit_of_measure', 'unit_value', 
             'quantity_per_property_card', 'quantity_per_physical_count', 
-            'shortage_overage_qty', 'shortage_overage_value', 'remarks', 'end_user', 'status',
+            'remarks', 'end_user', 'status',
             'division_id', 'area_id'
         ];
 
-        $callback = function () use ($columns) {
+        $hints = [
+            'Hint: Category Code (e.g. fandf, itequip) (Required)',
+            'Name of the item (Required)',
+            'Detailed description (Required)',
+            'YYYY-MM-DD',
+            'Property Number',
+            'Serial Number (Required)',
+            'e.g. unit, pc',
+            'Numeric value (Required)',
+            'Must be > 0 (Required)',
+            'Must be > 0 (Required)',
+            'Any remarks',
+            'End User Name',
+            'e.g. Serviceable, Unserviceable',
+            'Division ID Number (Required)',
+            'Area ID Number (Required)'
+        ];
+
+        $callback = function () use ($columns, $hints) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
+            fputcsv($file, $hints);
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
     }
 
-    public function import(Request $request, CreateEquipmentAction $action)
+    public function import(\App\Http\Requests\EquipmentImportRequest $request, CreateEquipmentAction $action)
     {
         \Illuminate\Support\Facades\Gate::authorize('create', Equipment::class);
 
-        $request->validate([
-            'file' => 'required|file|mimes:csv,txt'
-        ]);
-
-        $path = $request->file('file')->getRealPath();
-        $file = fopen($path, 'r');
+        $rows = $request->input('rows', []);
         
-        $header = fgetcsv($file);
-
-        if (!$header) {
-            return redirect()->back()->with('error', 'Invalid CSV file');
-        }
-
-        $imported = 0;
-        while (($row = fgetcsv($file)) !== false) {
-            if (count($header) === count($row)) {
-                $data = array_combine($header, $row);
-                
-                // Clean empty strings to null for nullable fields
-                foreach ($data as $key => $value) {
-                    if (trim($value) === '') {
-                        $data[$key] = null;
-                    }
-                }
-
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $action) {
+            foreach ($rows as $data) {
+                unset($data['_line']);
                 $dto = EquipmentDTO::fromArray($data);
                 $action->execute($dto);
-                $imported++;
             }
-        }
-        fclose($file);
+        });
+
+        $imported = count($rows);
 
         return redirect()->route('equipment.index')->with('success', "Successfully imported {$imported} equipment records.");
     }

@@ -34,20 +34,46 @@ class SupplyController extends Controller
         \Illuminate\Support\Facades\Gate::authorize('create', Supply::class);
 
         $validated = $request->validate([
-            'category' => 'nullable|string',
+            'category' => 'required|string',
             'article' => 'nullable|string',
-            'description' => 'nullable|string',
+            'description' => 'required|string',
             'stock_number' => 'nullable|string',
             'unit_of_measure' => 'nullable|string',
             'unit_value' => 'nullable|numeric',
-            'balance_per_card' => 'nullable|integer',
-            'on_hand_per_count' => 'nullable|integer',
+            'balance_per_card' => 'required|integer|gt:0',
+            'on_hand_per_count' => 'required|integer|gt:0',
             'shortage_overage_qty' => 'nullable|integer',
             'shortage_overage_value' => 'nullable|numeric',
             'status' => 'nullable|string',
-            'division_id' => 'required|integer|exists:divisions,id',
-            'area_id' => 'required|integer|exists:areas,id',
-            'expiry_date' => 'required_unless:category,ictsupply,officesup,hksupp|nullable|date',
+            'division_id' => [
+                'required',
+                'integer',
+                'exists:divisions,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $user = $request->user();
+                    if ($user->hasRole('Superadmin') || $user->hasRole('Developer')) {
+                        return;
+                    }
+                    if ($value != $user->division_id) {
+                        $fail("You are only allowed to add data for your assigned division.");
+                    }
+                }
+            ],
+            'area_id' => [
+                'required',
+                'integer',
+                'exists:areas,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $user = $request->user();
+                    if ($user->hasRole('Superadmin') || $user->hasRole('Developer') || $user->hasRole('Admin')) {
+                        return;
+                    }
+                    if ($user->hasRole('Encoder') && $value != $user->area_id) {
+                        $fail("You are only allowed to add data for your assigned area.");
+                    }
+                }
+            ],
+            'expiry_date' => 'required_if:category,mssup,enteral,drugs|nullable|date',
         ]);
 
         $dto = SupplyDTO::fromArray($validated);
@@ -80,7 +106,7 @@ class SupplyController extends Controller
         $dto = SupplyDTO::fromArray($validated);
         $action->execute($supply, $dto);
 
-        return redirect()->route('supplies.index')->with('success', 'Supply updated.');
+        return redirect()->route('supplies.index')->with('success', "{$supply->article} has been successfully updated.");
     }
 
     public function destroy(Supply $supply, DeleteSupplyAction $action)
@@ -88,7 +114,7 @@ class SupplyController extends Controller
         \Illuminate\Support\Facades\Gate::authorize('delete', $supply);
 
         $action->execute($supply);
-        return redirect()->route('supplies.index')->with('success', 'Supply deleted.');
+        return redirect()->route('supplies.index')->with('success', "{$supply->article} has been successfully deleted.");
     }
 
     public function bulkDestroy(Request $request, DeleteSupplyAction $action)
@@ -107,7 +133,7 @@ class SupplyController extends Controller
             }
         }
 
-        return redirect()->route('supplies.index')->with('success', "{$count} supplies deleted.");
+        return redirect()->route('supplies.index')->with('success', "{$count} have been deleted.");
     }
 
     public function template()
@@ -120,54 +146,49 @@ class SupplyController extends Controller
         $columns = [
             'category', 'article', 'description', 'stock_number', 'expiry_date', 'unit_of_measure', 
             'unit_value', 'balance_per_card', 'on_hand_per_count', 
-            'shortage_overage_qty', 'shortage_overage_value', 'total_amount', 'status',
-            'division_id', 'area_id'
+            'status', 'division_id', 'area_id'
         ];
 
-        $callback = function () use ($columns) {
+        $hints = [
+            'Hint: Category Code (e.g. officesup, drugs) (Required)',
+            'Name of the item (Required)',
+            'Detailed description (Required)',
+            'e.g. 12345',
+            'YYYY-MM-DD (Required for Medical and Surgical Supplies, Enteral Supplies & Drugs and Medicines)',
+            'e.g. box, pc',
+            'Numeric value',
+            'Must be > 0 (Required)',
+            'Must be > 0 (Required)',
+            'e.g. Available, Depleted',
+            'Division ID Number (Required)',
+            'Area ID Number (Required)'
+        ];
+
+        $callback = function () use ($columns, $hints) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
+            fputcsv($file, $hints);
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
     }
 
-    public function import(Request $request, CreateSupplyAction $action)
+    public function import(\App\Http\Requests\SupplyImportRequest $request, CreateSupplyAction $action)
     {
         \Illuminate\Support\Facades\Gate::authorize('create', Supply::class);
 
-        $request->validate([
-            'file' => 'required|file|mimes:csv,txt'
-        ]);
-
-        $path = $request->file('file')->getRealPath();
-        $file = fopen($path, 'r');
+        $rows = $request->input('rows', []);
         
-        $header = fgetcsv($file);
-
-        if (!$header) {
-            return redirect()->back()->with('error', 'Invalid CSV file');
-        }
-
-        $imported = 0;
-        while (($row = fgetcsv($file)) !== false) {
-            if (count($header) === count($row)) {
-                $data = array_combine($header, $row);
-                
-                // Clean empty strings to null for nullable fields
-                foreach ($data as $key => $value) {
-                    if (trim($value) === '') {
-                        $data[$key] = null;
-                    }
-                }
-
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $action) {
+            foreach ($rows as $data) {
+                unset($data['_line']);
                 $dto = SupplyDTO::fromArray($data);
                 $action->execute($dto);
-                $imported++;
             }
-        }
-        fclose($file);
+        });
+
+        $imported = count($rows);
 
         return redirect()->route('supplies.index')->with('success', "Successfully imported {$imported} supplies records.");
     }

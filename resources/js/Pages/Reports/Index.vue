@@ -7,6 +7,7 @@ import { FileText, Eye, Trash2 } from 'lucide-vue-next';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
+import ConfirmModal from '@/Components/ConfirmModal.vue';
 
 const props = defineProps({
     reports: {
@@ -100,26 +101,43 @@ const viewReport = (report) => {
     }
 };
 
+const isConfirmDeleteOpen = ref(false);
+const reportToDelete = ref(null);
+
 const deleteReport = (report) => {
-    if (confirm('Are you sure you want to delete this report?')) {
+    reportToDelete.value = report;
+    isConfirmDeleteOpen.value = true;
+};
+
+const executeDelete = () => {
+    if (reportToDelete.value) {
         router.post(route('reports.bulk_delete'), {
-            reports: [{ id: report.id, type: report.type }]
+            reports: [{ id: reportToDelete.value.id, type: reportToDelete.value.type }]
+        }, {
+            onSuccess: () => {
+                isConfirmDeleteOpen.value = false;
+                reportToDelete.value = null;
+            }
         });
     }
 };
 
+const isConfirmBulkDeleteOpen = ref(false);
+
 const deleteSelected = () => {
     if (selectedReports.value.length === 0) return;
-    
-    if (confirm(`Are you sure you want to delete ${selectedReports.value.length} selected report(s)?`)) {
-        router.post(route('reports.bulk_delete'), {
-            reports: selectedReports.value
-        }, {
-            onSuccess: () => {
-                selectedReports.value = [];
-            }
-        });
-    }
+    isConfirmBulkDeleteOpen.value = true;
+};
+
+const executeBulkDelete = () => {
+    router.post(route('reports.bulk_delete'), {
+        reports: selectedReports.value
+    }, {
+        onSuccess: () => {
+            selectedReports.value = [];
+            isConfirmBulkDeleteOpen.value = false;
+        }
+    });
 };
 
 const formatDateForPicker = (date) => {
@@ -313,5 +331,24 @@ const formatDateForPicker = (date) => {
         </div>
 
         <FloatingBulkDeleteButton :count="selectedReports.length" @delete="deleteSelected" />
+
+        <!-- Delete Confirm Modals -->
+        <ConfirmModal 
+            :show="isConfirmDeleteOpen" 
+            title="Delete Report" 
+            description="Are you sure you want to delete this report?" 
+            confirmText="Delete"
+            @close="isConfirmDeleteOpen = false; reportToDelete = null" 
+            @confirm="executeDelete" 
+        />
+
+        <ConfirmModal 
+            :show="isConfirmBulkDeleteOpen" 
+            title="Delete Selected Reports" 
+            :description="`Are you sure you want to delete ${selectedReports.length} selected report(s)?`" 
+            confirmText="Delete Selected"
+            @close="isConfirmBulkDeleteOpen = false" 
+            @confirm="executeBulkDelete" 
+        />
     </InventoryLayout>
 </template>

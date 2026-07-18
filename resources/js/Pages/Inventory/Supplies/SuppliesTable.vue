@@ -56,7 +56,7 @@
               <button v-if="canEditItem(item)" @click="$emit('edit', item)" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors ml-1" title="Edit">
                 <Edit2Icon class="w-4 h-4" />
               </button>
-              <button v-if="canDeleteItem(item)" @click="$emit('delete', item.id)" class="p-1.5 text-slate-400 hover:text-red-600 transition-colors ml-1" title="Delete">
+              <button v-if="canDeleteItem(item)" @click="handleDelete(item.id)" class="p-1.5 text-slate-400 hover:text-red-600 transition-colors ml-1" title="Delete">
                 <Trash2Icon class="w-4 h-4" />
               </button>
             </td>
@@ -98,6 +98,24 @@
     </div>
 
     <FloatingBulkDeleteButton :count="selectedItems.length" @delete="handleBulkDelete" />
+
+    <ConfirmModal 
+        :show="isConfirmDeleteOpen" 
+        title="Delete Supply" 
+        description="Are you sure you want to delete this supply record?" 
+        confirmText="Delete"
+        @close="isConfirmDeleteOpen = false; itemToDelete = null" 
+        @confirm="executeDelete" 
+    />
+
+    <ConfirmModal 
+        :show="isConfirmBulkDeleteOpen" 
+        title="Delete Selected Supplies" 
+        :description="`Are you sure you want to delete ${selectedItems.length} records?`" 
+        confirmText="Delete Selected"
+        @close="isConfirmBulkDeleteOpen = false" 
+        @confirm="executeBulkDelete" 
+    />
   </div>
 </template>
 
@@ -107,6 +125,7 @@ import { Link, usePage, router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { formatCurrency } from '@/utils/formatters.js';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
+import ConfirmModal from '@/Components/ConfirmModal.vue';
 
 const props = defineProps({
   supplies: Object,
@@ -130,7 +149,7 @@ const props = defineProps({
   filters: Object,
 });
 
-defineEmits(['edit', 'delete', 'update-per-page', 'view']);
+defineEmits(['edit', 'update-per-page', 'view']);
 
 const page = usePage();
 const userPermissions = computed(() => page.props.auth.user?.permissions || []);
@@ -186,15 +205,39 @@ const selectAll = computed({
     }
 });
 
-const handleBulkDelete = () => {
-    if (selectedItems.value.length === 0) return;
-    if (confirm(`Are you sure you want to delete ${selectedItems.value.length} supplies?`)) {
-        router.delete(route('supplies.bulk_delete'), {
-            data: { ids: selectedItems.value },
+const isConfirmDeleteOpen = ref(false);
+const itemToDelete = ref(null);
+
+const handleDelete = (id) => {
+    itemToDelete.value = id;
+    isConfirmDeleteOpen.value = true;
+};
+
+const executeDelete = () => {
+    if (itemToDelete.value) {
+        router.delete(route('supplies.destroy', itemToDelete.value), {
             onSuccess: () => {
-                selectedItems.value = [];
+                isConfirmDeleteOpen.value = false;
+                itemToDelete.value = null;
             }
         });
     }
+};
+
+const isConfirmBulkDeleteOpen = ref(false);
+
+const handleBulkDelete = () => {
+    if (selectedItems.value.length === 0) return;
+    isConfirmBulkDeleteOpen.value = true;
+};
+
+const executeBulkDelete = () => {
+    router.delete(route('supplies.bulk_delete'), {
+        data: { ids: selectedItems.value },
+        onSuccess: () => {
+            selectedItems.value = [];
+            isConfirmBulkDeleteOpen.value = false;
+        }
+    });
 };
 </script>

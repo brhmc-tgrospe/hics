@@ -1,5 +1,6 @@
 <script setup>
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+import GlobalToast from '@/Components/GlobalToast.vue';
 import { Link } from '@inertiajs/vue3';
 </script>
 
@@ -31,5 +32,7 @@ import { Link } from '@inertiajs/vue3';
         >
             <slot />
         </div>
+        
+        <GlobalToast />
     </div>
 </template>

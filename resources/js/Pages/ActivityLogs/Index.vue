@@ -4,6 +4,7 @@ import { ref, watch, computed } from 'vue';
 import { debounce } from 'lodash';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import Modal from '@/Components/Modal.vue';
+import ConfirmModal from '@/Components/ConfirmModal.vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 
@@ -54,25 +55,28 @@ const formatJustDate = (date) => {
     return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 };
 
-const deleteLogs = () => {
+const isConfirmDeleteOpen = ref(false);
+
+const openConfirmDelete = () => {
     if (!deleteStartDate.value || !deleteEndDate.value) {
-        alert("Please select both start and end dates.");
         return;
     }
+    isConfirmDeleteOpen.value = true;
+};
 
-    if (confirm('Are you sure you want to permanently delete these logs? This action cannot be undone.')) {
-        router.delete(route('activity-logs.destroy'), {
-            data: {
-                start_date: deleteStartDate.value instanceof Date ? deleteStartDate.value.toLocaleDateString('en-CA') : deleteStartDate.value,
-                end_date: deleteEndDate.value instanceof Date ? deleteEndDate.value.toLocaleDateString('en-CA') : deleteEndDate.value
-            },
-            onSuccess: () => {
-                isDeleting.value = false;
-                deleteStartDate.value = null;
-                deleteEndDate.value = null;
-            }
-        });
-    }
+const deleteLogs = () => {
+    router.delete(route('activity-logs.destroy'), {
+        data: {
+            start_date: deleteStartDate.value instanceof Date ? deleteStartDate.value.toLocaleDateString('en-CA') : deleteStartDate.value,
+            end_date: deleteEndDate.value instanceof Date ? deleteEndDate.value.toLocaleDateString('en-CA') : deleteEndDate.value
+        },
+        onSuccess: () => {
+            isDeleting.value = false;
+            isConfirmDeleteOpen.value = false;
+            deleteStartDate.value = null;
+            deleteEndDate.value = null;
+        }
+    });
 };
 
 const getEventColor = (event, description) => {
@@ -171,11 +175,20 @@ const getCauserName = (log) => {
                         </div>
                         <div class="pt-4 flex justify-end gap-3">
                             <button @click="isDeleting = false" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50">Cancel</button>
-                            <button @click="deleteLogs" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-md">Delete</button>
+                            <button @click="openConfirmDelete" :disabled="!deleteStartDate || !deleteEndDate" :class="(!deleteStartDate || !deleteEndDate) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-700 shadow-md'" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-xl transition-all">Delete</button>
                         </div>
                     </div>
                 </div>
             </Modal>
+
+            <ConfirmModal 
+                :show="isConfirmDeleteOpen" 
+                title="Delete Activity Logs" 
+                description="Are you sure you want to permanently delete these logs? This action cannot be undone." 
+                confirmText="Delete Logs"
+                @close="isConfirmDeleteOpen = false" 
+                @confirm="deleteLogs" 
+            />
 
             <div class="bg-white/50 backdrop-blur-xl rounded-3xl border border-white/80 shadow-2xl overflow-hidden flex flex-col">
                 <div class="p-4 border-b border-white/60 bg-slate-900/5 flex flex-col sm:flex-row items-center justify-between gap-4">

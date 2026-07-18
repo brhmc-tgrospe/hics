@@ -3,6 +3,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { formatCurrency } from '@/utils/formatters.js';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
+import ConfirmModal from '@/Components/ConfirmModal.vue';
 
 const props = defineProps({
     equipment: {
@@ -66,9 +67,22 @@ const canDeleteItem = (item) => {
     return false;
 };
 
+const isConfirmDeleteOpen = ref(false);
+const itemToDelete = ref(null);
+
 const handleDelete = (id) => {
-    if (confirm('Are you sure you want to delete this record?')) {
-        router.delete(route('equipment.destroy', id));
+    itemToDelete.value = id;
+    isConfirmDeleteOpen.value = true;
+};
+
+const executeDelete = () => {
+    if (itemToDelete.value) {
+        router.delete(route('equipment.destroy', itemToDelete.value), {
+            onSuccess: () => {
+                isConfirmDeleteOpen.value = false;
+                itemToDelete.value = null;
+            }
+        });
     }
 };
 
@@ -93,16 +107,21 @@ const selectAll = computed({
     }
 });
 
+const isConfirmBulkDeleteOpen = ref(false);
+
 const handleBulkDelete = () => {
     if (selectedItems.value.length === 0) return;
-    if (confirm(`Are you sure you want to delete ${selectedItems.value.length} records?`)) {
-        router.delete(route('equipment.bulk_delete'), {
-            data: { ids: selectedItems.value },
-            onSuccess: () => {
-                selectedItems.value = [];
-            }
-        });
-    }
+    isConfirmBulkDeleteOpen.value = true;
+};
+
+const executeBulkDelete = () => {
+    router.delete(route('equipment.bulk_delete'), {
+        data: { ids: selectedItems.value },
+        onSuccess: () => {
+            selectedItems.value = [];
+            isConfirmBulkDeleteOpen.value = false;
+        }
+    });
 };
 </script>
 
@@ -201,5 +220,23 @@ const handleBulkDelete = () => {
         </div>
 
         <FloatingBulkDeleteButton :count="selectedItems.length" @delete="handleBulkDelete" />
+
+        <ConfirmModal 
+            :show="isConfirmDeleteOpen" 
+            title="Delete Equipment" 
+            description="Are you sure you want to delete this equipment record?" 
+            confirmText="Delete"
+            @close="isConfirmDeleteOpen = false; itemToDelete = null" 
+            @confirm="executeDelete" 
+        />
+
+        <ConfirmModal 
+            :show="isConfirmBulkDeleteOpen" 
+            title="Delete Selected Equipment" 
+            :description="`Are you sure you want to delete ${selectedItems.length} records?`" 
+            confirmText="Delete Selected"
+            @close="isConfirmBulkDeleteOpen = false" 
+            @confirm="executeBulkDelete" 
+        />
     </div>
 </template>

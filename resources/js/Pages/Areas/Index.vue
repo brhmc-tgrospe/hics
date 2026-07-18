@@ -8,6 +8,7 @@ import { PlusCircle, Search, Edit, Trash2 } from 'lucide-vue-next';
 import Toggle from '@vueform/toggle';
 import '@vueform/toggle/themes/default.css';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
+import ConfirmModal from '@/Components/ConfirmModal.vue';
 
 const props = defineProps({
     areas: Object,
@@ -72,9 +73,22 @@ const submit = () => {
     }
 };
 
+const isConfirmDeleteOpen = ref(false);
+const areaToDelete = ref(null);
+
 const deleteArea = (area) => {
-    if (confirm('Are you sure you want to delete this area?')) {
-        router.delete(route('areas.destroy', area.id));
+    areaToDelete.value = area;
+    isConfirmDeleteOpen.value = true;
+};
+
+const executeDelete = () => {
+    if (areaToDelete.value) {
+        router.delete(route('areas.destroy', areaToDelete.value.id), {
+            onSuccess: () => {
+                isConfirmDeleteOpen.value = false;
+                areaToDelete.value = null;
+            }
+        });
     }
 };
 
@@ -107,16 +121,21 @@ const selectAll = computed({
     }
 });
 
+const isConfirmBulkDeleteOpen = ref(false);
+
 const handleBulkDelete = () => {
     if (selectedItems.value.length === 0) return;
-    if (confirm(`Are you sure you want to delete ${selectedItems.value.length} areas?`)) {
-        router.delete(route('areas.bulk_delete'), {
-            data: { ids: selectedItems.value },
-            onSuccess: () => {
-                selectedItems.value = [];
-            }
-        });
-    }
+    isConfirmBulkDeleteOpen.value = true;
+};
+
+const executeBulkDelete = () => {
+    router.delete(route('areas.bulk_delete'), {
+        data: { ids: selectedItems.value },
+        onSuccess: () => {
+            selectedItems.value = [];
+            isConfirmBulkDeleteOpen.value = false;
+        }
+    });
 };
 
 </script>
@@ -297,5 +316,24 @@ const handleBulkDelete = () => {
                 </form>
             </div>
         </Modal>
+
+        <!-- Delete Confirm Modals -->
+        <ConfirmModal 
+            :show="isConfirmDeleteOpen" 
+            title="Delete Area" 
+            description="Are you sure you want to delete this area?" 
+            confirmText="Delete"
+            @close="isConfirmDeleteOpen = false; areaToDelete = null" 
+            @confirm="executeDelete" 
+        />
+
+        <ConfirmModal 
+            :show="isConfirmBulkDeleteOpen" 
+            title="Delete Selected Areas" 
+            :description="`Are you sure you want to delete ${selectedItems.length} areas?`" 
+            confirmText="Delete Selected"
+            @close="isConfirmBulkDeleteOpen = false" 
+            @confirm="executeBulkDelete" 
+        />
     </InventoryLayout>
 </template>

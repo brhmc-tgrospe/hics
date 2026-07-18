@@ -172,24 +172,20 @@ const handleFileUpload = (e) => {
             showToast.value = true;
             setTimeout(() => { showToast.value = false; }, 3000);
         },
-        onError: () => {
+        onError: (errors) => {
             if (fileInput.value) fileInput.value.value = '';
-            alert('Failed to import CSV. Please ensure the format matches the template.');
+            errorMessageContent.value = Object.values(errors)[0] || 'Failed to import CSV. Please ensure the format matches the template.';
+            showErrorModal.value = true;
         }
     });
 };
 
-const toastMessage = ref('');
-const showToast = ref(false);
+const showErrorModal = ref(false);
+const errorMessageContent = ref('');
 
 const handleSaved = (data) => {
-    if (data && data.article && data.mode) {
-        toastMessage.value = `${data.article} has been successfully ${data.mode}`;
-        showToast.value = true;
-        setTimeout(() => {
-            showToast.value = false;
-        }, 3000);
-    }
+    // The GlobalToast handles this now via Inertia flash.
+    // Kept the function in case we need to trigger other client-side logic on save.
 };
 
 const currentYear = new Date().getFullYear();
@@ -270,6 +266,19 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                     :divisions="divisions"
                     @close="isViewing = false"
                 />
+            </Modal>
+
+            <Modal :show="showErrorModal" maxWidth="sm" @close="showErrorModal = false">
+                <div class="p-6">
+                    <div class="flex items-center gap-4 text-red-600 mb-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <h3 class="text-lg font-bold">Import Failed</h3>
+                    </div>
+                    <p class="text-slate-600 mb-6 font-medium">{{ errorMessageContent }}</p>
+                    <div class="flex justify-end">
+                        <button @click="showErrorModal = false" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold shadow-xl shadow-slate-200 hover:bg-slate-800 transition-colors">Close</button>
+                    </div>
+                </div>
             </Modal>
 
             <Modal :show="isReporting" maxWidth="md" @close="isReporting = false">
@@ -403,19 +412,4 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
             </div>
         </div>
     </InventoryLayout>
-
-    <!-- Toast Notification -->
-    <transition
-      enter-active-class="transform ease-out duration-300 transition"
-      enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
-      enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
-      leave-active-class="transition ease-in duration-100"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
-      <div v-if="showToast" class="fixed bottom-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg font-medium flex items-center gap-3">
-        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-        {{ toastMessage }}
-      </div>
-    </transition>
 </template>
