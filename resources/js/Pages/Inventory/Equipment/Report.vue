@@ -140,8 +140,8 @@ onMounted(() => {
                     <div class="w-11/12">
                         <div class="border-b border-black w-full mb-1"></div>
                         <div class="text-center">
-                            <p class="font-bold">BARBY ANN VILLAMOR-BENITEZ</p>
-                            <p>Administrative Officer V</p>
+                            <p class="font-bold">KARREN V. BOALOY</p>
+                            <p>Supervising Administrative Officer</p>
                             <p>Chairman, Inventory Committee</p>
                         </div>
                     </div>
