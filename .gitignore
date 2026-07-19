@@ -25,3 +25,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+auto_deploy.bat
+nssm-dump.txt
+test_deploy.bat
+composer.json
