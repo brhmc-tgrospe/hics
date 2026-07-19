@@ -33,14 +33,23 @@ class LoginRequest extends FormRequest
         ];
     }
 
-    /**
-     * Attempt to authenticate the request's credentials.
-     *
-     * @throws ValidationException
-     */
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
+
+        if (Auth::validate($this->only('username', 'password'))) {
+            $user = Auth::getProvider()->retrieveByCredentials($this->only('username', 'password'));
+
+            $hasActiveSession = \Illuminate\Support\Facades\DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->exists();
+
+            if ($hasActiveSession && ! $this->boolean('confirm_logout')) {
+                throw ValidationException::withMessages([
+                    'confirm_logout' => 'This account is already logged in on another device.',
+                ]);
+            }
+        }
 
         if (! Auth::attempt($this->only('username', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
