@@ -142,7 +142,7 @@ onMounted(() => {
                         <div class="text-center">
                             <p class="font-bold">KARREN V. BOALOY</p>
                             <p>Supervising Administrative Officer</p>
-                            <p>Chairman, Inventory Committee</p>
+                            <p>Cashier Office</p>
                         </div>
                     </div>
                 </div>
