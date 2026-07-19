@@ -1,5 +1,4 @@
 <script setup>
-import Checkbox from '@/Components/Checkbox.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -24,7 +23,6 @@ const page = usePage();
 const form = useForm({
     username: '',
     password: '',
-    remember: false,
     confirm_logout: false,
 });
 
@@ -132,15 +130,6 @@ const cancelLogout = () => {
                 </div>
 
                 <InputError class="mt-2" :message="form.errors.password" />
-            </div>
-
-            <div class="mt-4 block">
-                <label class="flex items-center">
-                    <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600"
-                        >Remember me</span
-                    >
-                </label>
             </div>
 
             <div class="mt-4 flex items-center justify-end">
