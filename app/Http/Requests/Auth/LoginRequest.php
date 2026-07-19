@@ -40,8 +40,11 @@ class LoginRequest extends FormRequest
         if (Auth::validate($this->only('username', 'password'))) {
             $user = Auth::getProvider()->retrieveByCredentials($this->only('username', 'password'));
 
+            $sessionLifetime = config('session.lifetime') * 60;
+
             $hasActiveSession = \Illuminate\Support\Facades\DB::table('sessions')
                 ->where('user_id', $user->id)
+                ->where('last_activity', '>=', now()->subSeconds($sessionLifetime)->getTimestamp())
                 ->exists();
 
             if ($hasActiveSession && ! $this->boolean('confirm_logout')) {
