@@ -17,8 +17,8 @@ class EquipmentController extends Controller
     {
         $equipment = app(GetEquipmentAction::class)->execute($request->all());
         $categories = \App\Domain\Shared\Models\Category::where('type', 'equipment')->get()->toArray();
-        $divisions = \App\Models\Division::select('id', 'div_name as name')->get()->toArray();
-        $areas = \App\Models\Area::select('id', 'area_name as name', 'division_id')->get()->toArray();
+        $divisions = \App\Models\Division::select(['id', 'div_name as name'])->get()->toArray();
+        $areas = \App\Models\Area::select(['id', 'area_name as name', 'division_id'])->get()->toArray();
 
         return Inertia::render('Inventory/Equipment/Index', [
             'equipment' => $equipment,
@@ -242,7 +242,7 @@ class EquipmentController extends Controller
         return response()->json(['id' => $report->id]);
     }
 
-    public function showReport($id)
+    public function showReport(int $id)
     {
         $report = \App\Domain\Equipment\Models\EquipmentReport::findOrFail($id);
         
@@ -255,7 +255,7 @@ class EquipmentController extends Controller
 
         $scopeName = '';
         if ($report->report_type === 'Division') {
-            $division = \App\Models\Division::find($report->scope_id);
+            $division = \App\Models\Division::query()->find($report->scope_id);
             if ($division) {
                 $scopeName = "Division: {$division->div_name}";
             }
