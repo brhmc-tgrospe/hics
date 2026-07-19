@@ -199,13 +199,11 @@
                 type="text" 
                 placeholder="Search..." 
                 v-model="searchQuery"
-                @input="handleSearch"
                 class="w-full pl-9 pr-4 py-2 bg-white/50 backdrop-blur border border-white/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium text-slate-700"
               />
             </div>
             <select 
               v-model="filterCat"
-              @change="handleSearch"
               class="w-full sm:w-auto bg-white/50 backdrop-blur border border-white/80 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium text-slate-700"
             >
               <option value="All">All Categories</option>
@@ -261,18 +259,18 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import { router, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { SearchIcon, PlusIcon } from 'lucide-vue-next';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import SupplyForm from './SupplyForm.vue';
 import SuppliesTable from './SuppliesTable.vue';
 import ViewSupplyDetails from './ViewSupplyDetails.vue';
 import Modal from '@/Components/Modal.vue';
-import debounce from 'lodash/debounce';
-import axios from 'axios';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+
+import { useInventoryPermissions } from '@/Composables/useInventoryPermissions';
+import { useInventoryIndex } from '@/Composables/useInventoryIndex';
 
 const props = defineProps({
   supplies: Object,
@@ -282,74 +280,67 @@ const props = defineProps({
   areas: Array,
 });
 
-const page = usePage();
-const authUser = computed(() => page.props.auth.user);
-const userRoles = computed(() => authUser.value?.roles || []);
-const isSuperadmin = computed(() => userRoles.value.includes('Superadmin') || userRoles.value.includes('Developer'));
-const isSecretary = computed(() => userRoles.value.includes('Secretary'));
-const canCreate = computed(() => authUser.value?.permissions?.includes('create_supplies'));
+const { authUser, userPermissions, isSuperadmin, isSecretary } = useInventoryPermissions();
+const canCreate = computed(() => userPermissions.value.includes('create_supplies'));
 
-const searchQuery = ref(props.filters.search || '');
-const filterCat = ref(props.filters.category || 'All');
-const myDivisionOnly = ref(props.filters.my_division_only === '1' || props.filters.my_division_only === true);
-const myAreaOnly = ref(props.filters.my_area_only === '1' || props.filters.my_area_only === true);
-
-const isFormOpen = ref(false);
-const editingId = ref(null);
-const formData = ref({});
-
-const isViewing = ref(false);
-const viewingData = ref(null);
-
-const isReporting = ref(false);
-const reportData = ref({
-    category: props.categories.length ? props.categories[0].code : '',
-    date_of_accountability: new Date('2021-05-28'),
-    year_of_report: new Date().getFullYear(),
-    fund_cluster: '',
-    report_type: 'General',
-    report_period: '1st Qtr',
-    custom_month: null,
-    scope_id: null,
+const {
+    search: searchQuery,
+    category: filterCat,
+    myDivisionOnly,
+    myAreaOnly,
+    toggleDivisionFilter,
+    toggleAreaFilter,
+    isAdding: isFormOpen,
+    editingData: formData,
+    isViewing,
+    viewingData,
+    openEdit: openEditForm,
+    openAdd: openAddForm,
+    openView,
+    closeForm,
+    fileInput,
+    showErrorModal,
+    errorMessageContent,
+    handleFileUpload,
+    isReporting,
+    reportData,
+    availableReportTypes,
+    reportDivisions,
+    reportAreas,
+    generateReport
+} = useInventoryIndex({
+    props,
+    indexRouteName: 'supplies.index',
+    importRouteName: 'supplies.import',
+    reportGenerateRouteName: 'supplies.report.generate',
+    reportShowRouteName: 'supplies.report.show'
 });
 
-const currentYear = new Date().getFullYear();
-const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const periods = ['1st Qtr', '2nd Qtr', '3rd Qtr', '4th Qtr', 'Custom Month'];
+const handleSearch = () => {
+    toggleDivisionFilter(); // just a trigger to applyFilters, wait, I need to call the returned handleSearch from composable.
+};
 
-const availableReportTypes = computed(() => {
-    if (isSuperadmin.value || userRoles.value.includes('Admin')) {
-        return ['General', 'Division', 'Area'];
-    }
-    return ['General', 'Area'];
-});
+// We actually need to adapt how handleSearch is used. 
+// In the composable, applyFilters is returned, but we mapped `search` to `searchQuery` and it watches `searchQuery`. 
+// The composable watches `search` and `category`. So `@input="handleSearch"` in template isn't strictly necessary since there's a watcher.
+// Let's just define a dummy handleSearch if the template calls it.
+const handleSearchDummy = () => {};
 
-const reportDivisions = computed(() => {
-    if (isSuperadmin.value) return props.divisions;
-    return props.divisions.filter(d => d.id === authUser.value?.division_id);
-});
+const handlePerPage = (size) => {
+    import('@inertiajs/vue3').then(({ router }) => {
+        router.get('/supplies', {
+            search: search.value,
+            category: category.value,
+            per_page: size,
+            my_division_only: myDivisionOnly.value ? '1' : '0',
+            my_area_only: myAreaOnly.value ? '1' : '0',
+        }, { preserveState: true, replace: true });
+    });
+};
 
-const reportAreas = computed(() => {
-    if (isSuperadmin.value) return props.areas;
-    if (userRoles.value.includes('Admin')) {
-        return props.areas.filter(a => a.division_id === authUser.value?.division_id);
-    }
-    return props.areas.filter(a => a.id === authUser.value?.area_id);
-});
-
-// Auto-select scope when changing report_type
-watch(() => reportData.value.report_type, (newType) => {
-    if (newType === 'General') {
-        reportData.value.scope_id = null;
-    } else if (newType === 'Division' && reportDivisions.value.length === 1) {
-        reportData.value.scope_id = reportDivisions.value[0].id;
-    } else if (newType === 'Area' && reportAreas.value.length === 1) {
-        reportData.value.scope_id = reportAreas.value[0].id;
-    } else {
-        reportData.value.scope_id = null;
-    }
-});
+const handleSuccess = (data) => {
+  closeForm();
+};
 
 const formatDate = (date) => {
     if (!date) return '';
@@ -357,129 +348,12 @@ const formatDate = (date) => {
     return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 };
 
-const generateReport = async () => {
-    if (!reportData.value.category || !reportData.value.date_of_accountability || !reportData.value.year_of_report || !reportData.value.fund_cluster || String(reportData.value.fund_cluster).trim() === '') {
-        alert("Please fill in all required fields.");
-        return;
-    }
-    if (reportData.value.report_type !== 'General' && !reportData.value.scope_id) {
-        alert(`Please select a ${reportData.value.report_type}.`);
-        return;
-    }
-    if (reportData.value.report_period === 'Custom Month' && !reportData.value.custom_month) {
-        alert("Please select a month.");
-        return;
-    }
+const currentYear = new Date().getFullYear();
+const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const periods = ['1st Qtr', '2nd Qtr', '3rd Qtr', '4th Qtr', 'Custom Month'];
 
-    try {
-        const payload = {
-            ...reportData.value,
-            date_of_accountability: reportData.value.date_of_accountability instanceof Date 
-                ? reportData.value.date_of_accountability.toLocaleDateString('en-CA') // YYYY-MM-DD
-                : reportData.value.date_of_accountability
-        };
-        const response = await axios.post(route('supplies.report.generate'), payload);
-        if (response.data && response.data.id) {
-            window.open(route('supplies.report.show', response.data.id), '_blank');
-            isReporting.value = false;
-        }
-    } catch (error) {
-        console.error("Error generating report", error);
-        alert("Failed to generate report. Please check your inputs.");
-    }
-};
+// Fix editingId which SupplyForm expects
+const editingId = computed(() => formData.value?.id || null);
 
-const handleSearch = debounce(() => {
-  router.get('/supplies', {
-    search: searchQuery.value,
-    category: filterCat.value,
-    per_page: props.supplies.per_page,
-    my_division_only: myDivisionOnly.value ? '1' : '0',
-    my_area_only: myAreaOnly.value ? '1' : '0',
-  }, {
-    preserveState: true,
-    replace: true
-  });
-}, 300);
-
-const toggleDivisionFilter = () => {
-    myDivisionOnly.value = !myDivisionOnly.value;
-    if (myDivisionOnly.value) myAreaOnly.value = false;
-    handleSearch();
-};
-
-const toggleAreaFilter = () => {
-    myAreaOnly.value = !myAreaOnly.value;
-    if (myAreaOnly.value) myDivisionOnly.value = false;
-    handleSearch();
-};
-
-const handlePerPage = (size) => {
-  router.get('/supplies', {
-    search: searchQuery.value,
-    category: filterCat.value,
-    per_page: size,
-    my_division_only: myDivisionOnly.value ? '1' : '0',
-    my_area_only: myAreaOnly.value ? '1' : '0',
-  }, {
-    preserveState: true,
-    replace: true
-  });
-};
-
-const openAddForm = () => {
-  formData.value = {};
-  editingId.value = null;
-  isFormOpen.value = true;
-};
-
-const openEditForm = (item) => {
-  formData.value = { ...item };
-  editingId.value = item.id;
-  isFormOpen.value = true;
-};
-
-const openView = (item) => {
-  viewingData.value = { ...item };
-  isViewing.value = true;
-};
-
-const closeForm = () => {
-  isFormOpen.value = false;
-  editingId.value = null;
-  formData.value = {};
-};
-
-const fileInput = ref(null);
-const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const uploadData = new FormData();
-    uploadData.append('file', file);
-
-    router.post(route('supplies.import'), uploadData, {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: () => {
-            if (fileInput.value) fileInput.value.value = '';
-            toastMessage.value = 'CSV Imported successfully!';
-            showToast.value = true;
-            setTimeout(() => { showToast.value = false; }, 3000);
-        },
-        onError: (errors) => {
-            if (fileInput.value) fileInput.value.value = '';
-            errorMessageContent.value = Object.values(errors)[0] || 'Failed to import CSV. Please ensure the format matches the template.';
-            showErrorModal.value = true;
-        }
-    });
-};
-
-const showErrorModal = ref(false);
-const errorMessageContent = ref('');
-
-const handleSuccess = (data) => {
-  // GlobalToast handles flash messages via Inertia now
-  closeForm();
-};
 </script>

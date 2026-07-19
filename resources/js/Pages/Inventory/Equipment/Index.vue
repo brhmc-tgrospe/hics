@@ -1,16 +1,16 @@
 <script setup>
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ref, watch, computed } from 'vue';
-import { debounce } from 'lodash';
-import axios from 'axios';
+import { Head } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import EquipmentTable from './EquipmentTable.vue';
 import EquipmentForm from './EquipmentForm.vue';
 import ViewEquipmentDetails from './ViewEquipmentDetails.vue';
 import Modal from '@/Components/Modal.vue';
-import { PlusCircle, Search } from 'lucide-vue-next';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+
+import { useInventoryPermissions } from '@/Composables/useInventoryPermissions';
+import { useInventoryIndex } from '@/Composables/useInventoryIndex';
 
 const props = defineProps({
     equipment: Object,
@@ -20,22 +20,41 @@ const props = defineProps({
     areas: Array,
 });
 
-const page = usePage();
-const authUser = computed(() => page.props.auth.user);
-const userRoles = computed(() => authUser.value?.roles || []);
-const isSuperadmin = computed(() => userRoles.value.includes('Superadmin') || userRoles.value.includes('Developer'));
-const isSecretary = computed(() => userRoles.value.includes('Secretary'));
-const canCreate = computed(() => authUser.value?.permissions?.includes('create_equipment'));
+const { authUser, userPermissions, isSuperadmin, isSecretary } = useInventoryPermissions();
+const canCreate = computed(() => userPermissions.value.includes('create_equipment'));
 
-const search = ref(props.filters.search || '');
-const category = ref(props.filters.category || 'All');
-const myDivisionOnly = ref(props.filters.my_division_only === '1' || props.filters.my_division_only === true);
-const myAreaOnly = ref(props.filters.my_area_only === '1' || props.filters.my_area_only === true);
-const isAdding = ref(false);
-const editingData = ref(null);
-const isReporting = ref(false);
-const isViewing = ref(false);
-const viewingData = ref(null);
+const {
+    search,
+    category,
+    myDivisionOnly,
+    myAreaOnly,
+    toggleDivisionFilter,
+    toggleAreaFilter,
+    isAdding,
+    editingData,
+    isViewing,
+    viewingData,
+    openEdit,
+    openAdd,
+    openView,
+    closeForm,
+    fileInput,
+    showErrorModal,
+    errorMessageContent,
+    handleFileUpload,
+    isReporting,
+    reportData,
+    availableReportTypes,
+    reportDivisions,
+    reportAreas,
+    generateReport
+} = useInventoryIndex({
+    props,
+    indexRouteName: 'equipment.index',
+    importRouteName: 'equipment.import',
+    reportGenerateRouteName: 'equipment.report.generate',
+    reportShowRouteName: 'equipment.report.show'
+});
 
 const formatDate = (date) => {
     if (!date) return '';
@@ -43,149 +62,8 @@ const formatDate = (date) => {
     return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 };
 
-const reportData = ref({
-    category: props.categories.length ? props.categories[0].code : '',
-    date_of_accountability: new Date('2021-05-28'),
-    year_of_report: new Date().getFullYear(),
-    report_type: 'General',
-    scope_id: null,
-});
-
-const availableReportTypes = computed(() => {
-    if (isSuperadmin.value || userRoles.value.includes('Admin')) {
-        return ['General', 'Division', 'Area'];
-    }
-    return ['General', 'Area'];
-});
-
-const reportDivisions = computed(() => {
-    if (isSuperadmin.value) return props.divisions;
-    return props.divisions.filter(d => d.id === authUser.value?.division_id);
-});
-
-const reportAreas = computed(() => {
-    if (isSuperadmin.value) return props.areas;
-    if (userRoles.value.includes('Admin')) {
-        return props.areas.filter(a => a.division_id === authUser.value?.division_id);
-    }
-    return props.areas.filter(a => a.id === authUser.value?.area_id);
-});
-
-// Auto-select scope when changing report_type
-watch(() => reportData.value.report_type, (newType) => {
-    if (newType === 'General') {
-        reportData.value.scope_id = null;
-    } else if (newType === 'Division' && reportDivisions.value.length === 1) {
-        reportData.value.scope_id = reportDivisions.value[0].id;
-    } else if (newType === 'Area' && reportAreas.value.length === 1) {
-        reportData.value.scope_id = reportAreas.value[0].id;
-    } else {
-        reportData.value.scope_id = null;
-    }
-});
-
-const generateReport = async () => {
-    if (!reportData.value.category || !reportData.value.date_of_accountability || !reportData.value.year_of_report) {
-        alert("Please fill in all required fields.");
-        return;
-    }
-    if (reportData.value.report_type !== 'General' && !reportData.value.scope_id) {
-        alert(`Please select a ${reportData.value.report_type}.`);
-        return;
-    }
-
-    try {
-        const payload = {
-            ...reportData.value,
-            date_of_accountability: reportData.value.date_of_accountability instanceof Date 
-                ? reportData.value.date_of_accountability.toLocaleDateString('en-CA') // YYYY-MM-DD
-                : reportData.value.date_of_accountability
-        };
-        const response = await axios.post(route('equipment.report.generate'), payload);
-        if (response.data && response.data.id) {
-            window.open(route('equipment.report.show', response.data.id), '_blank');
-            isReporting.value = false;
-        }
-    } catch (error) {
-        console.error("Error generating report", error);
-        alert("Failed to generate report. Please check your inputs.");
-    }
-};
-
-const applyFilters = debounce(() => {
-    router.get(route('equipment.index'), {
-        search: search.value,
-        category: category.value,
-        my_division_only: myDivisionOnly.value ? '1' : '0',
-        my_area_only: myAreaOnly.value ? '1' : '0',
-    }, { preserveState: true, replace: true, preserveScroll: true });
-}, 300);
-
-watch([search, category], applyFilters);
-
-const toggleDivisionFilter = () => {
-    myDivisionOnly.value = !myDivisionOnly.value;
-    if (myDivisionOnly.value) myAreaOnly.value = false;
-    applyFilters();
-};
-
-const toggleAreaFilter = () => {
-    myAreaOnly.value = !myAreaOnly.value;
-    if (myAreaOnly.value) myDivisionOnly.value = false;
-    applyFilters();
-};
-
-const openEdit = (data) => {
-    editingData.value = data;
-    isAdding.value = true;
-};
-
-const openAdd = () => {
-    editingData.value = null;
-    isAdding.value = true;
-};
-
-const openView = (data) => {
-    viewingData.value = data;
-    isViewing.value = true;
-};
-
-const closeForm = () => {
-    isAdding.value = false;
-    editingData.value = null;
-};
-
-const fileInput = ref(null);
-const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    router.post(route('equipment.import'), formData, {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: () => {
-            if (fileInput.value) fileInput.value.value = '';
-            toastMessage.value = 'CSV Imported successfully!';
-            showToast.value = true;
-            setTimeout(() => { showToast.value = false; }, 3000);
-        },
-        onError: (errors) => {
-            if (fileInput.value) fileInput.value.value = '';
-            errorMessageContent.value = Object.values(errors)[0] || 'Failed to import CSV. Please ensure the format matches the template.';
-            showErrorModal.value = true;
-        }
-    });
-};
-
-const showErrorModal = ref(false);
-const errorMessageContent = ref('');
-
 const handleSaved = (data) => {
-    // The GlobalToast handles this now via Inertia flash.
-    // Kept the function in case we need to trigger other client-side logic on save.
+    // GlobalToast handles this via Inertia flash.
 };
 
 const currentYear = new Date().getFullYear();

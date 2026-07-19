@@ -29,7 +29,7 @@
           <tr v-for="item in supplies.data" :key="item.id" class="hover:bg-white/40 transition-colors">
             <td class="px-6 py-4 text-center">
                 <input 
-                    v-if="canDeleteItem(item)"
+                    v-if="canDelete(item)"
                     type="checkbox" 
                     :value="item.id" 
                     v-model="selectedItems"
@@ -53,10 +53,10 @@
               <button @click="$emit('view', item)" class="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors" title="View">
                 <EyeIcon class="w-4 h-4" />
               </button>
-              <button v-if="canEditItem(item)" @click="$emit('edit', item)" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors ml-1" title="Edit">
+              <button v-if="canEdit(item)" @click="$emit('edit', item)" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors ml-1" title="Edit">
                 <Edit2Icon class="w-4 h-4" />
               </button>
-              <button v-if="canDeleteItem(item)" @click="handleDelete(item.id)" class="p-1.5 text-slate-400 hover:text-red-600 transition-colors ml-1" title="Delete">
+              <button v-if="canDelete(item)" @click="handleDelete(item.id)" class="p-1.5 text-slate-400 hover:text-red-600 transition-colors ml-1" title="Delete">
                 <Trash2Icon class="w-4 h-4" />
               </button>
             </td>
@@ -120,124 +120,60 @@
 </template>
 
 <script setup>
-import { Edit2Icon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, EyeIcon } from 'lucide-vue-next';
-import { Link, usePage, router } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { Edit2Icon, Trash2Icon, EyeIcon } from 'lucide-vue-next';
+import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { formatCurrency } from '@/utils/formatters.js';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
+import { useInventoryPermissions } from '@/Composables/useInventoryPermissions';
+import { useInventoryTable } from '@/Composables/useInventoryTable';
 
 const props = defineProps({
-  supplies: Object,
-  categories: Array,
-  isSuperadmin: {
-    type: Boolean,
-    default: false
-  },
-  isSecretary: {
-    type: Boolean,
-    default: false
-  },
-  userDivisionId: {
-    type: Number,
-    default: null
-  },
-  userAreaId: {
-    type: Number,
-    default: null
-  },
-  filters: Object,
+    supplies: {
+        type: Object,
+        required: true
+    },
+    categories: {
+        type: Array,
+        required: true
+    },
+    // Keep these if passed by parent
+    isSuperadmin: { type: Boolean, default: false },
+    isSecretary: { type: Boolean, default: false },
+    userDivisionId: { type: Number, default: null },
+    userAreaId: { type: Number, default: null },
+    filters: Object,
 });
 
-defineEmits(['edit', 'update-per-page', 'view']);
+const emit = defineEmits(['edit', 'update-per-page', 'view']);
 
-const page = usePage();
-const userPermissions = computed(() => page.props.auth.user?.permissions || []);
-const userRoles = computed(() => page.props.auth.user?.roles || []);
-const isAdmin = computed(() => userRoles.value.includes('Admin'));
-const isEncoder = computed(() => userRoles.value.includes('Encoder'));
+const { canEditItem, canDeleteItem } = useInventoryPermissions();
+
+const canEdit = (item) => canEditItem(item, 'edit_supplies');
+const canDelete = (item) => canDeleteItem(item, 'delete_supplies');
+
+const suppliesData = computed(() => props.supplies.data);
+
+const {
+    selectedItems,
+    selectAll,
+    isConfirmDeleteOpen,
+    itemToDelete,
+    handleDelete,
+    executeDelete,
+    isConfirmBulkDeleteOpen,
+    handleBulkDelete,
+    executeBulkDelete
+} = useInventoryTable({
+    items: suppliesData,
+    canDeleteItem: canDelete,
+    destroyRouteName: 'supplies.destroy',
+    bulkDeleteRouteName: 'supplies.bulk_delete'
+});
 
 const getCategoryName = (catId) => {
-  const cat = props.categories.find(c => c.id === catId);
-  return cat ? cat.name : catId;
-};
-
-const canEditItem = (item) => {
-    if (props.isSuperadmin) return true;
-    if (props.isSecretary) return false;
-    if (!userPermissions.value.includes('edit_supplies')) return false;
-
-    if (isAdmin.value) return item.division_id == props.userDivisionId;
-    if (isEncoder.value) return item.division_id == props.userDivisionId && item.area_id == props.userAreaId;
-    
-    return false;
-};
-
-const canDeleteItem = (item) => {
-    if (props.isSuperadmin) return true;
-    if (props.isSecretary) return false;
-    if (!userPermissions.value.includes('delete_supplies')) return false;
-
-    if (isAdmin.value) return item.division_id == props.userDivisionId;
-    if (isEncoder.value) return item.division_id == props.userDivisionId && item.area_id == props.userAreaId;
-    
-    return false;
-};
-
-const selectedItems = ref([]);
-
-// Clear selection when data changes (e.g., page change)
-watch(() => props.supplies.data, () => {
-    selectedItems.value = [];
-}, { deep: true });
-
-const selectAll = computed({
-    get: () => {
-        const deletableItems = props.supplies.data.filter(canDeleteItem);
-        return deletableItems.length > 0 && deletableItems.every(item => selectedItems.value.includes(item.id));
-    },
-    set: (val) => {
-        if (val) {
-            selectedItems.value = props.supplies.data.filter(canDeleteItem).map(item => item.id);
-        } else {
-            selectedItems.value = [];
-        }
-    }
-});
-
-const isConfirmDeleteOpen = ref(false);
-const itemToDelete = ref(null);
-
-const handleDelete = (id) => {
-    itemToDelete.value = id;
-    isConfirmDeleteOpen.value = true;
-};
-
-const executeDelete = () => {
-    if (itemToDelete.value) {
-        router.delete(route('supplies.destroy', itemToDelete.value), {
-            onSuccess: () => {
-                isConfirmDeleteOpen.value = false;
-                itemToDelete.value = null;
-            }
-        });
-    }
-};
-
-const isConfirmBulkDeleteOpen = ref(false);
-
-const handleBulkDelete = () => {
-    if (selectedItems.value.length === 0) return;
-    isConfirmBulkDeleteOpen.value = true;
-};
-
-const executeBulkDelete = () => {
-    router.delete(route('supplies.bulk_delete'), {
-        data: { ids: selectedItems.value },
-        onSuccess: () => {
-            selectedItems.value = [];
-            isConfirmBulkDeleteOpen.value = false;
-        }
-    });
+    const cat = props.categories.find(c => c.id === catId);
+    return cat ? cat.name : catId;
 };
 </script>

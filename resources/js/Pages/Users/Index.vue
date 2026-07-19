@@ -366,6 +366,14 @@ const executeBulkDelete = () => {
                         </div>
                         
                         <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Role</label>
+                            <select v-model="form.role" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
+                                <option value="">Select Role</option>
+                                <option v-for="role in roles" :key="role.id" :value="role.name">{{ role.name }}</option>
+                            </select>
+                        </div>
+                        
+                        <div>
                             <label class="block text-sm font-bold text-slate-700 mb-1">Division</label>
                             <select 
                                 v-model="form.division_id" 
@@ -389,17 +397,6 @@ const executeBulkDelete = () => {
                                 <option v-for="a in areas.filter(a => a.division_id == form.division_id)" :key="a.id" :value="a.id">{{ a.area_name }}</option>
                             </select>
                         </div>
-
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">Role</label>
-                            <select v-model="form.role" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
-                                <option value="">Select Role</option>
-                                <option v-for="role in roles" :key="role.id" :value="role.name">{{ role.name }}</option>
-                            </select>
-                        </div>
-
-                        <!-- Empty div to force the passwords to the next row (since grid is 2 cols) -->
-                        <div class="hidden sm:block"></div>
 
                         <div>
                             <label class="block text-sm font-bold text-slate-700 mb-1">
