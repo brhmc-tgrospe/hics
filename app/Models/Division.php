@@ -39,4 +39,14 @@ class Division extends Model
     {
         return $this->hasMany(Area::class);
     }
+
+    public function equipment()
+    {
+        return $this->hasMany(\App\Domain\Equipment\Models\Equipment::class);
+    }
+
+    public function supplies()
+    {
+        return $this->hasMany(\App\Domain\Supplies\Models\Supply::class);
+    }
 }

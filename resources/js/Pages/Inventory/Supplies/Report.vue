@@ -137,9 +137,9 @@ onMounted(() => {
                     <p class="mb-10 font-semibold w-full text-left pl-6">Certified Correct by:</p>
                     <div class="w-10/12">
                         <div class="border-b-[2px] border-black w-full mb-1"></div>
-                        <p class="font-bold">BARBY ANN VILLAMOR-BENITEZ</p>
-                        <p>Administrative Officer V</p>
-                        <p>Chairman, Inventory Committee</p>
+                        <p class="font-bold">FLOR M. OCTAVO</p>
+                        <p>Supervising Administrative Officer</p>
+                        <p>HRMO</p>
                     </div>
                 </div>
 
