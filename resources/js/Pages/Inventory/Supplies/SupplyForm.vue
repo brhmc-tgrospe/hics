@@ -143,23 +143,24 @@ const props = defineProps({
 const emit = defineEmits(['close', 'success']);
 
 const user = usePage().props.auth?.user;
+const initData = props.initialData || {};
 
 const form = useForm({
-  category: props.initialData.category || '',
-  division_id: props.initialData.division_id || (user && !user.roles?.some(r => ['Superadmin', 'Developer'].includes(r)) ? user.division_id : ''),
-  area_id: props.initialData.area_id || (user && !user.roles?.some(r => ['Superadmin', 'Developer', 'Admin'].includes(r)) ? user.area_id : ''),
-  article: props.initialData.article || '',
-  description: props.initialData.description || '',
-  stock_number: props.initialData.stock_number || '',
-  expiry_date: props.initialData.expiry_date ? new Date(props.initialData.expiry_date) : null,
-  unit_of_measure: props.initialData.unit_of_measure || '',
-  unit_value: props.initialData.unit_value || '',
-  balance_per_card: props.initialData.balance_per_card || '',
-  on_hand_per_count: props.initialData.on_hand_per_count || '',
-  shortage_overage_qty: props.initialData.shortage_overage_qty || '',
-  shortage_overage_value: props.initialData.shortage_overage_value || '',
-  total_amount: props.initialData.total_amount || '',
-  status: props.initialData.status || '',
+  category: initData.category || '',
+  division_id: initData.division_id || (user && !user.roles?.some(r => ['Superadmin', 'Developer'].includes(r)) ? user.division_id : ''),
+  area_id: initData.area_id || (user && !user.roles?.some(r => ['Superadmin', 'Developer', 'Admin'].includes(r)) ? user.area_id : ''),
+  article: initData.article || '',
+  description: initData.description || '',
+  stock_number: initData.stock_number || '',
+  expiry_date: initData.expiry_date ? new Date(initData.expiry_date) : null,
+  unit_of_measure: initData.unit_of_measure || '',
+  unit_value: initData.unit_value || '',
+  balance_per_card: initData.balance_per_card || '',
+  on_hand_per_count: initData.on_hand_per_count || '',
+  shortage_overage_qty: initData.shortage_overage_qty || '',
+  shortage_overage_value: initData.shortage_overage_value || '',
+  total_amount: initData.total_amount || '',
+  status: initData.status || '',
 });
 
 const exemptCategories = ['ictsupply', 'officesup', 'hksupp'];

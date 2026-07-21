@@ -30,7 +30,11 @@ const showPassword = ref(false);
 
 const submit = () => {
     form.post(route('login'), {
-        onFinish: () => form.reset('password'),
+        onFinish: () => {
+            if (!form.errors.confirm_logout) {
+                form.reset('password');
+            }
+        },
     });
 };
 
@@ -43,6 +47,7 @@ const confirmLogout = () => {
 const cancelLogout = () => {
     form.errors.confirm_logout = null;
     form.confirm_logout = false;
+    form.reset('password');
 };
 </script>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { formatCurrency } from '@/utils/formatters.js';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
@@ -53,6 +53,15 @@ const getCategoryName = (id, categories) => {
     const cat = categories.find(c => c.id === id);
     return cat ? cat.name : id;
 };
+
+const userSettings = usePage().props.auth.user?.settings || {};
+const visibleColumns = computed(() => {
+    return userSettings.equipment_columns || ['article', 'category', 'property_number', 'unit_value', 'quantity', 'status'];
+});
+
+const isColumnVisible = (column) => {
+    return visibleColumns.value.includes(column);
+};
 </script>
 <template>
     <div class="flex-1 flex flex-col">
@@ -68,11 +77,11 @@ const getCategoryName = (id, categories) => {
                             />
                         </th>
                         <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Article</th>
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Category</th>
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Property No.</th>
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Unit Val</th>
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Physical Qty</th>
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+                        <th v-if="isColumnVisible('category')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Category</th>
+                        <th v-if="isColumnVisible('property_number')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Property No.</th>
+                        <th v-if="isColumnVisible('unit_value')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Unit Val</th>
+                        <th v-if="isColumnVisible('quantity')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Physical Qty</th>
+                        <th v-if="isColumnVisible('status')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
                         <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
                     </tr>
                 </thead>
@@ -91,11 +100,11 @@ const getCategoryName = (id, categories) => {
                             />
                         </td>
                         <td class="px-6 py-4 text-sm font-bold text-slate-800">{{ item.article }}</td>
-                        <td class="px-6 py-4 text-xs text-slate-600 font-medium">{{ getCategoryName(item.category, categories) }}</td>
-                        <td class="px-6 py-4 text-xs font-mono font-bold text-blue-700">{{ item.property_number }}</td>
-                        <td class="px-6 py-4 text-xs font-bold text-slate-800 text-right">{{ formatCurrency(item.unit_value) }}</td>
-                        <td class="px-6 py-4 text-xs text-slate-800 font-semibold text-right">{{ item.quantity_per_physical_count }}</td>
-                        <td class="px-6 py-4 text-center">
+                        <td v-if="isColumnVisible('category')" class="px-6 py-4 text-xs text-slate-600 font-medium">{{ getCategoryName(item.category, categories) }}</td>
+                        <td v-if="isColumnVisible('property_number')" class="px-6 py-4 text-xs font-mono font-bold text-blue-700">{{ item.property_number }}</td>
+                        <td v-if="isColumnVisible('unit_value')" class="px-6 py-4 text-xs font-bold text-slate-800 text-right">{{ formatCurrency(item.unit_value) }}</td>
+                        <td v-if="isColumnVisible('quantity')" class="px-6 py-4 text-xs text-slate-800 font-semibold text-right">{{ item.quantity_per_physical_count }}</td>
+                        <td v-if="isColumnVisible('status')" class="px-6 py-4 text-center">
                             <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase', item.status === 'Serviceable' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">
                                 {{ item.status || 'Unknown' }}
                             </span>

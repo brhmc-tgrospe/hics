@@ -46,6 +46,10 @@ class ProfileController extends Controller
             $user->username_changed = true;
         }
 
+        if ($request->has('settings')) {
+            $validated['settings'] = array_merge($user->settings ?? [], $request->input('settings'));
+        }
+
         $user->fill($validated);
 
         if ($user->isDirty('email')) {

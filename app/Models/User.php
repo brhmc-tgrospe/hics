@@ -45,6 +45,7 @@ class User extends Authenticatable
         'password',
         'division_id',
         'area_id',
+        'settings',
     ];
 
     /**
@@ -67,6 +68,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'settings' => 'array',
         ];
     }
 

@@ -12,11 +12,11 @@
                 />
             </th>
             <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Article</th>
-            <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Category</th>
-            <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Stock No.</th>
-            <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Unit Val</th>
-            <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">On Hand Qty</th>
-            <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+            <th v-if="isColumnVisible('category')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Category</th>
+            <th v-if="isColumnVisible('stock_number')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Stock No.</th>
+            <th v-if="isColumnVisible('unit_value')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Unit Val</th>
+            <th v-if="isColumnVisible('quantity')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">On Hand Qty</th>
+            <th v-if="isColumnVisible('status')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
             <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
           </tr>
         </thead>
@@ -37,11 +37,11 @@
                 />
             </td>
             <td class="px-6 py-4 text-sm font-bold text-slate-800">{{ item.article }}</td>
-            <td class="px-6 py-4 text-xs text-slate-600 font-medium">{{ getCategoryName(item.category) }}</td>
-            <td class="px-6 py-4 text-xs font-mono font-bold text-blue-700">{{ item.stock_number }}</td>
-            <td class="px-6 py-4 text-xs font-bold text-slate-800 text-right">{{ formatCurrency(item.unit_value) }}</td>
-            <td class="px-6 py-4 text-xs text-slate-800 font-semibold text-right">{{ item.on_hand_per_count }}</td>
-            <td class="px-6 py-4 text-center">
+            <td v-if="isColumnVisible('category')" class="px-6 py-4 text-xs text-slate-600 font-medium">{{ getCategoryName(item.category) }}</td>
+            <td v-if="isColumnVisible('stock_number')" class="px-6 py-4 text-xs font-mono font-bold text-blue-700">{{ item.stock_number }}</td>
+            <td v-if="isColumnVisible('unit_value')" class="px-6 py-4 text-xs font-bold text-slate-800 text-right">{{ formatCurrency(item.unit_value) }}</td>
+            <td v-if="isColumnVisible('quantity')" class="px-6 py-4 text-xs text-slate-800 font-semibold text-right">{{ item.on_hand_per_count }}</td>
+            <td v-if="isColumnVisible('status')" class="px-6 py-4 text-center">
               <span 
                 class="px-2 py-1 rounded-full text-[10px] font-bold uppercase"
                 :class="item.status === 'Available' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'"
@@ -121,7 +121,7 @@
 
 <script setup>
 import { Edit2Icon, Trash2Icon, EyeIcon } from 'lucide-vue-next';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { formatCurrency } from '@/utils/formatters.js';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
@@ -175,5 +175,14 @@ const {
 const getCategoryName = (catId) => {
     const cat = props.categories.find(c => c.id === catId);
     return cat ? cat.name : catId;
+};
+
+const userSettings = usePage().props.auth.user?.settings || {};
+const visibleColumns = computed(() => {
+    return userSettings.supplies_columns || ['article', 'category', 'stock_number', 'unit_value', 'quantity', 'status'];
+});
+
+const isColumnVisible = (column) => {
+    return visibleColumns.value.includes(column);
 };
 </script>
