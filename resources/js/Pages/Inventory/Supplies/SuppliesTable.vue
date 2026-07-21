@@ -13,9 +13,15 @@
             </th>
             <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Article</th>
             <th v-if="isColumnVisible('category')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Category</th>
+            <th v-if="isColumnVisible('description')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Description</th>
             <th v-if="isColumnVisible('stock_number')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Stock No.</th>
+            <th v-if="isColumnVisible('unit_of_measure')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">UOM</th>
             <th v-if="isColumnVisible('unit_value')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Unit Val</th>
-            <th v-if="isColumnVisible('quantity')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">On Hand Qty</th>
+            <th v-if="isColumnVisible('balance_per_card')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Bal Per Card</th>
+            <th v-if="isColumnVisible('on_hand_per_count')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">On Hand Qty</th>
+            <th v-if="isColumnVisible('shortage_overage_qty')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Short/Over Qty</th>
+            <th v-if="isColumnVisible('shortage_overage_value')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Short/Over Val</th>
+            <th v-if="isColumnVisible('total_amount')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Total Amt</th>
             <th v-if="isColumnVisible('status')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
             <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
           </tr>
@@ -38,9 +44,15 @@
             </td>
             <td class="px-6 py-4 text-sm font-bold text-slate-800">{{ item.article }}</td>
             <td v-if="isColumnVisible('category')" class="px-6 py-4 text-xs text-slate-600 font-medium">{{ getCategoryName(item.category) }}</td>
+            <td v-if="isColumnVisible('description')" class="px-6 py-4 text-xs text-slate-600">{{ item.description }}</td>
             <td v-if="isColumnVisible('stock_number')" class="px-6 py-4 text-xs font-mono font-bold text-blue-700">{{ item.stock_number }}</td>
+            <td v-if="isColumnVisible('unit_of_measure')" class="px-6 py-4 text-xs text-slate-600">{{ item.unit_of_measure }}</td>
             <td v-if="isColumnVisible('unit_value')" class="px-6 py-4 text-xs font-bold text-slate-800 text-right">{{ formatCurrency(item.unit_value) }}</td>
-            <td v-if="isColumnVisible('quantity')" class="px-6 py-4 text-xs text-slate-800 font-semibold text-right">{{ item.on_hand_per_count }}</td>
+            <td v-if="isColumnVisible('balance_per_card')" class="px-6 py-4 text-xs text-slate-800 font-semibold text-right">{{ item.balance_per_card }}</td>
+            <td v-if="isColumnVisible('on_hand_per_count')" class="px-6 py-4 text-xs text-slate-800 font-semibold text-right">{{ item.on_hand_per_count }}</td>
+            <td v-if="isColumnVisible('shortage_overage_qty')" class="px-6 py-4 text-xs text-slate-800 font-semibold text-right">{{ item.shortage_overage_qty }}</td>
+            <td v-if="isColumnVisible('shortage_overage_value')" class="px-6 py-4 text-xs font-bold text-slate-800 text-right">{{ formatCurrency(item.shortage_overage_value) }}</td>
+            <td v-if="isColumnVisible('total_amount')" class="px-6 py-4 text-xs font-bold text-slate-800 text-right">{{ formatCurrency(item.total_amount) }}</td>
             <td v-if="isColumnVisible('status')" class="px-6 py-4 text-center">
               <span 
                 class="px-2 py-1 rounded-full text-[10px] font-bold uppercase"
@@ -179,7 +191,11 @@ const getCategoryName = (catId) => {
 
 const userSettings = usePage().props.auth.user?.settings || {};
 const visibleColumns = computed(() => {
-    return userSettings.supplies_columns || ['article', 'category', 'stock_number', 'unit_value', 'quantity', 'status'];
+    return userSettings.supplies_columns || [
+        'article', 'category', 'description', 'stock_number', 'unit_of_measure', 
+        'unit_value', 'balance_per_card', 'on_hand_per_count', 'shortage_overage_qty', 
+        'shortage_overage_value', 'total_amount', 'status'
+    ];
 });
 
 const isColumnVisible = (column) => {

@@ -9,26 +9,51 @@ const currentSettings = user.settings || {};
 
 const form = useForm({
     settings: {
-        equipment_columns: currentSettings.equipment_columns || ['article', 'category', 'property_number', 'unit_value', 'quantity', 'status'],
-        supplies_columns: currentSettings.supplies_columns || ['article', 'category', 'stock_number', 'unit_value', 'quantity', 'status'],
+        equipment_columns: currentSettings.equipment_columns || [
+            'article', 'category', 'description', 'date_acquired', 'property_number', 
+            'serial_number', 'unit_of_measure', 'unit_value', 'quantity_per_property_card', 
+            'quantity_per_physical_count', 'shortage_overage_qty', 'shortage_overage_value', 
+            'total_value', 'end_user', 'status', 'remarks'
+        ],
+        supplies_columns: currentSettings.supplies_columns || [
+            'article', 'category', 'description', 'stock_number', 'unit_of_measure', 
+            'unit_value', 'balance_per_card', 'on_hand_per_count', 'shortage_overage_qty', 
+            'shortage_overage_value', 'total_amount', 'status'
+        ],
     }
 });
 
 const equipmentColumns = [
     { key: 'article', label: 'Article' },
     { key: 'category', label: 'Category' },
-    { key: 'property_number', label: 'Property No.' },
-    { key: 'unit_value', label: 'Unit Val' },
-    { key: 'quantity', label: 'Physical Qty' },
+    { key: 'description', label: 'Description' },
+    { key: 'date_acquired', label: 'Date Acquired' },
+    { key: 'property_number', label: 'Property Number' },
+    { key: 'serial_number', label: 'Serial Number' },
+    { key: 'unit_of_measure', label: 'Unit of Measure' },
+    { key: 'unit_value', label: 'Unit Value' },
+    { key: 'quantity_per_property_card', label: 'Qty per Property Card' },
+    { key: 'quantity_per_physical_count', label: 'Qty per Physical Count' },
+    { key: 'shortage_overage_qty', label: 'Shortage/Overage Qty' },
+    { key: 'shortage_overage_value', label: 'Shortage/Overage Value' },
+    { key: 'total_value', label: 'Total Value' },
+    { key: 'end_user', label: 'End User' },
     { key: 'status', label: 'Status' },
+    { key: 'remarks', label: 'Remarks' },
 ];
 
 const suppliesColumns = [
     { key: 'article', label: 'Article' },
     { key: 'category', label: 'Category' },
-    { key: 'stock_number', label: 'Stock No.' },
-    { key: 'unit_value', label: 'Unit Val' },
-    { key: 'quantity', label: 'On Hand Qty' },
+    { key: 'description', label: 'Description' },
+    { key: 'stock_number', label: 'Stock Number' },
+    { key: 'unit_of_measure', label: 'Unit of Measure' },
+    { key: 'unit_value', label: 'Unit Value' },
+    { key: 'balance_per_card', label: 'Balance per Card' },
+    { key: 'on_hand_per_count', label: 'On-hand per Count' },
+    { key: 'shortage_overage_qty', label: 'Shortage/Overage Qty' },
+    { key: 'shortage_overage_value', label: 'Shortage/Overage Value' },
+    { key: 'total_amount', label: 'Total Amount' },
     { key: 'status', label: 'Status' },
 ];
 

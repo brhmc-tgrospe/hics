@@ -56,7 +56,12 @@ const getCategoryName = (id, categories) => {
 
 const userSettings = usePage().props.auth.user?.settings || {};
 const visibleColumns = computed(() => {
-    return userSettings.equipment_columns || ['article', 'category', 'property_number', 'unit_value', 'quantity', 'status'];
+    return userSettings.equipment_columns || [
+        'article', 'category', 'description', 'date_acquired', 'property_number', 
+        'serial_number', 'unit_of_measure', 'unit_value', 'quantity_per_property_card', 
+        'quantity_per_physical_count', 'shortage_overage_qty', 'shortage_overage_value', 
+        'total_value', 'end_user', 'status', 'remarks'
+    ];
 });
 
 const isColumnVisible = (column) => {
@@ -78,10 +83,20 @@ const isColumnVisible = (column) => {
                         </th>
                         <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Article</th>
                         <th v-if="isColumnVisible('category')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Category</th>
+                        <th v-if="isColumnVisible('description')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Description</th>
+                        <th v-if="isColumnVisible('date_acquired')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Date Acquired</th>
                         <th v-if="isColumnVisible('property_number')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Property No.</th>
+                        <th v-if="isColumnVisible('serial_number')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Serial Number</th>
+                        <th v-if="isColumnVisible('unit_of_measure')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">UOM</th>
                         <th v-if="isColumnVisible('unit_value')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Unit Val</th>
-                        <th v-if="isColumnVisible('quantity')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Physical Qty</th>
+                        <th v-if="isColumnVisible('quantity_per_property_card')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Qty Prop Card</th>
+                        <th v-if="isColumnVisible('quantity_per_physical_count')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Qty Physical</th>
+                        <th v-if="isColumnVisible('shortage_overage_qty')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Short/Over Qty</th>
+                        <th v-if="isColumnVisible('shortage_overage_value')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Short/Over Val</th>
+                        <th v-if="isColumnVisible('total_value')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Total Val</th>
+                        <th v-if="isColumnVisible('end_user')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">End User</th>
                         <th v-if="isColumnVisible('status')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+                        <th v-if="isColumnVisible('remarks')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Remarks</th>
                         <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
                     </tr>
                 </thead>
@@ -101,14 +116,24 @@ const isColumnVisible = (column) => {
                         </td>
                         <td class="px-6 py-4 text-sm font-bold text-slate-800">{{ item.article }}</td>
                         <td v-if="isColumnVisible('category')" class="px-6 py-4 text-xs text-slate-600 font-medium">{{ getCategoryName(item.category, categories) }}</td>
+                        <td v-if="isColumnVisible('description')" class="px-6 py-4 text-xs text-slate-600">{{ item.description }}</td>
+                        <td v-if="isColumnVisible('date_acquired')" class="px-6 py-4 text-xs text-slate-600">{{ item.date_acquired }}</td>
                         <td v-if="isColumnVisible('property_number')" class="px-6 py-4 text-xs font-mono font-bold text-blue-700">{{ item.property_number }}</td>
+                        <td v-if="isColumnVisible('serial_number')" class="px-6 py-4 text-xs font-mono text-slate-600">{{ item.serial_number }}</td>
+                        <td v-if="isColumnVisible('unit_of_measure')" class="px-6 py-4 text-xs text-slate-600">{{ item.unit_of_measure }}</td>
                         <td v-if="isColumnVisible('unit_value')" class="px-6 py-4 text-xs font-bold text-slate-800 text-right">{{ formatCurrency(item.unit_value) }}</td>
-                        <td v-if="isColumnVisible('quantity')" class="px-6 py-4 text-xs text-slate-800 font-semibold text-right">{{ item.quantity_per_physical_count }}</td>
+                        <td v-if="isColumnVisible('quantity_per_property_card')" class="px-6 py-4 text-xs text-slate-800 font-semibold text-right">{{ item.quantity_per_property_card }}</td>
+                        <td v-if="isColumnVisible('quantity_per_physical_count')" class="px-6 py-4 text-xs text-slate-800 font-semibold text-right">{{ item.quantity_per_physical_count }}</td>
+                        <td v-if="isColumnVisible('shortage_overage_qty')" class="px-6 py-4 text-xs text-slate-800 font-semibold text-right">{{ item.shortage_overage_qty }}</td>
+                        <td v-if="isColumnVisible('shortage_overage_value')" class="px-6 py-4 text-xs font-bold text-slate-800 text-right">{{ formatCurrency(item.shortage_overage_value) }}</td>
+                        <td v-if="isColumnVisible('total_value')" class="px-6 py-4 text-xs font-bold text-slate-800 text-right">{{ formatCurrency(item.total_value) }}</td>
+                        <td v-if="isColumnVisible('end_user')" class="px-6 py-4 text-xs text-slate-600">{{ item.end_user }}</td>
                         <td v-if="isColumnVisible('status')" class="px-6 py-4 text-center">
                             <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase', item.status === 'Serviceable' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">
                                 {{ item.status || 'Unknown' }}
                             </span>
                         </td>
+                        <td v-if="isColumnVisible('remarks')" class="px-6 py-4 text-xs text-slate-600">{{ item.remarks }}</td>
                         <td class="px-6 py-4 text-right">
                             <button @click="$emit('view', item)" class="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors" title="View">
                                 <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
