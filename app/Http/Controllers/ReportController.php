@@ -138,6 +138,33 @@ class ReportController extends Controller
         ]);
     }
 
+    public function destroy($type, $id)
+    {
+        $user = auth()->user();
+        $areaDivisions = Area::pluck('division_id', 'id')->toArray();
+
+        $report = null;
+        if ($type === 'supply') {
+            $report = SupplyReport::find($id);
+        } elseif ($type === 'equipment') {
+            $report = EquipmentReport::find($id);
+        }
+
+        if (!$report) {
+            return redirect()->back()->with('error', 'Report not found.');
+        }
+
+        if ($this->canDeleteReport($user, (object) $report->toArray(), $areaDivisions)) {
+            if (Storage::disk('local')->exists($report->file_path)) {
+                Storage::disk('local')->delete($report->file_path);
+            }
+            $report->delete();
+            return redirect()->back()->with('success', 'Report deleted successfully.');
+        }
+
+        return redirect()->back()->with('error', 'Unauthorized to delete this report.');
+    }
+
     public function destroyMultiple(Request $request)
     {
         $validated = $request->validate([

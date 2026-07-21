@@ -132,10 +132,10 @@ export function useInventoryIndex({
     watch(() => reportData.value.report_type, (newType) => {
         if (newType === 'General') {
             reportData.value.scope_id = null;
-        } else if (newType === 'Division' && reportDivisions.value.length === 1) {
-            reportData.value.scope_id = reportDivisions.value[0].id;
-        } else if (newType === 'Area' && reportAreas.value.length === 1) {
-            reportData.value.scope_id = reportAreas.value[0].id;
+        } else if (newType === 'Division') {
+            reportData.value.scope_id = reportDivisions.value.length === 1 ? reportDivisions.value[0].id : null;
+        } else if (newType === 'Area') {
+            reportData.value.scope_id = reportAreas.value.length === 1 ? reportAreas.value[0].id : null;
         } else {
             reportData.value.scope_id = null;
         }

@@ -17,6 +17,7 @@ Route::middleware('auth')->group(function () {
     // Reports Routes
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index')->middleware('permission:generate_reports');
     Route::post('reports/bulk-delete', [ReportController::class, 'destroyMultiple'])->name('reports.bulk_delete')->middleware('permission:generate_reports');
+    Route::delete('reports/{type}/{id}', [ReportController::class, 'destroy'])->name('reports.destroy')->middleware('permission:generate_reports');
 
     // Equipment Routes
     Route::get('equipment/template', [EquipmentController::class, 'template'])->name('equipment.template')->middleware('permission:create_equipment');

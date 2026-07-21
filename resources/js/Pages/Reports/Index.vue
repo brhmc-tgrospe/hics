@@ -111,9 +111,7 @@ const deleteReport = (report) => {
 
 const executeDelete = () => {
     if (reportToDelete.value) {
-        router.post(route('reports.bulk_delete'), {
-            reports: [{ id: reportToDelete.value.id, type: reportToDelete.value.type }]
-        }, {
+        router.delete(route('reports.destroy', { type: reportToDelete.value.type, id: reportToDelete.value.id }), {
             onSuccess: () => {
                 isConfirmDeleteOpen.value = false;
                 reportToDelete.value = null;
