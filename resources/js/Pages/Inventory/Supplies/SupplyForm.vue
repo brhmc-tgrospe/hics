@@ -4,7 +4,7 @@
     <form @submit.prevent="submit" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       
       <div>
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Category</label>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Category <span class="text-red-500">*</span></label>
         <select required v-model="form.category" class="w-full bg-white border border-slate-300 shadow-sm rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800">
           <option value="">Select Category</option>
           <option v-for="c in categories" :key="c.code" :value="c.code">{{ c.name }}</option>
@@ -73,8 +73,8 @@
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Unit Value</label>
-        <input type="number" step="0.01" v-model="form.unit_value" class="w-full bg-white border border-slate-300 shadow-sm rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" />
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Unit Value <span class="text-red-500">*</span></label>
+        <input type="number" step="0.01" required v-model="form.unit_value" class="w-full bg-white border border-slate-300 shadow-sm rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" />
       </div>
 
       <div>
@@ -83,13 +83,13 @@
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Balance per Card (Qty)</label>
-        <input type="number" v-model="form.balance_per_card" class="w-full bg-white border border-slate-300 shadow-sm rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" />
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Balance per Card (Qty) <span class="text-red-500">*</span></label>
+        <input type="number" required v-model="form.balance_per_card" class="w-full bg-white border border-slate-300 shadow-sm rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" />
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">On Hand per Count (Qty)</label>
-        <input type="number" v-model="form.on_hand_per_count" class="w-full bg-white border border-slate-300 shadow-sm rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" />
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">On Hand per Count (Qty) <span class="text-red-500">*</span></label>
+        <input type="number" required v-model="form.on_hand_per_count" class="w-full bg-white border border-slate-300 shadow-sm rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" />
       </div>
 
       <div>

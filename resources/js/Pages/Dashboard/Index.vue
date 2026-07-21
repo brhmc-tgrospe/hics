@@ -38,76 +38,99 @@
       </div>
 
       <!-- Discrepancy KPI Cards -->
-      <div v-if="discrepancyMetrics" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div 
-          @click="showDiscrepancyDetails = !showDiscrepancyDetails"
-          class="bg-amber-500/10 backdrop-blur-xl rounded-3xl border border-amber-500/20 shadow-2xl p-5 cursor-pointer hover:bg-amber-500/20 transition-colors flex items-center justify-between"
-        >
-          <div>
-            <p class="text-[10px] font-bold text-amber-600/80 uppercase tracking-widest mb-1 flex items-center gap-2">
-              <ActivityIcon class="w-3 h-3" /> Discrepant Items
-            </p>
-            <h3 class="text-3xl font-bold text-amber-700">{{ discrepancyMetrics.count }}</h3>
+      <div v-if="discrepancyMetrics" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        <div class="bg-amber-500/10 backdrop-blur-xl rounded-3xl border border-amber-500/20 shadow-2xl overflow-hidden">
+          <div 
+            @click="showDiscrepancyQty = !showDiscrepancyQty"
+            class="p-5 cursor-pointer hover:bg-amber-500/20 transition-colors flex items-center justify-between"
+          >
+            <div>
+              <p class="text-[10px] font-bold text-amber-600/80 uppercase tracking-widest mb-1 flex items-center gap-2">
+                <ActivityIcon class="w-3 h-3" /> Discrepant Items
+              </p>
+              <h3 class="text-3xl font-bold text-amber-700">{{ discrepancyMetrics.count }}</h3>
+            </div>
+            <button type="button" class="text-amber-600/50 hover:text-amber-600 transition-colors">
+              <ChevronUpIcon v-if="showDiscrepancyQty" class="w-6 h-6" />
+              <ChevronDownIcon v-else class="w-6 h-6" />
+            </button>
           </div>
-          <button type="button" class="text-amber-600/50 hover:text-amber-600 transition-colors">
-            <ChevronUpIcon v-if="showDiscrepancyDetails" class="w-6 h-6" />
-            <ChevronDownIcon v-else class="w-6 h-6" />
-          </button>
+          <Transition name="list">
+            <div v-if="showDiscrepancyQty" class="border-t border-amber-500/20 bg-white/30">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-600">
+                  <thead>
+                    <tr class="border-b border-amber-200/50">
+                      <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Type</th>
+                      <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Item</th>
+                      <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700 text-right">Variance Qty</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-amber-200/30">
+                    <tr v-for="item in discrepancyMetrics.items" :key="item.type + item.id" class="hover:bg-amber-500/10 transition-colors">
+                      <td class="px-4 py-3 font-medium text-slate-800">{{ item.type }}</td>
+                      <td class="px-4 py-3 text-slate-800">{{ item.name }}</td>
+                      <td class="px-4 py-3 text-right font-medium" :class="item.qty > 0 ? 'text-emerald-600' : 'text-rose-600'">
+                        {{ item.qty > 0 ? '+' : '' }}{{ item.qty }}
+                      </td>
+                    </tr>
+                    <tr v-if="discrepancyMetrics.items.length === 0">
+                      <td colspan="3" class="px-4 py-6 text-center text-slate-500 italic">No discrepancies found.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </Transition>
         </div>
-        <div 
-          @click="showDiscrepancyDetails = !showDiscrepancyDetails"
-          class="bg-amber-500/10 backdrop-blur-xl rounded-3xl border border-amber-500/20 shadow-2xl p-5 cursor-pointer hover:bg-amber-500/20 transition-colors flex items-center justify-between"
-        >
-          <div>
-            <p class="text-[10px] font-bold text-amber-600/80 uppercase tracking-widest mb-1 flex items-center gap-2">
-              <ActivityIcon class="w-3 h-3" /> Net Discrepancy Value
-            </p>
-            <h3 class="text-3xl font-bold text-amber-700">
-              {{ formatCurrency(discrepancyMetrics.value) }}
-            </h3>
+
+        <div class="bg-amber-500/10 backdrop-blur-xl rounded-3xl border border-amber-500/20 shadow-2xl overflow-hidden">
+          <div 
+            @click="showDiscrepancyValue = !showDiscrepancyValue"
+            class="p-5 cursor-pointer hover:bg-amber-500/20 transition-colors flex items-center justify-between"
+          >
+            <div>
+              <p class="text-[10px] font-bold text-amber-600/80 uppercase tracking-widest mb-1 flex items-center gap-2">
+                <ActivityIcon class="w-3 h-3" /> Net Discrepancy Value
+              </p>
+              <h3 class="text-3xl font-bold text-amber-700">
+                {{ formatCurrency(discrepancyMetrics.value) }}
+              </h3>
+            </div>
+            <button type="button" class="text-amber-600/50 hover:text-amber-600 transition-colors">
+              <ChevronUpIcon v-if="showDiscrepancyValue" class="w-6 h-6" />
+              <ChevronDownIcon v-else class="w-6 h-6" />
+            </button>
           </div>
-          <button type="button" class="text-amber-600/50 hover:text-amber-600 transition-colors">
-            <ChevronUpIcon v-if="showDiscrepancyDetails" class="w-6 h-6" />
-            <ChevronDownIcon v-else class="w-6 h-6" />
-          </button>
+          <Transition name="list">
+            <div v-if="showDiscrepancyValue" class="border-t border-amber-500/20 bg-white/30">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-600">
+                  <thead>
+                    <tr class="border-b border-amber-200/50">
+                      <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Type</th>
+                      <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Item</th>
+                      <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700 text-right">Variance Value</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-amber-200/30">
+                    <tr v-for="item in discrepancyMetrics.items" :key="item.type + item.id" class="hover:bg-amber-500/10 transition-colors">
+                      <td class="px-4 py-3 font-medium text-slate-800">{{ item.type }}</td>
+                      <td class="px-4 py-3 text-slate-800">{{ item.name }}</td>
+                      <td class="px-4 py-3 text-right font-bold" :class="item.value > 0 ? 'text-emerald-600' : 'text-rose-600'">
+                        {{ formatCurrency(item.value) }}
+                      </td>
+                    </tr>
+                    <tr v-if="discrepancyMetrics.items.length === 0">
+                      <td colspan="3" class="px-4 py-6 text-center text-slate-500 italic">No discrepancies found.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </Transition>
         </div>
       </div>
-
-      <!-- Discrepancy Details List -->
-      <Transition name="slide-fade">
-        <div v-if="showDiscrepancyDetails" class="bg-white/50 backdrop-blur-xl rounded-3xl border border-amber-500/30 shadow-2xl p-6 relative overflow-hidden">
-          <div class="absolute inset-0 bg-amber-500/5 pointer-events-none"></div>
-          <div class="relative flex justify-between items-center mb-4">
-            <h3 class="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Discrepancy Details (By Variance Value)</h3>
-          </div>
-          <div class="relative overflow-x-auto">
-            <table class="w-full text-left text-sm text-slate-600">
-              <thead>
-                <tr class="border-b border-amber-200/50">
-                  <th class="py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Type</th>
-                  <th class="py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Code</th>
-                  <th class="py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Item</th>
-                  <th class="py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700 text-right">Variance Qty</th>
-                  <th class="py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700 text-right">Variance Value</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-amber-200/30">
-                <tr v-for="item in discrepancyMetrics.items" :key="item.type + item.id" class="hover:bg-amber-500/10 transition-colors">
-                  <td class="py-3 font-medium text-slate-800">{{ item.type }}</td>
-                  <td class="py-3 text-slate-600">{{ item.code }}</td>
-                  <td class="py-3 text-slate-800">{{ item.name }}</td>
-                  <td class="py-3 text-right font-medium" :class="item.qty > 0 ? 'text-emerald-600' : 'text-rose-600'">
-                    {{ item.qty > 0 ? '+' : '' }}{{ item.qty }}
-                  </td>
-                  <td class="py-3 text-right font-bold" :class="item.value > 0 ? 'text-emerald-600' : 'text-rose-600'">
-                    {{ formatCurrency(item.value) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </Transition>
 
       <div v-if="divisionTotals && divisionTotals.length > 0" class="bg-white/50 backdrop-blur-xl rounded-3xl border border-white/80 shadow-2xl p-6">
         <div class="flex justify-between items-center mb-4">
@@ -204,7 +227,8 @@ const totalSuppliesValue = computed(() => {
 const showAllDivisions = ref(false);
 const showAllEquipmentCats = ref(false);
 const showAllSupplyCats = ref(false);
-const showDiscrepancyDetails = ref(false);
+const showDiscrepancyQty = ref(false);
+const showDiscrepancyValue = ref(false);
 
 const visibleDivisions = computed(() => {
   return showAllDivisions.value ? props.divisionTotals : props.divisionTotals.slice(0, 5);
