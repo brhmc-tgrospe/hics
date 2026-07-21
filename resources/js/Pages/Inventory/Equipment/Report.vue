@@ -141,7 +141,7 @@ onMounted(() => {
                         <div class="border-b border-black w-full mb-1"></div>
                         <div class="text-center">
                             <p class="font-bold">KARREN V. BOALOY</p>
-                            <p>SAO / Inventory Committee Chairman</p>
+                            <p>SAO / Inventory Committee Chairman - Equipment</p>
                         </div>
                     </div>
                 </div>

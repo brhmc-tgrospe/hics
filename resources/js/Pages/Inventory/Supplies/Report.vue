@@ -138,8 +138,7 @@ onMounted(() => {
                     <div class="w-10/12">
                         <div class="border-b-[2px] border-black w-full mb-1"></div>
                         <p class="font-bold">FLOR M. OCTAVO</p>
-                        <p>Supervising Administrative Officer</p>
-                        <p>HRMO</p>
+                        <p>SAO / Inventory Chairman Committee - Supplies</p>
                     </div>
                 </div>
 
