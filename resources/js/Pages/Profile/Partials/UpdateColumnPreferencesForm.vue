@@ -5,9 +5,13 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { Transition } from 'vue';
 
 const user = usePage().props.auth.user;
+const page = usePage();
 const currentSettings = user.settings || {};
 
 const form = useForm({
+    first_name: user.first_name,
+    last_name: user.last_name,
+    email: user.email,
     settings: {
         equipment_columns: currentSettings.equipment_columns || [
             'article', 'category', 'description', 'date_acquired', 'property_number', 
@@ -60,6 +64,9 @@ const suppliesColumns = [
 const saveSettings = () => {
     form.patch(route('profile.update'), {
         preserveScroll: true,
+        onSuccess: () => {
+            page.props.flash.success = 'Column preferences saved successfully.';
+        }
     });
 };
 </script>
