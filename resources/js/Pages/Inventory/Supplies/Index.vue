@@ -249,6 +249,9 @@
           :userDivisionId="authUser?.division_id"
           :userAreaId="authUser?.area_id"
           :filters="filters"
+          :sortField="sortField"
+          :sortDirection="sortDirection"
+          @sort="toggleSort"
           @edit="openEditForm"
           @view="openView"
           @update-per-page="handlePerPage"
@@ -288,6 +291,9 @@ const {
     category: filterCat,
     myDivisionOnly,
     myAreaOnly,
+    sortField,
+    sortDirection,
+    toggleSort,
     toggleDivisionFilter,
     toggleAreaFilter,
     isAdding: isFormOpen,
@@ -328,12 +334,14 @@ const handleSearchDummy = () => {};
 
 const handlePerPage = (size) => {
     import('@inertiajs/vue3').then(({ router }) => {
-        router.get('/supplies', {
-            search: search.value,
-            category: category.value,
+        router.get(route('supplies.index'), {
+            search: searchQuery.value,
+            category: filterCat.value,
             per_page: size,
             my_division_only: myDivisionOnly.value ? '1' : '0',
             my_area_only: myAreaOnly.value ? '1' : '0',
+            sort_field: sortField.value,
+            sort_direction: sortDirection.value,
         }, { preserveState: true, replace: true });
     });
 };

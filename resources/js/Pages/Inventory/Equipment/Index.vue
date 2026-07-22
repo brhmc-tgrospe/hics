@@ -28,6 +28,9 @@ const {
     category,
     myDivisionOnly,
     myAreaOnly,
+    sortField,
+    sortDirection,
+    toggleSort,
     toggleDivisionFilter,
     toggleAreaFilter,
     isAdding,
@@ -284,6 +287,9 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                     :isSecretary="isSecretary"
                     :userDivisionId="authUser?.division_id"
                     :userAreaId="authUser?.area_id"
+                    :sortField="sortField"
+                    :sortDirection="sortDirection"
+                    @sort="toggleSort"
                     @edit="openEdit"
                     @view="openView"
                 />

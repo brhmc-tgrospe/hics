@@ -38,7 +38,17 @@ class GetEquipmentAction
             $query->where('category', $filters['category']);
         }
 
-        return $query->orderBy('id', 'desc')
+        $sortField = $filters['sort_field'] ?? 'id';
+        $sortDirection = $filters['sort_direction'] ?? 'desc';
+
+        $allowedSortFields = ['id', 'article'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'id';
+        }
+
+        $sortDirection = strtolower($sortDirection) === 'asc' ? 'asc' : 'desc';
+
+        return $query->orderBy($sortField, $sortDirection)
                      ->paginate($filters['per_page'] ?? 10)
                      ->withQueryString();
     }

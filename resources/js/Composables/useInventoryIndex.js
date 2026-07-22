@@ -20,6 +20,8 @@ export function useInventoryIndex({
     const category = ref(props.filters.category || 'All');
     const myDivisionOnly = ref(props.filters.my_division_only === '1' || props.filters.my_division_only === true);
     const myAreaOnly = ref(props.filters.my_area_only === '1' || props.filters.my_area_only === true);
+    const sortField = ref(props.filters.sort_field || 'id');
+    const sortDirection = ref(props.filters.sort_direction || 'desc');
 
     const applyFilters = debounce(() => {
         router.get(route(indexRouteName), {
@@ -27,10 +29,21 @@ export function useInventoryIndex({
             category: category.value,
             my_division_only: myDivisionOnly.value ? '1' : '0',
             my_area_only: myAreaOnly.value ? '1' : '0',
+            sort_field: sortField.value,
+            sort_direction: sortDirection.value,
         }, { preserveState: true, replace: true, preserveScroll: true });
     }, 300);
 
-    watch([search, category], applyFilters);
+    watch([search, category, sortField, sortDirection], applyFilters);
+
+    const toggleSort = (field) => {
+        if (sortField.value === field) {
+            sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortField.value = field;
+            sortDirection.value = 'asc';
+        }
+    };
 
     const toggleDivisionFilter = () => {
         myDivisionOnly.value = !myDivisionOnly.value;
@@ -174,6 +187,9 @@ export function useInventoryIndex({
         category,
         myDivisionOnly,
         myAreaOnly,
+        sortField,
+        sortDirection,
+        toggleSort,
         toggleDivisionFilter,
         toggleAreaFilter,
         isAdding,
