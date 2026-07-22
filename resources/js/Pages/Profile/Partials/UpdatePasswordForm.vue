@@ -3,7 +3,7 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { Eye, EyeOff } from 'lucide-vue-next';
 
@@ -20,10 +20,15 @@ const form = useForm({
     password_confirmation: '',
 });
 
+const page = usePage();
+
 const updatePassword = () => {
     form.put(route('password.update'), {
         preserveScroll: true,
-        onSuccess: () => form.reset(),
+        onSuccess: () => {
+            form.reset();
+            page.props.flash.success = 'Password updated successfully.';
+        },
         onError: () => {
             if (form.errors.password) {
                 form.reset('password', 'password_confirmation');

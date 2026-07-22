@@ -12,10 +12,7 @@ defineProps({
     status: {
         type: String,
     },
-    divisionName: {
-        type: String,
-    },
-    areaName: {
+    divisionAreaName: {
         type: String,
     },
     roleName: {
@@ -24,6 +21,7 @@ defineProps({
 });
 
 const user = usePage().props.auth.user;
+const page = usePage();
 
 const form = useForm({
     first_name: user.first_name,
@@ -32,6 +30,15 @@ const form = useForm({
     contact_number: user.contact_number,
     email: user.email,
 });
+
+const submitProfile = () => {
+    form.patch(route('profile.update'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            page.props.flash.success = 'Profile information updated successfully.';
+        }
+    });
+};
 </script>
 
 <template>
@@ -47,7 +54,7 @@ const form = useForm({
         </header>
 
         <form
-            @submit.prevent="form.patch(route('profile.update'))"
+            @submit.prevent="submitProfile"
             class="mt-6 space-y-6"
         >
             <div>
@@ -112,25 +119,13 @@ const form = useForm({
             </div>
 
             <div>
-                <InputLabel for="division" value="Division" />
+                <InputLabel for="division_area" value="Division - Area" />
 
                 <input
-                    id="division"
+                    id="division_area"
                     type="text"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm opacity-50 bg-gray-100"
-                    :value="divisionName"
-                    disabled
-                />
-            </div>
-
-            <div v-if="areaName">
-                <InputLabel for="area" value="Area" />
-
-                <input
-                    id="area"
-                    type="text"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm opacity-50 bg-gray-100"
-                    :value="areaName"
+                    :value="divisionAreaName"
                     disabled
                 />
             </div>

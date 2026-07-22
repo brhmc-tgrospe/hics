@@ -5,7 +5,7 @@ import { debounce } from 'lodash';
 import axios from 'axios';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import Modal from '@/Components/Modal.vue';
-import { PlusCircle, Search, Edit, Trash2, VenetianMask, Eye, EyeOff } from 'lucide-vue-next';
+import { PlusCircle, Search, Edit, Trash2, VenetianMask, Eye, EyeOff, ChevronUp, ChevronDown } from 'lucide-vue-next';
 import Toggle from '@vueform/toggle';
 import '@vueform/toggle/themes/default.css';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
@@ -23,6 +23,8 @@ const page = usePage();
 const search = ref(props.filters.search || '');
 const per_page = ref(props.filters.per_page || 10);
 const division_only = ref(props.filters.division_only !== undefined ? (props.filters.division_only === 'true' || props.filters.division_only === true) : true);
+const sort_field = ref(props.filters.sort_field || 'created_at');
+const sort_direction = ref(props.filters.sort_direction || 'desc');
 const isAdding = ref(false);
 const editingData = ref(null);
 const isViewing = ref(false);
@@ -48,10 +50,21 @@ const applyFilters = debounce(() => {
         search: search.value,
         per_page: per_page.value,
         division_only: division_only.value,
+        sort_field: sort_field.value,
+        sort_direction: sort_direction.value,
     }, { preserveState: true, replace: true, preserveScroll: true });
 }, 300);
 
-watch([search, per_page, division_only], applyFilters);
+const sortBy = (field) => {
+    if (sort_field.value === field) {
+        sort_direction.value = sort_direction.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sort_field.value = field;
+        sort_direction.value = 'asc';
+    }
+};
+
+watch([search, per_page, division_only, sort_field, sort_direction], applyFilters);
 
 const openAdd = () => {
     editingData.value = null;
@@ -209,7 +222,7 @@ const executeBulkDelete = () => {
                     >
                 </div>
                 <div class="flex items-center gap-6">
-                    <div class="flex items-center gap-2" v-if="$page.props.auth.user?.roles?.some(r => ['Admin'].includes(r))">
+                    <div class="flex items-center gap-2" v-if="$page.props.auth.user?.division_id">
                         <span class="text-sm text-slate-500 font-medium">My Division Only</span>
                         <Toggle v-model="division_only" class="toggle-blue" />
                     </div>
@@ -229,8 +242,24 @@ const executeBulkDelete = () => {
                                         class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                                     />
                                 </th>
-                                <th class="px-6 py-4">First Name</th>
-                                <th class="px-6 py-4">Last Name</th>
+                                <th class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors" @click="sortBy('first_name')">
+                                    <div class="flex items-center gap-1">
+                                        First Name
+                                        <span v-if="sort_field === 'first_name'">
+                                            <ChevronUp v-if="sort_direction === 'asc'" class="w-4 h-4" />
+                                            <ChevronDown v-else class="w-4 h-4" />
+                                        </span>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors" @click="sortBy('last_name')">
+                                    <div class="flex items-center gap-1">
+                                        Last Name
+                                        <span v-if="sort_field === 'last_name'">
+                                            <ChevronUp v-if="sort_direction === 'asc'" class="w-4 h-4" />
+                                            <ChevronDown v-else class="w-4 h-4" />
+                                        </span>
+                                    </div>
+                                </th>
                                 <th class="px-6 py-4">Username</th>
                                 <th class="px-6 py-4">Email</th>
                                 <th class="px-6 py-4">Division</th>

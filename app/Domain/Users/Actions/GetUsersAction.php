@@ -25,7 +25,7 @@ class GetUsersAction
             });
         }
 
-        $divisionOnly = $filters['division_only'] ?? ($user->hasRole('Admin') && !$user->hasRole(['Developer', 'Superadmin']));
+        $divisionOnly = $filters['division_only'] ?? true;
         
         if ($divisionOnly === true || $divisionOnly === 'true') {
             $query->where('division_id', $user->division_id);
@@ -41,7 +41,20 @@ class GetUsersAction
             });
         }
 
-        return $query->orderBy('id', 'desc')
+        $sortField = $filters['sort_field'] ?? 'created_at';
+        $sortDirection = $filters['sort_direction'] ?? 'desc';
+        
+        $allowedSortFields = ['first_name', 'last_name', 'created_at', 'id'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'created_at';
+        }
+        
+        if (!in_array(strtolower($sortDirection), ['asc', 'desc'])) {
+            $sortDirection = 'desc';
+        }
+
+        return $query->orderBy($sortField, $sortDirection)
+                     ->orderBy('id', 'desc')
                      ->paginate($filters['per_page'] ?? 10)
                      ->withQueryString();
     }

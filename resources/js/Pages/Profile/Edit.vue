@@ -14,10 +14,7 @@ defineProps({
     status: {
         type: String,
     },
-    division_name: {
-        type: String,
-    },
-    area_name: {
+    division_area_name: {
         type: String,
     },
     role_name: {
@@ -75,8 +72,7 @@ const activeTab = ref('info');
                         <UpdateProfileInformationForm
                             :must-verify-email="mustVerifyEmail"
                             :status="status"
-                            :division-name="division_name"
-                            :area-name="area_name"
+                            :division-area-name="division_area_name"
                             :role-name="role_name"
                             class="max-w-xl"
                         />

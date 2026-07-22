@@ -41,6 +41,13 @@ class UpdateUserAction
                 throw ValidationException::withMessages(['error' => 'You do not have permission to assign this role.']);
             }
         }
+        
+        // Superadmin cannot assign Superadmin or Developer roles
+        if ($user->hasRole('Superadmin') && !$user->hasRole('Developer')) {
+            if ($dto->role && in_array($dto->role, ['Superadmin', 'Developer'])) {
+                throw ValidationException::withMessages(['error' => 'You do not have permission to assign this role.']);
+            }
+        }
 
         $targetUser->update($data);
 

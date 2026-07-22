@@ -25,8 +25,14 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
-            'division_name' => $user->division ? "({$user->division->div_code}) - {$user->division->div_name}" : 'No Division',
-            'area_name' => ($showArea && $user->area) ? "({$user->area->id}) - {$user->area->area_name}" : null,
+            'division_area_name' => (function() use ($user) {
+                $div = $user->division ? "({$user->division_id}) {$user->division->div_name}" : 'No Division';
+                if ($user->area) {
+                    $area = "({$user->area_id}) {$user->area->area_name}";
+                    return "{$div} - {$area}";
+                }
+                return $div;
+            })(),
             'role_name' => $user->roles->first() ? $user->roles->first()->name : 'No Role',
         ]);
     }
