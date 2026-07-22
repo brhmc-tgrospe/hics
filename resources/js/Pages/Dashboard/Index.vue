@@ -135,7 +135,7 @@
       <div v-if="divisionTotals && divisionTotals.length > 0" class="bg-white/50 backdrop-blur-xl rounded-3xl border border-white/80 shadow-2xl p-6">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Division Values</h3>
-          <button type="button" v-if="divisionTotals.length > 5" @click="showAllDivisions = !showAllDivisions" class="text-slate-400 hover:text-slate-600 transition-colors">
+          <button type="button" v-if="divisionTotals.length > 3" @click="showAllDivisions = !showAllDivisions" class="text-slate-400 hover:text-slate-600 transition-colors">
             <ChevronUpIcon v-if="showAllDivisions" class="w-5 h-5" />
             <ChevronDownIcon v-else class="w-5 h-5" />
           </button>
@@ -231,7 +231,7 @@ const showDiscrepancyQty = ref(false);
 const showDiscrepancyValue = ref(false);
 
 const visibleDivisions = computed(() => {
-  return showAllDivisions.value ? props.divisionTotals : props.divisionTotals.slice(0, 5);
+  return showAllDivisions.value ? props.divisionTotals : props.divisionTotals.slice(0, 3);
 });
 
 const equipmentByCategoryList = computed(() => {
