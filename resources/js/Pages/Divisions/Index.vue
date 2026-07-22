@@ -190,6 +190,7 @@ const executeBulkDelete = () => {
                             <tr class="border-b border-slate-200/60 text-sm text-slate-500 font-bold bg-slate-50/50">
                                 <th class="px-6 py-4 w-12 text-center">
                                     <input 
+                                        v-if="canDeleteDivision()"
                                         type="checkbox" 
                                         v-model="selectAll"
                                         class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"

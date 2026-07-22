@@ -58,6 +58,14 @@ class ActivityLogController extends Controller
             }
         }
 
+        // Filter by Date Range
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
         $perPage = $request->input('per_page', 10);
         $validPerPages = [10, 25, 50, 100];
         if (!in_array($perPage, $validPerPages)) {
@@ -68,7 +76,7 @@ class ActivityLogController extends Controller
 
         return Inertia::render('ActivityLogs/Index', [
             'activities' => $activities,
-            'filters' => $request->only(['search', 'action_type', 'per_page']),
+            'filters' => $request->only(['search', 'action_type', 'per_page', 'date_from', 'date_to']),
         ]);
     }
 

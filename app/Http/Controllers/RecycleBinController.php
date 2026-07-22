@@ -19,7 +19,7 @@ class RecycleBinController extends Controller
     public function index(Request $request)
     {
         $tab = $request->query('tab', 'categories');
-        $perPage = 10;
+        $perPage = $request->query('per_page', 10);
         
         $data = null;
         
@@ -145,7 +145,8 @@ class RecycleBinController extends Controller
 
         return Inertia::render('RecycleBin/Index', [
             'tab' => $tab,
-            'data' => $data
+            'data' => $data,
+            'filters' => $request->only(['per_page']),
         ]);
     }
 

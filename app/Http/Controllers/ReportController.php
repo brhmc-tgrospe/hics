@@ -73,8 +73,41 @@ class ReportController extends Controller
             $wrappedQuery->where('category', $request->category);
         }
 
+        // Creator Search Filter
+        if ($request->filled('creator_search')) {
+            $search = strtolower($request->creator_search);
+            $userIds = User::where(DB::raw('LOWER(first_name)'), 'LIKE', "%{$search}%")
+                ->orWhere(DB::raw('LOWER(last_name)'), 'LIKE', "%{$search}%")
+                ->pluck('id')
+                ->toArray();
+                
+            if ($search === 'system') {
+                $wrappedQuery->where(function($q) use ($userIds) {
+                    $q->whereIn('user_id', $userIds)
+                      ->orWhereNull('user_id');
+                });
+            } else {
+                $wrappedQuery->whereIn('user_id', $userIds);
+            }
+        }
+
+        // Apply Sorting
+        $wrappedQuery->leftJoin('users', 'reports.user_id', '=', 'users.id')
+                     ->select('reports.*', 'users.first_name', 'users.last_name');
+
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDir = $request->input('sort_dir', 'desc');
+        $sortDir = in_array(strtolower($sortDir), ['asc', 'desc']) ? strtolower($sortDir) : 'desc';
+
+        if ($sortBy === 'creator') {
+            $wrappedQuery->orderBy('users.first_name', $sortDir)
+                         ->orderBy('users.last_name', $sortDir);
+        } else {
+            $wrappedQuery->orderBy('reports.created_at', $sortDir);
+        }
+
         $perPage = $request->input('per_page', 10);
-        $paginated = $wrappedQuery->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
+        $paginated = $wrappedQuery->paginate($perPage)->withQueryString();
 
         $categoryNames = Category::pluck('name', 'code')->toArray();
         $divisionNames = Division::pluck('div_name', 'id')->toArray();
@@ -133,7 +166,7 @@ class ReportController extends Controller
 
         return Inertia::render('Reports/Index', [
             'reports' => $paginated,
-            'filters' => $request->only(['date_from', 'date_to', 'category', 'my_division_only', 'my_area_only', 'per_page']),
+            'filters' => $request->only(['date_from', 'date_to', 'category', 'my_division_only', 'my_area_only', 'per_page', 'creator_search', 'sort_by', 'sort_dir']),
             'categories' => $categories
         ]);
     }

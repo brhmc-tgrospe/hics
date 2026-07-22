@@ -27,6 +27,11 @@ class AreaController extends Controller
         if ($myDivisionOnly && $user->division_id) {
             $query->where('division_id', $user->division_id);
         }
+        
+        // Encoders and Secretaries can only see their specific area
+        if ($user->hasRole(['Encoder', 'Secretary'])) {
+            $query->where('id', $user->area_id);
+        }
 
         $perPage = $request->input('per_page', 10);
         $areas = $query->paginate($perPage)->withQueryString();

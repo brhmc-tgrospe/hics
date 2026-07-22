@@ -1,6 +1,6 @@
 <script setup>
 import { Head, router, Link } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import { Trash2, RotateCcw } from 'lucide-vue-next';
@@ -8,6 +8,13 @@ import { Trash2, RotateCcw } from 'lucide-vue-next';
 const props = defineProps({
     tab: String,
     data: Object,
+    filters: Object,
+});
+
+const per_page = ref(props.filters?.per_page || 10);
+
+watch(per_page, (value) => {
+    router.get(route('recycle-bin.index'), { tab: props.tab, per_page: value }, { preserveState: true, replace: true });
 });
 
 const selectedItems = ref([]);
@@ -43,7 +50,7 @@ const toggleSelect = (item) => {
 
 const setTab = (newTab) => {
     selectedItems.value = [];
-    router.get(route('recycle-bin.index'), { tab: newTab }, { preserveState: true, replace: true });
+    router.get(route('recycle-bin.index'), { tab: newTab, per_page: per_page.value }, { preserveState: true, replace: true });
 };
 
 const isConfirmRestoreOpen = ref(false);
@@ -241,7 +248,17 @@ const tabs = [
                     </table>
                 </div>
 
-                <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end" v-if="data.data.length > 0">
+                <div class="px-6 py-4 border-t border-white/60 bg-slate-900/5 flex flex-col sm:flex-row items-center justify-between gap-4" v-if="data.data.length > 0">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-medium text-slate-500">Rows per page:</span>
+                        <select
+                            v-model="per_page"
+                            class="bg-white/50 backdrop-blur border border-white/80 rounded-lg pl-2 pr-8 py-1 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        >
+                            <option v-for="size in [10, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
+                        </select>
+                    </div>
+                    
                     <div class="flex items-center gap-1">
                         <template v-for="(link, index) in data.links" :key="index">
                             <Link

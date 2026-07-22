@@ -15,6 +15,11 @@ class GetDivisionsAction
                   ->orWhere('div_code', 'like', '%' . $filters['search'] . '%');
         }
 
+        $user = auth()->user();
+        if ($user && $user->hasRole(['Encoder', 'Secretary'])) {
+            $query->where('id', $user->division_id);
+        }
+
         $perPage = $filters['per_page'] ?? 10;
         return $query->paginate($perPage)->withQueryString();
     }

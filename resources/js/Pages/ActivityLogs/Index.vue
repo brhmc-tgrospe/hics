@@ -28,6 +28,8 @@ const isDeveloper = computed(() => userRoles.value.includes('Developer'));
 const search = ref(props.filters.search || '');
 const actionType = ref(props.filters.action_type || 'All');
 const perPage = ref(props.filters.per_page ? Number(props.filters.per_page) : 10);
+const dateFrom = ref(props.filters.date_from || null);
+const dateTo = ref(props.filters.date_to || null);
 
 const isDeleting = ref(false);
 const deleteStartDate = ref(null);
@@ -37,11 +39,13 @@ const applyFilters = debounce(() => {
     router.get(route('activity-logs.index'), {
         search: search.value,
         action_type: actionType.value,
-        per_page: perPage.value
+        per_page: perPage.value,
+        date_from: dateFrom.value ? (dateFrom.value instanceof Date ? dateFrom.value.toLocaleDateString('en-CA') : dateFrom.value) : null,
+        date_to: dateTo.value ? (dateTo.value instanceof Date ? dateTo.value.toLocaleDateString('en-CA') : dateTo.value) : null
     }, { preserveState: true, replace: true, preserveScroll: true });
 }, 300);
 
-watch([search, actionType, perPage], applyFilters);
+watch([search, actionType, perPage, dateFrom, dateTo], applyFilters);
 
 const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -191,8 +195,8 @@ const getCauserName = (log) => {
             />
 
             <div class="bg-white/50 backdrop-blur-xl rounded-3xl border border-white/80 shadow-2xl overflow-hidden flex flex-col">
-                <div class="p-4 border-b border-white/60 bg-slate-900/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                <div class="p-4 border-b border-white/60 bg-slate-900/5 flex flex-col lg:flex-row items-center justify-between gap-4">
+                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
                         <div class="relative w-full sm:w-64">
                             <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             <input 
@@ -213,6 +217,68 @@ const getCauserName = (log) => {
                             <option value="Login">Login</option>
                             <option value="Logout">Logout</option>
                         </select>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                        <div class="relative w-full sm:w-44">
+                            <VueDatePicker 
+                                v-model="dateFrom" 
+                                :enable-time-picker="false" 
+                                auto-apply 
+                                :format="formatJustDate"
+                                :preview-format="formatJustDate"
+                                :clearable="true"
+                            >
+                                <template #trigger>
+                                    <div class="relative w-full">
+                                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <input 
+                                            :value="dateFrom ? formatJustDate(dateFrom) : ''" 
+                                            readonly 
+                                            class="w-full bg-white/50 backdrop-blur border border-white/80 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium text-slate-700 cursor-pointer"
+                                            placeholder="From date"
+                                        />
+                                        <!-- Custom Clear Button when value exists -->
+                                        <button 
+                                            v-if="dateFrom" 
+                                            @click.stop="dateFrom = null"
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                    </div>
+                                </template>
+                            </VueDatePicker>
+                        </div>
+                        <div class="relative w-full sm:w-44">
+                            <VueDatePicker 
+                                v-model="dateTo" 
+                                :enable-time-picker="false" 
+                                auto-apply 
+                                :format="formatJustDate"
+                                :preview-format="formatJustDate"
+                                :clearable="true"
+                            >
+                                <template #trigger>
+                                    <div class="relative w-full">
+                                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <input 
+                                            :value="dateTo ? formatJustDate(dateTo) : ''" 
+                                            readonly 
+                                            class="w-full bg-white/50 backdrop-blur border border-white/80 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium text-slate-700 cursor-pointer"
+                                            placeholder="To date"
+                                        />
+                                        <button 
+                                            v-if="dateTo" 
+                                            @click.stop="dateTo = null"
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                    </div>
+                                </template>
+                            </VueDatePicker>
+                        </div>
                     </div>
                 </div>
 

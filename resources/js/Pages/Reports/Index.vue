@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { Head, router, Link, usePage } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
-import { FileText, Eye, Trash2 } from 'lucide-vue-next';
+import { FileText, Eye, Trash2, Search, ChevronUp, ChevronDown } from 'lucide-vue-next';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
@@ -33,6 +33,9 @@ const dateTo = ref(props.filters.date_to || null);
 const myDivisionOnly = ref(props.filters.my_division_only === '1' || props.filters.my_division_only === true);
 const myAreaOnly = ref(props.filters.my_area_only === '1' || props.filters.my_area_only === true);
 const perPage = ref(props.filters.per_page || 10);
+const creatorSearch = ref(props.filters.creator_search || '');
+const sortBy = ref(props.filters.sort_by || 'created_at');
+const sortDir = ref(props.filters.sort_dir || 'desc');
 
 const selectedReports = ref([]);
 
@@ -75,11 +78,24 @@ const applyFilters = debounce(() => {
         date_to: dateTo.value ? (dateTo.value instanceof Date ? dateTo.value.toLocaleDateString('en-CA') : dateTo.value) : null,
         my_division_only: myDivisionOnly.value ? '1' : '0',
         my_area_only: myAreaOnly.value ? '1' : '0',
-        per_page: perPage.value
+        per_page: perPage.value,
+        creator_search: creatorSearch.value,
+        sort_by: sortBy.value,
+        sort_dir: sortDir.value
     }, { preserveState: true, replace: true, preserveScroll: true });
 }, 300);
 
-watch([category, dateFrom, dateTo, perPage], applyFilters);
+watch([category, dateFrom, dateTo, perPage, creatorSearch], applyFilters);
+
+const toggleSort = (column) => {
+    if (sortBy.value === column) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = column;
+        sortDir.value = 'asc';
+    }
+    applyFilters();
+};
 
 const toggleDivisionFilter = () => {
     myDivisionOnly.value = !myDivisionOnly.value;
@@ -162,6 +178,17 @@ const formatDateForPicker = (date) => {
 
             <!-- Filters Section -->
             <div class="bg-white/50 backdrop-blur-xl rounded-2xl border border-white/80 shadow-sm p-4 flex flex-wrap gap-4 items-center relative z-20">
+                <!-- Search Filter -->
+                <div class="w-full sm:w-auto relative">
+                    <Search class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input 
+                        type="text" 
+                        v-model="creatorSearch"
+                        placeholder="Search Created By..."
+                        class="w-full sm:w-56 bg-white border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium text-slate-700 shadow-sm"
+                    >
+                </div>
+
                 <!-- Category Filter -->
                 <div class="w-full sm:w-auto">
                     <select 
@@ -237,8 +264,24 @@ const formatDateForPicker = (date) => {
                                     >
                                 </th>
                                 <th class="p-4">Report Name</th>
-                                <th class="p-4">Created By</th>
-                                <th class="p-4">Date Created</th>
+                                <th class="p-4 cursor-pointer hover:bg-slate-100/50 transition-colors group select-none" @click="toggleSort('creator')">
+                                    <div class="flex items-center gap-2">
+                                        Created By
+                                        <div class="flex flex-col text-slate-400 group-hover:text-slate-600 transition-colors">
+                                            <ChevronUp v-if="sortBy !== 'creator' || sortDir === 'asc'" class="w-3 h-3 -mb-1" :class="{'text-blue-600': sortBy === 'creator' && sortDir === 'asc'}" />
+                                            <ChevronDown v-if="sortBy !== 'creator' || sortDir === 'desc'" class="w-3 h-3" :class="{'text-blue-600': sortBy === 'creator' && sortDir === 'desc'}" />
+                                        </div>
+                                    </div>
+                                </th>
+                                <th class="p-4 cursor-pointer hover:bg-slate-100/50 transition-colors group select-none" @click="toggleSort('created_at')">
+                                    <div class="flex items-center gap-2">
+                                        Date Created
+                                        <div class="flex flex-col text-slate-400 group-hover:text-slate-600 transition-colors">
+                                            <ChevronUp v-if="sortBy !== 'created_at' || sortDir === 'asc'" class="w-3 h-3 -mb-1" :class="{'text-blue-600': sortBy === 'created_at' && sortDir === 'asc'}" />
+                                            <ChevronDown v-if="sortBy !== 'created_at' || sortDir === 'desc'" class="w-3 h-3" :class="{'text-blue-600': sortBy === 'created_at' && sortDir === 'desc'}" />
+                                        </div>
+                                    </div>
+                                </th>
                                 <th class="p-4 text-right w-32">Actions</th>
                             </tr>
                         </thead>

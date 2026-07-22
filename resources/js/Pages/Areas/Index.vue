@@ -95,6 +95,9 @@ const executeDelete = () => {
 // Check if current user can edit/delete this area
 const canManageArea = (area) => {
     const user = usePage().props.auth.user;
+    if (!user?.permissions?.includes('delete_areas')) {
+        return false;
+    }
     if (user?.roles?.includes('Developer') || user?.roles?.includes('Superadmin')) {
         return true;
     }
@@ -176,7 +179,7 @@ const executeBulkDelete = () => {
                     >
                 </div>
                 <div class="flex items-center gap-6">
-                    <div class="flex items-center gap-2" v-if="userDivisionId">
+                    <div class="flex items-center gap-2" v-if="$page.props.auth.user?.roles?.some(r => ['Admin', 'Superadmin', 'Developer'].includes(r)) && userDivisionId">
                         <span class="text-sm text-slate-500 font-medium">My Division Only</span>
                         <Toggle v-model="my_division_only" class="toggle-blue" />
                     </div>
@@ -191,6 +194,7 @@ const executeBulkDelete = () => {
                             <tr class="border-b border-slate-200/60 text-sm text-slate-500 font-bold bg-slate-50/50">
                                 <th class="px-6 py-4 w-12 text-center">
                                     <input 
+                                        v-if="$page.props.auth.user?.permissions?.includes('delete_areas')"
                                         type="checkbox" 
                                         v-model="selectAll"
                                         class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"

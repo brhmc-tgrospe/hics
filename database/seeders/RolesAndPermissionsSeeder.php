@@ -54,7 +54,9 @@ class RolesAndPermissionsSeeder extends Seeder
         $secretaryRole->givePermissionTo([
             'view_equipment',
             'view_supplies',
-            'generate_reports'
+            'generate_reports',
+            'view_divisions',
+            'view_areas'
         ]);
 
         // 2. Encoder
@@ -62,7 +64,8 @@ class RolesAndPermissionsSeeder extends Seeder
         $encoderRole->givePermissionTo([
             'view_equipment', 'create_equipment', 'edit_equipment', 'delete_equipment',
             'view_supplies', 'create_supplies', 'edit_supplies', 'delete_supplies',
-            'generate_reports'
+            'generate_reports',
+            'view_divisions', 'view_areas'
         ]);
 
         // 3. Admin (Division Scoped)
