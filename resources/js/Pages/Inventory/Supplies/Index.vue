@@ -159,15 +159,7 @@
                           </button>
                       </div>
                   </div>
-                  <div>
-                      <label class="block text-sm font-semibold text-slate-700 mb-1.5">Fund Cluster</label>
-                      <input 
-                          type="text" 
-                          v-model="reportData.fund_cluster" 
-                          placeholder="e.g. 05"
-                          class="w-full rounded-xl border border-slate-300 bg-slate-50 text-slate-700 px-4 py-2.5 shadow-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                      />
-                  </div>
+
                   <div class="pt-4 flex justify-end gap-3 sticky bottom-0 bg-white border-t mt-4 py-2">
                       <button @click="isReporting = false" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50">Cancel</button>
                       <button @click="generateReport" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md">Generate</button>

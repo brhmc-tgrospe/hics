@@ -22,6 +22,11 @@ const editingData = ref(null);
 const form = ref({
     div_code: '',
     div_name: '',
+    head_first_name: '',
+    head_middle_initial: '',
+    head_last_name: '',
+    head_nominal_letters: '',
+    head_designation: '',
 });
 
 const applyFilters = debounce(() => {
@@ -38,6 +43,11 @@ const openAdd = () => {
     form.value = {
         div_code: '',
         div_name: '',
+        head_first_name: '',
+        head_middle_initial: '',
+        head_last_name: '',
+        head_nominal_letters: '',
+        head_designation: '',
     };
     isAdding.value = true;
 };
@@ -47,6 +57,11 @@ const openEdit = (division) => {
     form.value = {
         div_code: division.div_code,
         div_name: division.div_name,
+        head_first_name: division.head_first_name || '',
+        head_middle_initial: division.head_middle_initial || '',
+        head_last_name: division.head_last_name || '',
+        head_nominal_letters: division.head_nominal_letters || '',
+        head_designation: division.head_designation || '',
     };
     isAdding.value = true;
 };
@@ -183,6 +198,7 @@ const executeBulkDelete = () => {
                                 <th class="px-6 py-4">ID</th>
                                 <th class="px-6 py-4">Code</th>
                                 <th class="px-6 py-4">Name</th>
+                                <th class="px-6 py-4">Head</th>
                                 <th class="px-6 py-4 w-32">Actions</th>
                             </tr>
                         </thead>
@@ -200,6 +216,12 @@ const executeBulkDelete = () => {
                                 <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ division.id }}</td>
                                 <td class="px-6 py-4 text-sm font-bold text-slate-700">{{ division.div_code }}</td>
                                 <td class="px-6 py-4 text-sm text-slate-600">{{ division.div_name }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-semibold text-slate-700">
+                                        {{ division.head_first_name }} <template v-if="division.head_middle_initial">{{ division.head_middle_initial }}. </template>{{ division.head_last_name }}<span v-if="division.head_nominal_letters">, {{ division.head_nominal_letters }}</span>
+                                    </div>
+                                    <div class="text-xs text-slate-500">{{ division.head_designation }}</div>
+                                </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
                                         <button 
@@ -278,6 +300,30 @@ const executeBulkDelete = () => {
                         <div>
                             <label class="block text-sm font-bold text-slate-700 mb-1">Division Name</label>
                             <input v-model="form.div_name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="col-span-1">
+                                <label class="block text-sm font-bold text-slate-700 mb-1">First Name</label>
+                                <input v-model="form.head_first_name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
+                            </div>
+                            <div class="col-span-1">
+                                <label class="block text-sm font-bold text-slate-700 mb-1">Middle Initial</label>
+                                <input v-model="form.head_middle_initial" type="text" maxlength="1" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
+                            </div>
+                            <div class="col-span-1">
+                                <label class="block text-sm font-bold text-slate-700 mb-1">Last Name</label>
+                                <input v-model="form.head_last_name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-1">Nominal Letters</label>
+                                <input v-model="form.head_nominal_letters" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-1">Designation</label>
+                                <input v-model="form.head_designation" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
+                            </div>
                         </div>
                     </div>
                     

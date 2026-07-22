@@ -254,16 +254,29 @@ class EquipmentController extends Controller
             ->value('name') ?? $report->category;
 
         $scopeName = '';
+        $divisionHeadName = null;
+        $divisionHeadDesignation = null;
+
         if ($report->report_type === 'Division') {
             $division = \App\Models\Division::query()->find($report->scope_id);
             if ($division) {
                 $scopeName = "Division: {$division->div_name}";
+                $mi = $division->head_middle_initial ? ' ' . trim($division->head_middle_initial) . '.' : '';
+                $nom = $division->head_nominal_letters ? ', ' . trim($division->head_nominal_letters) : '';
+                $divisionHeadName = strtoupper(trim("{$division->head_first_name}{$mi} {$division->head_last_name}") . $nom);
+                $divisionHeadDesignation = $division->head_designation;
             }
         } elseif ($report->report_type === 'Area') {
             $area = \App\Models\Area::with('division')->find($report->scope_id);
             if ($area) {
                 $divName = $area->division ? $area->division->div_name : '';
                 $scopeName = "Division: {$divName} | Area: {$area->area_name}";
+                if ($area->division) {
+                    $mi = $area->division->head_middle_initial ? ' ' . trim($area->division->head_middle_initial) . '.' : '';
+                    $nom = $area->division->head_nominal_letters ? ', ' . trim($area->division->head_nominal_letters) : '';
+                    $divisionHeadName = strtoupper(trim("{$area->division->head_first_name}{$mi} {$area->division->head_last_name}") . $nom);
+                    $divisionHeadDesignation = $area->division->head_designation;
+                }
             }
         }
 
@@ -272,6 +285,8 @@ class EquipmentController extends Controller
             'equipment' => $equipment,
             'categoryName' => $categoryName,
             'scopeName' => $scopeName,
+            'divisionHeadName' => $divisionHeadName,
+            'divisionHeadDesignation' => $divisionHeadDesignation,
         ]);
     }
 }

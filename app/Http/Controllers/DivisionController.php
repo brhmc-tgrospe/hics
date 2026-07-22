@@ -32,6 +32,11 @@ class DivisionController extends Controller
         $validated = $request->validate([
             'div_code' => 'required|string|max:255|unique:divisions',
             'div_name' => 'required|string|max:255|unique:divisions',
+            'head_first_name' => 'required|string|max:255',
+            'head_middle_initial' => 'required|string|max:1',
+            'head_last_name' => 'required|string|max:255',
+            'head_nominal_letters' => 'nullable|string|max:255',
+            'head_designation' => 'required|string|max:255',
         ], [
             'div_code.unique' => 'An existing division is still in the database. Contact the system developer.',
             'div_name.unique' => 'An existing division is still in the database. Contact the system developer.'
@@ -49,6 +54,11 @@ class DivisionController extends Controller
         $validated = $request->validate([
             'div_code' => 'required|string|max:255|unique:divisions,div_code,' . $division->id,
             'div_name' => 'required|string|max:255|unique:divisions,div_name,' . $division->id,
+            'head_first_name' => 'required|string|max:255',
+            'head_middle_initial' => 'required|string|max:1',
+            'head_last_name' => 'required|string|max:255',
+            'head_nominal_letters' => 'nullable|string|max:255',
+            'head_designation' => 'required|string|max:255',
         ], [
             'div_code.unique' => 'An existing division is still in the database. Contact the system developer.',
             'div_name.unique' => 'An existing division is still in the database. Contact the system developer.'

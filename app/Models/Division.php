@@ -28,7 +28,15 @@ class Division extends Model
         ]);
     }
 
-    protected $fillable = ['div_code', 'div_name'];
+    protected $fillable = [
+        'div_code', 
+        'div_name',
+        'head_first_name',
+        'head_middle_initial',
+        'head_last_name',
+        'head_nominal_letters',
+        'head_designation'
+    ];
 
     public function users()
     {

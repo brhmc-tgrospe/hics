@@ -122,7 +122,7 @@ defineEmits(['close']);
                 </Link>
 
                 <Link 
-                    v-if="$page.props.auth.user?.roles?.includes('Developer')"
+                    v-if="$page.props.auth.user?.roles?.includes('Developer') || $page.props.auth.user?.roles?.includes('Superadmin')"
                     :href="route('recycle-bin.index')" 
                     @click="$emit('close')"
                     :class="['w-full flex items-center gap-3 px-3 py-2 text-sm font-medium transition-colors', route().current('recycle-bin.index') ? 'text-blue-700 bg-blue-100/50 rounded-lg' : 'text-slate-600 hover:bg-white/40 rounded-lg']"

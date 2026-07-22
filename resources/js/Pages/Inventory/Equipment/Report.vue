@@ -7,6 +7,8 @@ const props = defineProps({
     equipment: Array,
     categoryName: String,
     scopeName: String,
+    divisionHeadName: String,
+    divisionHeadDesignation: String,
 });
 
 const totalAmount = computed(() => {
@@ -165,6 +167,41 @@ onMounted(() => {
                             <p class="font-bold">JEMALYN G. OCAY</p>
                             <p>State Auditor III</p>
                             <p>Audit Team Leader</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div v-if="report.report_type === 'Division' || report.report_type === 'Area'" class="mt-8 grid grid-cols-3 gap-8 text-[13px]">
+                <div>
+                    <p class="mb-8 font-semibold">Certified Correct by:</p>
+                    <div class="w-11/12">
+                        <div class="border-b-[2px] border-black w-full mb-1"></div>
+                        <div class="text-center">
+                            <p>{{ report.report_type === 'Area' ? 'Area Secretary' : 'Division Secretary' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <p class="mb-8 font-semibold text-left">Approved by:</p>
+                    <div class="w-full">
+                        <div class="border-b-[2px] border-black mx-auto w-11/12 mb-1"></div>
+                        <div v-if="divisionHeadName" class="text-center font-bold">
+                            {{ divisionHeadName }}
+                        </div>
+                        <div class="text-center">
+                            <p>{{ divisionHeadDesignation || 'Division Head' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="mb-8 font-semibold">Verified by:</p>
+                    <div class="w-11/12">
+                        <div class="border-b-[2px] border-black w-full mb-1"></div>
+                        <div class="text-center">
+                            <p>Secretariat - Inventory Committee</p>
                         </div>
                     </div>
                 </div>

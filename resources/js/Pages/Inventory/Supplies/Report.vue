@@ -7,10 +7,12 @@ const props = defineProps({
     supplies: Array,
     categoryName: String,
     scopeName: String,
+    divisionHeadName: String,
+    divisionHeadDesignation: String,
 });
 
 const totalAmount = computed(() => {
-    return props.supplies.reduce((sum, item) => sum + (Number(item.unit_value) * Number(item.on_hand_per_count)), 0);
+    return props.supplies.reduce((sum, item) => sum + (Number(item.unit_value) * Number(item.balance_per_card)), 0);
 });
 
 const reportPeriodText = computed(() => {
@@ -56,7 +58,7 @@ onMounted(() => {
                 <thead>
                     <!-- Header Row -->
                     <tr>
-                        <th colspan="7" class="border-[3px] border-black p-0">
+                        <th colspan="10" class="border-[3px] border-black p-0">
                             <div class="relative flex items-center justify-center min-h-[90px]">
                                 <div class="absolute left-0 flex items-center gap-2 px-2">
                                     <img src="/doh.png" alt="DOH Logo" class="h-20 w-auto object-contain" />
@@ -76,56 +78,60 @@ onMounted(() => {
                     </tr>
                     <!-- Title Row -->
                     <tr>
-                        <th colspan="7" class="border-[3px] border-black p-2 text-center relative">
+                        <th colspan="10" class="border-[3px] border-black p-2 text-center relative">
                             <div class="text-[15px] font-bold uppercase">REPORT ON THE PHYSICAL COUNT OF Inventories</div>
                             <div class="text-[14px] font-bold mt-1 uppercase">{{ categoryName }}</div>
                             <div v-if="scopeName" class="text-[14px] font-bold mt-1 uppercase">{{ scopeName }}</div>
                             <div class="text-[14px] font-bold mt-1 mb-4">{{ reportPeriodText }}</div>
-                            
-                            <div class="mt-4 flex justify-start font-bold text-[13px]">
-                                <div class="flex items-end pl-2">
-                                    <div class="pr-2">Fund Cluster :</div>
-                                    <div class="font-bold border-b-[2px] border-black text-red-600 pb-0">{{ report.fund_cluster }}</div>
-                                </div>
-                            </div>
                         </th>
                     </tr>
                     <!-- Accountability Row -->
                     <tr>
-                        <th colspan="7" class="border-[3px] border-black p-2 text-left text-[12px] font-normal leading-tight">
+                        <th colspan="10" class="border-[3px] border-black p-2 text-left text-[12px] font-normal leading-tight">
                             For which <span class="font-bold underline">ERIC RAYMOND N. RABORAR, MD,MPA-HEDM,MMHoA,FPSMS</span>, Medical Center Chief II, <span class="font-bold underline">BICOL REGIONAL TRAINING AND TEACHING HOSPITAL</span>, is accountable, having assumed such accountability on <span class="font-bold">{{ formatDate(report.date_of_accountability) }}</span>.
                         </th>
                     </tr>
                     <!-- Table Columns -->
-                    <tr class="font-bold text-center">
-                        <th class="border-[3px] border-black px-1 py-2 align-middle">Article</th>
-                        <th class="border-[3px] border-black px-1 py-2 align-middle">Description</th>
-                        <th class="border-[3px] border-black px-1 py-2 align-middle">Stock Number</th>
-                        <th class="border-[3px] border-black px-1 py-2 align-middle">Unit of Measure</th>
-                        <th class="border-[3px] border-black px-1 py-2 align-middle">Unit Value</th>
-                        <th class="border-[3px] border-black px-1 py-2 align-middle">Quantity per<br/>Physical Count</th>
-                        <th class="border-[3px] border-black px-1 py-2 align-middle">Total Amount</th>
+                    <tr class="font-bold text-center text-[11px]">
+                        <th rowspan="2" class="border-[3px] border-black px-1 py-1 align-middle">Article</th>
+                        <th rowspan="2" class="border-[3px] border-black px-1 py-1 align-middle">Description</th>
+                        <th rowspan="2" class="border-[3px] border-black px-1 py-1 align-middle">Stock<br/>Number</th>
+                        <th rowspan="2" class="border-[3px] border-black px-1 py-1 align-middle">Unit of<br/>Measure</th>
+                        <th rowspan="2" class="border-[3px] border-black px-1 py-1 align-middle">Unit Value</th>
+                        <th class="border-[3px] border-black px-1 py-1 align-middle">Balance<br/>Per Card</th>
+                        <th class="border-[3px] border-black px-1 py-1 align-middle">On Hand<br/>Per Count</th>
+                        <th colspan="2" class="border-[3px] border-black px-1 py-1 align-middle">Shortage/Overage</th>
+                        <th rowspan="2" class="border-[3px] border-black px-1 py-1 align-middle">Total Amount</th>
+                    </tr>
+                    <tr class="font-bold text-center text-[11px]">
+                        <th class="border-[3px] border-black px-1 py-1 align-middle">(Quantity)</th>
+                        <th class="border-[3px] border-black px-1 py-1 align-middle">(Quantity)</th>
+                        <th class="border-[3px] border-black px-1 py-1 align-middle">Quantity</th>
+                        <th class="border-[3px] border-black px-1 py-1 align-middle">Value</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="text-[11px]">
                     <tr v-for="item in supplies" :key="item.id">
                         <td class="border-[3px] border-black px-2 py-1 font-semibold">{{ item.article }}</td>
                         <td class="border-[3px] border-black px-2 py-1">{{ item.description }}</td>
                         <td class="border-[3px] border-black px-2 py-1 text-center">{{ item.stock_number }}</td>
                         <td class="border-[3px] border-black px-2 py-1 text-center">{{ item.unit_of_measure }}</td>
                         <td class="border-[3px] border-black px-2 py-1 text-right">{{ Number(item.unit_value).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-center">{{ item.balance_per_card }}</td>
                         <td class="border-[3px] border-black px-2 py-1 text-center">{{ item.on_hand_per_count }}</td>
-                        <td class="border-[3px] border-black px-2 py-1 text-right">{{ (Number(item.unit_value) * Number(item.on_hand_per_count)).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-center">{{ item.shortage_overage_qty !== null ? item.shortage_overage_qty : '' }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-right">{{ item.shortage_overage_value !== null ? Number(item.shortage_overage_value).toLocaleString(undefined, {minimumFractionDigits: 2}) : '' }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-right">{{ (Number(item.unit_value) * Number(item.balance_per_card)).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
                     </tr>
                     <tr v-if="supplies.length === 0">
-                        <td colspan="7" class="border-[3px] border-black px-2 py-4 text-center italic">No supplies found for this category.</td>
+                        <td colspan="10" class="border-[3px] border-black px-2 py-4 text-center italic">No supplies found for this category.</td>
                     </tr>
                     <tr>
                         <td colspan="3" class="border-[3px] border-black px-2 py-1 font-bold">***Nothing follows***</td>
-                        <td colspan="4" class="border-[3px] border-black px-2 py-1"></td>
+                        <td colspan="7" class="border-[3px] border-black px-2 py-1"></td>
                     </tr>
                     <tr class="font-bold">
-                        <td colspan="6" class="border-[3px] border-black px-2 py-2 text-center uppercase">Total</td>
+                        <td colspan="9" class="border-[3px] border-black px-2 py-2 text-center uppercase">Total</td>
                         <td class="border-[3px] border-black px-2 py-2 text-right">{{ totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
                     </tr>
                 </tbody>
@@ -158,6 +164,41 @@ onMounted(() => {
                         <p class="font-bold">JEMALYN G. OCAY</p>
                         <p>State Auditor III</p>
                         <p>Audit Team Leader</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div v-if="report.report_type === 'Division' || report.report_type === 'Area'" class="mt-8 grid grid-cols-3 gap-8 text-[13px]">
+                <div>
+                    <p class="mb-8 font-semibold">Certified Correct by:</p>
+                    <div class="w-11/12">
+                        <div class="border-b-[2px] border-black w-full mb-1"></div>
+                        <div class="text-center">
+                            <p>{{ report.report_type === 'Area' ? 'Area Secretary' : 'Division Secretary' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <p class="mb-8 font-semibold text-left">Approved by:</p>
+                    <div class="w-full">
+                        <div class="border-b-[2px] border-black mx-auto w-11/12 mb-1"></div>
+                        <div v-if="divisionHeadName" class="text-center font-bold">
+                            {{ divisionHeadName }}
+                        </div>
+                        <div class="text-center">
+                            <p>{{ divisionHeadDesignation || 'Division Head' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="mb-8 font-semibold">Verified by:</p>
+                    <div class="w-11/12">
+                        <div class="border-b-[2px] border-black w-full mb-1"></div>
+                        <div class="text-center">
+                            <p>Secretariat - Inventory Committee</p>
+                        </div>
                     </div>
                 </div>
             </div>
