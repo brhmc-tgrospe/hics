@@ -2,23 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
-use Illuminate\Http\Request;
-use App\Domain\Equipment\Models\Equipment;
-use App\Domain\Equipment\DTOs\EquipmentDTO;
-use App\Domain\Equipment\Actions\GetEquipmentAction;
 use App\Domain\Equipment\Actions\CreateEquipmentAction;
-use App\Domain\Equipment\Actions\UpdateEquipmentAction;
 use App\Domain\Equipment\Actions\DeleteEquipmentAction;
+use App\Domain\Equipment\Actions\GetEquipmentAction;
+use App\Domain\Equipment\Actions\ImportEquipmentAction;
+use App\Domain\Equipment\Actions\UpdateEquipmentAction;
+use App\Domain\Equipment\DTOs\EquipmentDTO;
+use App\Domain\Equipment\Models\Equipment;
+use App\Domain\Equipment\Models\EquipmentReport;
+use App\Domain\Shared\Models\Category;
+use App\Http\Requests\EquipmentImportRequest;
+use App\Models\Area;
+use App\Models\Division;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class EquipmentController extends Controller
 {
     public function index(Request $request)
     {
         $equipment = app(GetEquipmentAction::class)->execute($request->all());
-        $categories = \App\Domain\Shared\Models\Category::where('type', 'equipment')->get()->toArray();
-        $divisions = \App\Models\Division::select(['id', 'div_name as name'])->get()->toArray();
-        $areas = \App\Models\Area::select(['id', 'area_name as name', 'division_id'])->get()->toArray();
+        $categories = Category::where('type', 'equipment')->get()->toArray();
+        $divisions = Division::select(['id', 'div_name as name'])->get()->toArray();
+        $areas = Area::select(['id', 'area_name as name', 'division_id'])->get()->toArray();
 
         return Inertia::render('Inventory/Equipment/Index', [
             'equipment' => $equipment,
@@ -31,7 +41,7 @@ class EquipmentController extends Controller
 
     public function store(Request $request, CreateEquipmentAction $action)
     {
-        \Illuminate\Support\Facades\Gate::authorize('create', Equipment::class);
+        Gate::authorize('create', Equipment::class);
 
         $validated = $request->validate([
             'category' => 'nullable|string',
@@ -60,9 +70,9 @@ class EquipmentController extends Controller
                         return;
                     }
                     if ($value != $user->division_id) {
-                        $fail("You are only allowed to add data for your assigned division.");
+                        $fail('You are only allowed to add data for your assigned division.');
                     }
-                }
+                },
             ],
             'area_id' => [
                 'required',
@@ -74,9 +84,9 @@ class EquipmentController extends Controller
                         return;
                     }
                     if ($user->hasRole('Encoder') && $value != $user->area_id) {
-                        $fail("You are only allowed to add data for your assigned area.");
+                        $fail('You are only allowed to add data for your assigned area.');
                     }
-                }
+                },
             ],
         ]);
 
@@ -88,7 +98,7 @@ class EquipmentController extends Controller
 
     public function update(Request $request, Equipment $equipment, UpdateEquipmentAction $action)
     {
-        \Illuminate\Support\Facades\Gate::authorize('update', $equipment);
+        Gate::authorize('update', $equipment);
 
         $validated = $request->validate([
             'category' => 'nullable|string',
@@ -119,9 +129,10 @@ class EquipmentController extends Controller
 
     public function destroy(Equipment $equipment, DeleteEquipmentAction $action)
     {
-        \Illuminate\Support\Facades\Gate::authorize('delete', $equipment);
+        Gate::authorize('delete', $equipment);
 
         $action->execute($equipment);
+
         return redirect()->route('equipment.index')->with('success', "{$equipment->article} has been successfully deleted.");
     }
 
@@ -129,13 +140,13 @@ class EquipmentController extends Controller
     {
         $validated = $request->validate([
             'ids' => 'required|array',
-            'ids.*' => 'integer|exists:equipment,id'
+            'ids.*' => 'integer|exists:equipment,id',
         ]);
 
         $count = 0;
         foreach ($validated['ids'] as $id) {
             $equipment = Equipment::find($id);
-            if ($equipment && \Illuminate\Support\Facades\Gate::allows('delete', $equipment)) {
+            if ($equipment && Gate::allows('delete', $equipment)) {
                 $action->execute($equipment);
                 $count++;
             }
@@ -152,11 +163,11 @@ class EquipmentController extends Controller
         ];
 
         $columns = [
-            'category', 'article', 'description', 'date_acquired', 'property_number', 
-            'serial_number', 'unit_of_measure', 'unit_value', 
-            'quantity_per_property_card', 'quantity_per_physical_count', 
+            'category', 'article', 'description', 'date_acquired', 'property_number',
+            'serial_number', 'unit_of_measure', 'unit_value',
+            'quantity_per_property_card', 'quantity_per_physical_count',
             'remarks', 'end_user', 'status',
-            'division_id', 'area_id'
+            'division_id', 'area_id',
         ];
 
         $hints = [
@@ -172,9 +183,9 @@ class EquipmentController extends Controller
             'Must be > 0 (Required)',
             'Any remarks',
             'End User Name',
-            'e.g. Serviceable, Unserviceable(For Eqpt) | Available, Unavailable (For Supplies)',
+            'e.g. Serviceable, Unserviceable',
             'Division ID Number (Required)',
-            'Area ID Number (Required)'
+            'Area ID Number (Required)',
         ];
 
         $callback = function () use ($columns, $hints) {
@@ -187,13 +198,13 @@ class EquipmentController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function import(\App\Http\Requests\EquipmentImportRequest $request, \App\Domain\Equipment\Actions\ImportEquipmentAction $action)
+    public function import(EquipmentImportRequest $request, ImportEquipmentAction $action)
     {
-        \Illuminate\Support\Facades\Gate::authorize('create', Equipment::class);
+        Gate::authorize('create', Equipment::class);
 
         $rows = $request->input('rows', []);
-        
-        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $action) {
+
+        DB::transaction(function () use ($rows, $action) {
             foreach ($rows as $data) {
                 unset($data['_line']);
                 $dto = EquipmentDTO::fromArray($data);
@@ -216,7 +227,7 @@ class EquipmentController extends Controller
             'scope_id' => 'nullable|integer',
         ]);
 
-        $query = \App\Domain\Equipment\Models\Equipment::where('category', $validated['category']);
+        $query = Equipment::where('category', $validated['category']);
 
         if ($validated['report_type'] === 'Division') {
             $query->where('division_id', $validated['scope_id']);
@@ -225,18 +236,18 @@ class EquipmentController extends Controller
         }
 
         $equipment = $query->get();
-        
-        $filename = 'equipment_report_' . time() . '_' . uniqid() . '.json';
-        \Illuminate\Support\Facades\Storage::disk('local')->put("reports/{$filename}", $equipment->toJson());
 
-        $report = \App\Domain\Equipment\Models\EquipmentReport::create([
+        $filename = 'equipment_report_'.time().'_'.uniqid().'.json';
+        Storage::disk('local')->put("reports/{$filename}", $equipment->toJson());
+
+        $report = EquipmentReport::create([
             'category' => $validated['category'],
             'date_of_accountability' => $validated['date_of_accountability'],
             'year_of_report' => $validated['year_of_report'],
             'file_path' => "reports/{$filename}",
             'report_type' => $validated['report_type'],
             'scope_id' => $validated['scope_id'] ?? null,
-            'user_id' => \Illuminate\Support\Facades\Auth::id(),
+            'user_id' => Auth::id(),
         ]);
 
         return response()->json(['id' => $report->id]);
@@ -244,12 +255,12 @@ class EquipmentController extends Controller
 
     public function showReport(int $id)
     {
-        $report = \App\Domain\Equipment\Models\EquipmentReport::findOrFail($id);
-        
-        $json = \Illuminate\Support\Facades\Storage::disk('local')->get($report->file_path);
+        $report = EquipmentReport::findOrFail($id);
+
+        $json = Storage::disk('local')->get($report->file_path);
         $equipment = json_decode($json, true);
-        
-        $categoryName = \App\Domain\Shared\Models\Category::where('code', $report->category)
+
+        $categoryName = Category::where('code', $report->category)
             ->where('type', 'equipment')
             ->value('name') ?? $report->category;
 
@@ -258,23 +269,23 @@ class EquipmentController extends Controller
         $divisionHeadDesignation = null;
 
         if ($report->report_type === 'Division') {
-            $division = \App\Models\Division::query()->find($report->scope_id);
+            $division = Division::query()->find($report->scope_id);
             if ($division) {
                 $scopeName = "Division: {$division->div_name}";
-                $mi = $division->head_middle_initial ? ' ' . trim($division->head_middle_initial) . '.' : '';
-                $nom = $division->head_nominal_letters ? ', ' . trim($division->head_nominal_letters) : '';
-                $divisionHeadName = strtoupper(trim("{$division->head_first_name}{$mi} {$division->head_last_name}") . $nom);
+                $mi = $division->head_middle_initial ? ' '.trim($division->head_middle_initial).'.' : '';
+                $nom = $division->head_nominal_letters ? ', '.trim($division->head_nominal_letters) : '';
+                $divisionHeadName = strtoupper(trim("{$division->head_first_name}{$mi} {$division->head_last_name}").$nom);
                 $divisionHeadDesignation = $division->head_designation;
             }
         } elseif ($report->report_type === 'Area') {
-            $area = \App\Models\Area::with('division')->find($report->scope_id);
+            $area = Area::with('division')->find($report->scope_id);
             if ($area) {
                 $divName = $area->division ? $area->division->div_name : '';
                 $scopeName = "Division: {$divName} | Area: {$area->area_name}";
                 if ($area->division) {
-                    $mi = $area->division->head_middle_initial ? ' ' . trim($area->division->head_middle_initial) . '.' : '';
-                    $nom = $area->division->head_nominal_letters ? ', ' . trim($area->division->head_nominal_letters) : '';
-                    $divisionHeadName = strtoupper(trim("{$area->division->head_first_name}{$mi} {$area->division->head_last_name}") . $nom);
+                    $mi = $area->division->head_middle_initial ? ' '.trim($area->division->head_middle_initial).'.' : '';
+                    $nom = $area->division->head_nominal_letters ? ', '.trim($area->division->head_nominal_letters) : '';
+                    $divisionHeadName = strtoupper(trim("{$area->division->head_first_name}{$mi} {$area->division->head_last_name}").$nom);
                     $divisionHeadDesignation = $area->division->head_designation;
                 }
             }

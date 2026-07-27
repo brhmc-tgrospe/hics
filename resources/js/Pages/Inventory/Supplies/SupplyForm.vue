@@ -186,7 +186,7 @@ watch([
   const shortageQty = bal - oh;
   form.shortage_overage_qty = shortageQty;
   form.shortage_overage_value = (shortageQty * uv).toFixed(2);
-  form.total_amount = (uv * bal).toFixed(2);
+  form.total_amount = (uv * oh).toFixed(2);
 }, { immediate: true });
 
 const submit = () => {

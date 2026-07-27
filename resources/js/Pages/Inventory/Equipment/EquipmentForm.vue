@@ -86,7 +86,7 @@ watch([
     
     form.shortage_overage_qty = card - count;
     form.shortage_overage_value = parseFloat((form.shortage_overage_qty * val).toFixed(2));
-    form.total_value = parseFloat((card * val).toFixed(2));
+    form.total_value = parseFloat((count * val).toFixed(2));
 });
 
 const submit = () => {

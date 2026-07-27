@@ -12,7 +12,7 @@ const props = defineProps({
 });
 
 const totalAmount = computed(() => {
-    return props.supplies.reduce((sum, item) => sum + (Number(item.unit_value) * Number(item.balance_per_card)), 0);
+    return props.supplies.reduce((sum, item) => sum + (Number(item.unit_value) * Number(item.on_hand_per_count)), 0);
 });
 
 const reportPeriodText = computed(() => {
@@ -121,7 +121,7 @@ onMounted(() => {
                         <td class="border-[3px] border-black px-2 py-1 text-center">{{ item.on_hand_per_count }}</td>
                         <td class="border-[3px] border-black px-2 py-1 text-center">{{ item.shortage_overage_qty !== null ? item.shortage_overage_qty : '' }}</td>
                         <td class="border-[3px] border-black px-2 py-1 text-right">{{ item.shortage_overage_value !== null ? Number(item.shortage_overage_value).toLocaleString(undefined, {minimumFractionDigits: 2}) : '' }}</td>
-                        <td class="border-[3px] border-black px-2 py-1 text-right">{{ (Number(item.unit_value) * Number(item.balance_per_card)).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-right">{{ (Number(item.unit_value) * Number(item.on_hand_per_count)).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
                     </tr>
                     <tr v-if="supplies.length === 0">
                         <td colspan="10" class="border-[3px] border-black px-2 py-4 text-center italic">No supplies found for this category.</td>
