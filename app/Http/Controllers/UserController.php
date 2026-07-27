@@ -22,6 +22,7 @@ class UserController extends Controller
             'search' => $request->search,
             'per_page' => $request->per_page,
             'division_only' => $request->division_only,
+            'division_filter' => $request->division_filter,
             'sort_field' => $request->sort_field,
             'sort_direction' => $request->sort_direction,
         ]);
@@ -42,7 +43,7 @@ class UserController extends Controller
 
         return Inertia::render('Users/Index', [
             'users' => $users,
-            'filters' => $request->only(['search', 'per_page', 'division_only', 'sort_field', 'sort_direction']),
+            'filters' => $request->only(['search', 'per_page', 'division_only', 'division_filter', 'sort_field', 'sort_direction']),
             'roles' => $roles,
             'divisions' => $divisions,
             'areas' => $areas,
