@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\TracksDeletes;
 
 class SupplyReport extends Model
 {
     /** @use HasFactory<\Database\Factories\Domain\Supply\Models\SupplyReportFactory> */
-    use HasFactory, LogsActivity, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes, TracksDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {

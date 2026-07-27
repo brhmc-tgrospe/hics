@@ -101,7 +101,7 @@ class SupplyImportRequest extends FormRequest
             ],
             'rows.*.balance_per_card' => 'required|numeric|gt:0',
             'rows.*.on_hand_per_count' => 'required|numeric|gt:0',
-            'rows.*.expiry_date' => 'required_if:rows.*.category,mssup,enteral,drugs',
+            'rows.*.expiry_date' => 'required_if:rows.*.category,mssup,enteral,drmeds|nullable|date',
         ];
     }
 

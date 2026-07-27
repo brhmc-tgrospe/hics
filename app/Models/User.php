@@ -10,10 +10,11 @@ use Spatie\Permission\Traits\HasRoles;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\TracksDeletes;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles, LogsActivity, SoftDeletes;
+    use HasFactory, Notifiable, HasRoles, LogsActivity, SoftDeletes, TracksDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {

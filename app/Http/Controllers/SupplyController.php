@@ -73,7 +73,7 @@ class SupplyController extends Controller
                     }
                 }
             ],
-            'expiry_date' => 'required_if:category,mssup,enteral,drugs|nullable|date',
+            'expiry_date' => 'required_if:category,mssup,enteral,drmeds|nullable|date',
         ]);
 
         $dto = SupplyDTO::fromArray($validated);
@@ -150,7 +150,7 @@ class SupplyController extends Controller
         ];
 
         $hints = [
-            'Hint: Category Code (e.g. officesup, drugs) (Required)',
+            'Hint: Category Code (e.g. officesup, drmeds) (Required)',
             'Name of the item (Required)',
             'Detailed description (Required)',
             'e.g. 12345',

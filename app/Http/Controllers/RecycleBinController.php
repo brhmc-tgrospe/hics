@@ -25,40 +25,45 @@ class RecycleBinController extends Controller
         
         switch ($tab) {
             case 'categories':
-                $data = Category::onlyTrashed()->paginate($perPage)->through(fn($item) => [
+                $data = Category::with('deleter')->onlyTrashed()->paginate($perPage)->through(fn($item) => [
                     'id' => $item->id,
                     'code' => $item->code,
                     'name' => $item->name,
                     'type' => 'categories',
+                    'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
                 ]);
                 break;
             case 'equipment':
                 $categories = Category::pluck('name', 'code')->toArray();
-                $data = Equipment::onlyTrashed()->paginate($perPage)->through(fn($item) => [
+                $data = Equipment::with('deleter')->onlyTrashed()->paginate($perPage)->through(fn($item) => [
                     'id' => $item->id,
                     'category' => $categories[$item->category] ?? $item->category,
                     'article' => $item->article,
                     'type' => 'equipment',
+                    'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
                 ]);
                 break;
             case 'supplies':
                 $categories = Category::pluck('name', 'code')->toArray();
-                $data = Supply::onlyTrashed()->paginate($perPage)->through(fn($item) => [
+                $data = Supply::with('deleter')->onlyTrashed()->paginate($perPage)->through(fn($item) => [
                     'id' => $item->id,
                     'category' => $categories[$item->category] ?? $item->category,
                     'article' => $item->article,
                     'type' => 'supplies',
+                    'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
                 ]);
                 break;
             case 'reports':
                 // Reuse union logic for reports, but adding onlyTrashed conditions
                 $supplyQuery = DB::table('supply_reports')
-                    ->whereNotNull('deleted_at')
-                    ->select('id', 'category', 'date_of_accountability', 'year_of_report', 'file_path', 'report_type', 'scope_id', 'user_id', 'created_at', DB::raw("'supply' as report_model_type"), 'report_period', 'custom_month', 'deleted_at');
+                    ->whereNotNull('supply_reports.deleted_at')
+                    ->leftJoin('users as del_users', 'supply_reports.deleted_by', '=', 'del_users.id')
+                    ->select('supply_reports.id', 'category', 'date_of_accountability', 'year_of_report', 'file_path', 'report_type', 'scope_id', 'user_id', 'supply_reports.created_at', DB::raw("'supply' as report_model_type"), 'report_period', 'custom_month', 'supply_reports.deleted_at', DB::raw("CONCAT(del_users.first_name, ' ', del_users.last_name) as deleted_by_name"));
 
                 $equipmentQuery = DB::table('equipment_reports')
-                    ->whereNotNull('deleted_at')
-                    ->select('id', 'category', 'date_of_accountability', 'year_of_report', 'file_path', 'report_type', 'scope_id', 'user_id', 'created_at', DB::raw("'equipment' as report_model_type"), DB::raw("NULL as report_period"), DB::raw("NULL as custom_month"), 'deleted_at');
+                    ->whereNotNull('equipment_reports.deleted_at')
+                    ->leftJoin('users as del_users', 'equipment_reports.deleted_by', '=', 'del_users.id')
+                    ->select('equipment_reports.id', 'category', 'date_of_accountability', 'year_of_report', 'file_path', 'report_type', 'scope_id', 'user_id', 'equipment_reports.created_at', DB::raw("'equipment' as report_model_type"), DB::raw("NULL as report_period"), DB::raw("NULL as custom_month"), 'equipment_reports.deleted_at', DB::raw("CONCAT(del_users.first_name, ' ', del_users.last_name) as deleted_by_name"));
 
                 $query = $supplyQuery->unionAll($equipmentQuery);
                 
@@ -112,33 +117,37 @@ class RecycleBinController extends Controller
                         'name' => $name,
                         'created_at' => date('Y-m-d H:i:s', strtotime($report->created_at)),
                         'report_model_type' => $report->report_model_type,
-                        'type' => 'reports'
+                        'type' => 'reports',
+                        'deleted_by_name' => trim($report->deleted_by_name) ?: 'Unknown'
                     ];
                 });
                 break;
             case 'users':
-                $data = User::onlyTrashed()->paginate($perPage)->through(fn($item) => [
+                $data = User::with('deleter')->onlyTrashed()->paginate($perPage)->through(fn($item) => [
                     'id' => $item->id,
                     'first_name' => $item->first_name,
                     'last_name' => $item->last_name,
                     'username' => $item->username,
                     'type' => 'users',
+                    'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
                 ]);
                 break;
             case 'divisions':
-                $data = Division::onlyTrashed()->paginate($perPage)->through(fn($item) => [
+                $data = Division::with('deleter')->onlyTrashed()->paginate($perPage)->through(fn($item) => [
                     'id' => $item->id,
                     'code' => $item->div_code,
                     'name' => $item->div_name,
                     'type' => 'divisions',
+                    'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
                 ]);
                 break;
             case 'areas':
-                $data = Area::with('division')->onlyTrashed()->paginate($perPage)->through(fn($item) => [
+                $data = Area::with(['division', 'deleter'])->onlyTrashed()->paginate($perPage)->through(fn($item) => [
                     'id' => $item->id,
                     'area_name' => $item->area_name,
                     'division' => $item->division ? $item->division->div_name : '',
                     'type' => 'areas',
+                    'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
                 ]);
                 break;
         }

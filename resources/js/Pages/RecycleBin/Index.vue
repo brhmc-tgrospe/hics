@@ -175,7 +175,7 @@ const tabs = [
                                     <th class="py-4 px-6 font-bold text-sm">Area Name</th>
                                     <th class="py-4 px-6 font-bold text-sm">Division</th>
                                 </template>
-
+                                <th class="py-4 px-6 font-bold text-sm">Deleted By</th>
                                 <th class="py-4 px-6 font-bold text-sm text-right w-48">Actions</th>
                             </tr>
                         </thead>
@@ -216,6 +216,15 @@ const tabs = [
                                     <td class="py-3 px-6 text-sm font-semibold text-slate-800">{{ item.area_name }}</td>
                                     <td class="py-3 px-6 text-sm text-slate-600">{{ item.division }}</td>
                                 </template>
+                                
+                                <td class="py-3 px-6 text-sm text-slate-600 font-medium">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 uppercase">
+                                            {{ item.deleted_by_name?.charAt(0) || '?' }}
+                                        </div>
+                                        {{ item.deleted_by_name || 'Unknown' }}
+                                    </div>
+                                </td>
 
                                 <td class="py-3 px-6 text-right">
                                     <div class="flex items-center justify-end gap-2">

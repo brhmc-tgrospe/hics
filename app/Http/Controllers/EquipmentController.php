@@ -172,7 +172,7 @@ class EquipmentController extends Controller
             'Must be > 0 (Required)',
             'Any remarks',
             'End User Name',
-            'e.g. Serviceable, Unserviceable',
+            'e.g. Serviceable, Unserviceable(For Eqpt) | Available, Unavailable (For Supplies)',
             'Division ID Number (Required)',
             'Area ID Number (Required)'
         ];
