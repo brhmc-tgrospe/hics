@@ -47,7 +47,15 @@ const openAdd = () => {
     isAdding.value = true;
 };
 
+const isWarningModalOpen = ref(false);
+const warningMessage = ref('');
+
 const openEdit = (area) => {
+    if (isGeneralArea(area)) {
+        warningMessage.value = 'Area cannot be edited. Contact the developer administrator for more info.';
+        isWarningModalOpen.value = true;
+        return;
+    }
     editingData.value = area;
     form.value = {
         area_name: area.area_name,
@@ -77,6 +85,11 @@ const isConfirmDeleteOpen = ref(false);
 const areaToDelete = ref(null);
 
 const deleteArea = (area) => {
+    if (isGeneralArea(area)) {
+        warningMessage.value = 'Area cannot be deleted. Contact the developer administrator for more info.';
+        isWarningModalOpen.value = true;
+        return;
+    }
     areaToDelete.value = area;
     isConfirmDeleteOpen.value = true;
 };
@@ -104,6 +117,10 @@ const canManageArea = (area) => {
     return area.division_id === user?.division_id;
 };
 
+const isGeneralArea = (area) => {
+    return area?.area_name?.toLowerCase() === 'general area';
+};
+
 const selectedItems = ref([]);
 
 watch(() => props.areas.data, () => {
@@ -112,12 +129,12 @@ watch(() => props.areas.data, () => {
 
 const selectAll = computed({
     get: () => {
-        const deletableItems = props.areas.data.filter(canManageArea);
+        const deletableItems = props.areas.data.filter(area => canManageArea(area) && !isGeneralArea(area));
         return deletableItems.length > 0 && deletableItems.every(item => selectedItems.value.includes(item.id));
     },
     set: (val) => {
         if (val) {
-            selectedItems.value = props.areas.data.filter(canManageArea).map(item => item.id);
+            selectedItems.value = props.areas.data.filter(area => canManageArea(area) && !isGeneralArea(area)).map(item => item.id);
         } else {
             selectedItems.value = [];
         }
@@ -210,7 +227,7 @@ const executeBulkDelete = () => {
                             <tr v-for="area in areas.data" :key="area.id" class="hover:bg-blue-50/30 transition-colors">
                                 <td class="px-6 py-4 text-center">
                                     <input 
-                                        v-if="canManageArea(area)"
+                                        v-if="canManageArea(area) && !isGeneralArea(area)"
                                         type="checkbox" 
                                         :value="area.id" 
                                         v-model="selectedItems"
@@ -339,5 +356,14 @@ const executeBulkDelete = () => {
             @close="isConfirmBulkDeleteOpen = false" 
             @confirm="executeBulkDelete" 
         />
+        <Modal :show="isWarningModalOpen" @close="isWarningModalOpen = false">
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-slate-900 mb-4">Action Denied</h2>
+                <p class="text-slate-700">{{ warningMessage }}</p>
+                <div class="mt-6 flex justify-end">
+                    <button @click="isWarningModalOpen = false" class="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors">OK</button>
+                </div>
+            </div>
+        </Modal>
     </InventoryLayout>
 </template>
