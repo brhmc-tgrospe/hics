@@ -45,11 +45,22 @@ class ProfileController extends Controller
         $validated = $request->validated();
         $user = $request->user();
 
-        // If username was already changed, prevent it from being updated
-        if ($user->username_changed && isset($validated['username'])) {
-            unset($validated['username']);
-        } elseif (isset($validated['username']) && $validated['username'] !== $user->username) {
-            $user->username_changed = true;
+        $isDeveloperOrSuperadmin = $user->hasRole(['Developer', 'Superadmin']);
+        $isAdminEncoderSecretary = $user->hasRole(['Admin', 'Encoder', 'Secretary']);
+
+        if (isset($validated['username']) && $validated['username'] !== $user->username) {
+            if ($isDeveloperOrSuperadmin) {
+                // Unlimited changes allowed, no need to touch username_changed flag necessarily, but can leave it.
+            } elseif ($isAdminEncoderSecretary) {
+                if ($user->username_changed) {
+                    unset($validated['username']); // Already changed once, ignore
+                } else {
+                    $user->username_changed = true; // First time change
+                }
+            } else {
+                // Other roles (if any) cannot change username
+                unset($validated['username']);
+            }
         }
 
         if ($request->has('settings')) {

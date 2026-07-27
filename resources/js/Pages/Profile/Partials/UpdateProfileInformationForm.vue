@@ -3,6 +3,7 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
+import { computed } from 'vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineProps({
@@ -22,6 +23,17 @@ defineProps({
 
 const user = usePage().props.auth.user;
 const page = usePage();
+
+const canEditUsername = computed(() => {
+    const roles = user.roles || [];
+    if (roles.includes('Developer') || roles.includes('Superadmin')) {
+        return true;
+    }
+    if (roles.includes('Admin') || roles.includes('Encoder') || roles.includes('Secretary')) {
+        return !user.username_changed;
+    }
+    return false;
+});
 
 const form = useForm({
     first_name: user.first_name,
@@ -96,10 +108,11 @@ const submitProfile = () => {
                     type="text"
                     class="mt-1 block w-full disabled:opacity-50 disabled:bg-gray-100"
                     v-model="form.username"
-                    :disabled="user.username_changed"
+                    :disabled="!canEditUsername"
                     autocomplete="username"
                 />
-                <p v-if="user.username_changed" class="mt-1 text-xs text-gray-500">Username can only be edited once.</p>
+                <p v-if="!canEditUsername && user.username_changed" class="mt-1 text-xs text-gray-500">Username can only be edited once.</p>
+                <p v-else-if="!canEditUsername" class="mt-1 text-xs text-gray-500">You do not have permission to edit your username.</p>
 
                 <InputError class="mt-2" :message="form.errors.username" />
             </div>

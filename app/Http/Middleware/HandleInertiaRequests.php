@@ -45,6 +45,7 @@ class HandleInertiaRequests extends Middleware
                         ? \Spatie\Permission\Models\Permission::pluck('name') 
                         : $request->user()->getAllPermissions()->pluck('name'),
                     'settings' => $request->user()->settings,
+                    'username_changed' => $request->user()->username_changed,
                 ] : null,
                 'is_impersonating' => $request->session()->has('impersonator_id'),
                 'impersonator_name' => $request->session()->get('impersonator_name'),

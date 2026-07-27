@@ -26,8 +26,11 @@ class GetUsersAction
         }
 
         $divisionOnly = $filters['division_only'] ?? true;
+        $divisionFilter = $filters['division_filter'] ?? null;
         
-        if ($divisionOnly === true || $divisionOnly === 'true') {
+        if ($divisionFilter && $user->hasRole(['Developer', 'Superadmin'])) {
+            $query->where('division_id', $divisionFilter);
+        } elseif ($divisionOnly === true || $divisionOnly === 'true') {
             $query->where('division_id', $user->division_id);
         }
 

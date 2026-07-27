@@ -10,6 +10,7 @@ import Toggle from '@vueform/toggle';
 import '@vueform/toggle/themes/default.css';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
+import UserFormModal from './Partials/UserFormModal.vue';
 
 const props = defineProps({
     users: Object,
@@ -23,33 +24,20 @@ const page = usePage();
 const search = ref(props.filters.search || '');
 const per_page = ref(props.filters.per_page || 10);
 const division_only = ref(props.filters.division_only !== undefined ? (props.filters.division_only === 'true' || props.filters.division_only === true) : true);
+const division_filter = ref(props.filters.division_filter || '');
 const sort_field = ref(props.filters.sort_field || 'created_at');
 const sort_direction = ref(props.filters.sort_direction || 'desc');
 const isAdding = ref(false);
 const editingData = ref(null);
 const isViewing = ref(false);
 const viewingData = ref(null);
-const showPassword = ref(false);
-const showConfirmPassword = ref(false);
-
-const form = ref({
-    first_name: '',
-    last_name: '',
-    username: '',
-    email: '',
-    contact_number: '',
-    division_id: '',
-    area_id: '',
-    role: '',
-    password: '',
-    password_confirmation: '',
-});
 
 const applyFilters = debounce(() => {
     router.get(route('users.index'), {
         search: search.value,
         per_page: per_page.value,
         division_only: division_only.value,
+        division_filter: division_filter.value,
         sort_field: sort_field.value,
         sort_direction: sort_direction.value,
     }, { preserveState: true, replace: true, preserveScroll: true });
@@ -64,39 +52,15 @@ const sortBy = (field) => {
     }
 };
 
-watch([search, per_page, division_only, sort_field, sort_direction], applyFilters);
+watch([search, per_page, division_only, division_filter, sort_field, sort_direction], applyFilters);
 
 const openAdd = () => {
     editingData.value = null;
-    form.value = {
-        first_name: '',
-        last_name: '',
-        username: '',
-        email: '',
-        contact_number: '',
-        division_id: (!(page.props.auth?.user?.roles?.some(r => ['Superadmin', 'Developer'].includes(r)))) ? page.props.auth?.user?.division_id || '' : '',
-        area_id: (!(page.props.auth?.user?.roles?.some(r => ['Superadmin', 'Developer', 'Admin'].includes(r)))) ? page.props.auth?.user?.area_id || '' : '',
-        role: '',
-        password: '',
-        password_confirmation: '',
-    };
     isAdding.value = true;
 };
 
 const openEdit = (user) => {
     editingData.value = user;
-    form.value = {
-        first_name: user.first_name,
-        last_name: user.last_name,
-        username: user.username,
-        email: user.email,
-        contact_number: user.contact_number,
-        division_id: user.division_id,
-        area_id: user.area_id,
-        role: user.roles && user.roles.length ? user.roles[0].name : '',
-        password: '',
-        password_confirmation: '',
-    };
     isAdding.value = true;
 };
 
@@ -110,13 +74,13 @@ const closeForm = () => {
     editingData.value = null;
 };
 
-const submit = () => {
+const submit = (formValue) => {
     if (editingData.value) {
-        router.put(route('users.update', editingData.value.id), form.value, {
+        router.put(route('users.update', editingData.value.id), formValue, {
             onSuccess: () => closeForm(),
         });
     } else {
-        router.post(route('users.store'), form.value, {
+        router.post(route('users.store'), formValue, {
             onSuccess: () => closeForm(),
         });
     }
@@ -222,6 +186,16 @@ const executeBulkDelete = () => {
                     >
                 </div>
                 <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2" v-if="$page.props.auth.user?.roles?.some(r => ['Superadmin', 'Developer'].includes(r))">
+                        <span class="text-sm text-slate-500 font-medium">Division:</span>
+                        <select 
+                            v-model="division_filter"
+                            class="bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm py-1.5"
+                        >
+                            <option value="">All Divisions</option>
+                            <option v-for="dept in divisions" :key="dept.id" :value="dept.id">{{ dept.div_name }}</option>
+                        </select>
+                    </div>
                     <div class="flex items-center gap-2" v-if="$page.props.auth.user?.division_id">
                         <span class="text-sm text-slate-500 font-medium">My Division Only</span>
                         <Toggle v-model="division_only" class="toggle-blue" />
@@ -367,102 +341,15 @@ const executeBulkDelete = () => {
 
         <FloatingBulkDeleteButton :count="selectedItems.length" @delete="handleBulkDelete" />
 
-        <!-- Add/Edit Modal -->
-        <Modal :show="isAdding" @close="closeForm">
-            <div class="p-6">
-                <h2 class="text-xl font-bold text-slate-900 mb-6">{{ editingData ? 'Edit User' : 'Add User' }}</h2>
-                <form @submit.prevent="submit" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">First Name</label>
-                            <input v-model="form.first_name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">Last Name</label>
-                            <input v-model="form.last_name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">Username</label>
-                            <input v-model="form.username" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">Email</label>
-                            <input v-model="form.email" type="email" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">Contact Number</label>
-                            <input v-model="form.contact_number" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">Role</label>
-                            <select v-model="form.role" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
-                                <option value="">Select Role</option>
-                                <option v-for="role in roles" :key="role.id" :value="role.name">{{ role.name }}</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">Division</label>
-                            <select 
-                                v-model="form.division_id" 
-                                class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                :disabled="!($page.props.auth.user?.permissions?.includes('assign_division') || $page.props.auth.user?.roles?.some(r => ['Superadmin', 'Developer'].includes(r)))"
-                            >
-                                <option value="">Select Division</option>
-                                <option v-for="dept in divisions" :key="dept.id" :value="dept.id">{{ dept.div_name }}</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">Area</label>
-                            <select 
-                                v-model="form.area_id" 
-                                class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                :disabled="$page.props.auth.user?.area_id && !($page.props.auth.user?.roles?.includes('Developer') || $page.props.auth.user?.roles?.includes('Superadmin') || $page.props.auth.user?.roles?.includes('Admin'))"
-                                required
-                            >
-                                <option value="">Select Area</option>
-                                <option v-for="a in areas.filter(a => a.division_id == form.division_id)" :key="a.id" :value="a.id">{{ a.area_name }}</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">
-                                Password 
-                                <span v-if="editingData" class="text-xs font-normal text-slate-400">(Leave blank to keep current)</span>
-                            </label>
-                            <div class="relative">
-                                <input :type="showPassword ? 'text' : 'password'" v-model="form.password" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm pr-10" :required="!editingData" minlength="6">
-                                <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
-                                    <Eye v-if="!showPassword" class="w-4 h-4" />
-                                    <EyeOff v-else class="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">
-                                Confirm Password 
-                            </label>
-                            <div class="relative">
-                                <input :type="showConfirmPassword ? 'text' : 'password'" v-model="form.password_confirmation" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm pr-10" :required="!editingData || form.password.length > 0" minlength="6">
-                                <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
-                                    <Eye v-if="!showConfirmPassword" class="w-4 h-4" />
-                                    <EyeOff v-else class="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6 flex justify-end gap-3">
-                        <button type="button" @click="closeForm" class="px-4 py-2 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">Cancel</button>
-                        <button type="submit" class="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-200 transition-colors">
-                            {{ editingData ? 'Update User' : 'Create User' }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </Modal>
+        <UserFormModal
+            :show="isAdding"
+            :editingData="editingData"
+            :roles="roles"
+            :divisions="divisions"
+            :areas="areas"
+            @close="closeForm"
+            @submit="submit"
+        />
 
         <!-- View Modal -->
         <Modal :show="isViewing" @close="isViewing = false">
