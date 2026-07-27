@@ -73,6 +73,10 @@ class AreaController extends Controller
     {
         Gate::authorize('edit_areas');
 
+        if (strtolower($area->area_name) === 'general area') {
+            return redirect()->back()->with('error', 'Area cannot be edited. Contact the developer administrator for more info.');
+        }
+
         $validated = $request->validate([
             'area_name' => 'required|string|max:255',
             'division_id' => 'required|exists:divisions,id',
@@ -94,6 +98,10 @@ class AreaController extends Controller
     public function destroy(Area $area)
     {
         Gate::authorize('delete_areas');
+
+        if (strtolower($area->area_name) === 'general area') {
+            return redirect()->back()->with('error', 'Area cannot be deleted. Contact the developer administrator for more info.');
+        }
 
         $user = auth()->user();
         if (!$user->hasRole(['Superadmin', 'Developer'])) {
@@ -121,6 +129,10 @@ class AreaController extends Controller
 
         DB::transaction(function () use ($areas, $authUser) {
             foreach ($areas as $area) {
+                if (strtolower($area->area_name) === 'general area') {
+                    continue;
+                }
+
                 if (!$authUser->hasRole(['Superadmin', 'Developer'])) {
                     if ($area->division_id != $authUser->division_id) {
                         continue;
