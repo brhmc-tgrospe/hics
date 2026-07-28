@@ -51,65 +51,93 @@ class DashboardMetricsService
     }
 
     /**
-     * Get discrepancy metrics and items based on user roles.
+     * Get aggregate metrics for equipment and supplies based on user roles.
      *
      * @param User $user
      * @return array
      */
-    public function getDiscrepancyMetrics(User $user)
+    public function getAggregateMetrics(User $user)
     {
         $isSuper = $user->hasRole(['Developer', 'Superadmin']);
 
-        $equipmentQuery = \App\Domain\Equipment\Models\Equipment::whereNotNull('shortage_overage_qty')
-            ->where('shortage_overage_qty', '!=', 0);
-        $suppliesQuery = \App\Domain\Supplies\Models\Supply::whereNotNull('shortage_overage_qty')
-            ->where('shortage_overage_qty', '!=', 0);
+        $equipmentQuery = \Illuminate\Support\Facades\DB::table('equipment')->whereNull('deleted_at');
+        $suppliesQuery = \Illuminate\Support\Facades\DB::table('supplies')->whereNull('deleted_at');
 
-        if (!$isSuper && $user->division_id) {
-            $equipmentQuery->where('division_id', $user->division_id);
-            $suppliesQuery->where('division_id', $user->division_id);
-        } elseif (!$isSuper) {
-            // User has no division and is not superadmin, return empty
-            $equipmentQuery->where('id', 0);
-            $suppliesQuery->where('id', 0);
-        }
-
-        $equipmentItems = $equipmentQuery->get(['id', 'article', 'description', 'property_number', 'shortage_overage_qty', 'shortage_overage_value', 'division_id']);
-        $supplyItems = $suppliesQuery->get(['id', 'article', 'description', 'stock_number', 'shortage_overage_qty', 'shortage_overage_value', 'division_id']);
-
-        $totalItemsCount = $equipmentItems->count() + $supplyItems->count();
-        $totalValue = $equipmentItems->sum('shortage_overage_value') + $supplyItems->sum('shortage_overage_value');
-
-        $formattedItems = collect();
-        
-        foreach ($equipmentItems as $item) {
-            $formattedItems->push([
-                'type' => 'Equipment',
-                'id' => $item->id,
-                'name' => $item->article . ($item->description ? ' - ' . $item->description : ''),
-                'code' => $item->property_number,
-                'qty' => $item->shortage_overage_qty,
-                'value' => (float)$item->shortage_overage_value
-            ]);
-        }
-
-        foreach ($supplyItems as $item) {
-            $formattedItems->push([
-                'type' => 'Supply',
-                'id' => $item->id,
-                'name' => $item->article . ($item->description ? ' - ' . $item->description : ''),
-                'code' => $item->stock_number,
-                'qty' => $item->shortage_overage_qty,
-                'value' => (float)$item->shortage_overage_value
-            ]);
+        if (!$isSuper) {
+            if ($user->division_id) {
+                $equipmentQuery->where('division_id', $user->division_id);
+                $suppliesQuery->where('division_id', $user->division_id);
+            } else {
+                return [
+                    'equipmentCount' => 0,
+                    'suppliesCount' => 0,
+                    'equipmentValue' => 0,
+                    'suppliesValue' => 0,
+                    'equipmentByCategory' => [],
+                    'suppliesByCategory' => []
+                ];
+            }
         }
 
         return [
-            'count' => $totalItemsCount,
-            'value' => (float)$totalValue,
-            'items' => $formattedItems->sortByDesc(function ($item) {
-                return abs($item['value']);
-            })->values()->all()
+            'equipmentCount' => $equipmentQuery->count(),
+            'suppliesCount' => $suppliesQuery->count(),
+            'equipmentValue' => (float) $equipmentQuery->sum('total_value'),
+            'suppliesValue' => (float) $suppliesQuery->sum('total_amount'),
+            'equipmentByCategory' => $equipmentQuery->select('category', \Illuminate\Support\Facades\DB::raw('count(*) as count'))->groupBy('category')->pluck('count', 'category')->toArray(),
+            'suppliesByCategory' => $suppliesQuery->select('category', \Illuminate\Support\Facades\DB::raw('count(*) as count'))->groupBy('category')->pluck('count', 'category')->toArray(),
+        ];
+    }
+
+    /**
+     * Get discrepancy metrics and items based on user roles, paginated.
+     *
+     * @param User $user
+     * @param int $perPage
+     * @return array
+     */
+    public function getDiscrepancyMetrics(User $user, $perPage = 5)
+    {
+        $isSuper = $user->hasRole(['Developer', 'Superadmin']);
+
+        $eqQuery = \Illuminate\Support\Facades\DB::table('equipment')
+            ->whereNotNull('shortage_overage_qty')
+            ->where('shortage_overage_qty', '!=', 0)
+            ->whereNull('deleted_at')
+            ->selectRaw("'Equipment' as type, id, article as name, description, property_number as code, shortage_overage_qty as qty, shortage_overage_value as value");
+
+        $supQuery = \Illuminate\Support\Facades\DB::table('supplies')
+            ->whereNotNull('shortage_overage_qty')
+            ->where('shortage_overage_qty', '!=', 0)
+            ->whereNull('deleted_at')
+            ->selectRaw("'Supply' as type, id, article as name, description, stock_number as code, shortage_overage_qty as qty, shortage_overage_value as value");
+
+        if (!$isSuper && $user->division_id) {
+            $eqQuery->where('division_id', $user->division_id);
+            $supQuery->where('division_id', $user->division_id);
+        } elseif (!$isSuper) {
+            $eqQuery->where('id', 0);
+            $supQuery->where('id', 0);
+        }
+
+        $unionQuery = $eqQuery->unionAll($supQuery);
+
+        // We can get total value by summing the absolute value of shortage_overage_value on each table directly first
+        // Or we can just calculate it from the union query.
+        $totalValueResult = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$unionQuery->toSql()}) as combined"))
+            ->mergeBindings($unionQuery)
+            ->selectRaw('SUM(value) as total_value, COUNT(*) as total_count')
+            ->first();
+
+        $paginatedItems = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$unionQuery->toSql()}) as combined"))
+            ->mergeBindings($unionQuery)
+            ->orderByRaw('ABS(value) DESC')
+            ->paginate($perPage);
+
+        return [
+            'count' => $totalValueResult->total_count ?? 0,
+            'value' => (float)($totalValueResult->total_value ?? 0),
+            'items' => $paginatedItems
         ];
     }
 }
