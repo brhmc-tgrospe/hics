@@ -174,7 +174,7 @@ onMounted(() => {
                     <div class="w-11/12">
                         <div class="border-b-[2px] border-black w-full mb-1"></div>
                         <div class="text-center">
-                            <p>{{ report.report_type === 'Area' ? 'Area Secretary' : 'Division Secretary' }}</p>
+                            <p>{{ report.report_type === 'Area' ? 'Unit Head' : 'Unit Head' }}</p>
                         </div>
                     </div>
                 </div>
