@@ -11,13 +11,13 @@
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
             <HardDriveIcon class="w-3 h-3" /> Total Equipment
           </p>
-          <h3 class="text-3xl font-bold text-slate-800">{{ equipment.length }}</h3>
+          <h3 class="text-3xl font-bold text-slate-800">{{ aggregateMetrics.equipmentCount }}</h3>
         </div>
         <div class="bg-white/60 backdrop-blur-md p-5 rounded-3xl border border-white/80 shadow-sm">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
             <PackageIcon class="w-3 h-3" /> Total Supplies
           </p>
-          <h3 class="text-3xl font-bold text-slate-800">{{ supplies.length }}</h3>
+          <h3 class="text-3xl font-bold text-slate-800">{{ aggregateMetrics.suppliesCount }}</h3>
         </div>
         <div class="bg-white/60 backdrop-blur-md p-5 rounded-3xl border border-white/80 shadow-sm">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
@@ -57,6 +57,15 @@
           </div>
           <Transition name="list">
             <div v-if="showDiscrepancyQty" class="border-t border-amber-500/20 bg-white/30">
+              <div class="p-3 flex justify-end gap-2 items-center text-xs text-amber-700 bg-amber-500/10">
+                <span>Items per page:</span>
+                <select v-model="perPage" @change="updatePagination" class="text-xs bg-white border-amber-300 rounded p-1 py-0 h-7 text-amber-900 focus:ring-amber-500 focus:border-amber-500">
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                </select>
+              </div>
               <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm text-slate-600">
                   <thead>
@@ -67,18 +76,26 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-amber-200/30">
-                    <tr v-for="item in discrepancyMetrics.items" :key="item.type + item.id" class="hover:bg-amber-500/10 transition-colors">
+                    <tr v-for="item in discrepancyMetrics.items.data" :key="item.type + item.id" class="hover:bg-amber-500/10 transition-colors">
                       <td class="px-4 py-3 font-medium text-slate-800">{{ item.type }}</td>
                       <td class="px-4 py-3 text-slate-800">{{ item.name }}</td>
                       <td class="px-4 py-3 text-right font-medium" :class="item.qty > 0 ? 'text-emerald-600' : 'text-rose-600'">
                         {{ item.qty > 0 ? '+' : '' }}{{ item.qty }}
                       </td>
                     </tr>
-                    <tr v-if="discrepancyMetrics.items.length === 0">
+                    <tr v-if="!discrepancyMetrics.items.data || discrepancyMetrics.items.data.length === 0">
                       <td colspan="3" class="px-4 py-6 text-center text-slate-500 italic">No discrepancies found.</td>
                     </tr>
                   </tbody>
                 </table>
+              </div>
+              
+              <!-- Pagination links -->
+              <div v-if="discrepancyMetrics.items.links && discrepancyMetrics.items.links.length > 3" class="p-4 border-t border-amber-200/50 flex justify-center flex-wrap gap-1">
+                <template v-for="(link, pIndex) in discrepancyMetrics.items.links" :key="pIndex">
+                  <div v-if="link.url === null" class="mr-1 mb-1 px-3 py-1 text-xs text-amber-500 border border-amber-200 rounded" v-html="link.label"></div>
+                  <Link v-else :href="link.url + (link.url.includes('?') ? '&' : '?') + 'per_page=' + perPage" class="mr-1 mb-1 px-3 py-1 text-xs border rounded hover:bg-amber-500/20 focus:border-amber-500 focus:text-amber-700" :class="{ 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600 hover:text-white': link.active, 'border-amber-300 text-amber-700': !link.active }" v-html="link.label"></Link>
+                </template>
               </div>
             </div>
           </Transition>
@@ -114,18 +131,26 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-amber-200/30">
-                    <tr v-for="item in discrepancyMetrics.items" :key="item.type + item.id" class="hover:bg-amber-500/10 transition-colors">
+                    <tr v-for="item in discrepancyMetrics.items.data" :key="item.type + item.id" class="hover:bg-amber-500/10 transition-colors">
                       <td class="px-4 py-3 font-medium text-slate-800">{{ item.type }}</td>
                       <td class="px-4 py-3 text-slate-800">{{ item.name }}</td>
                       <td class="px-4 py-3 text-right font-bold" :class="item.value > 0 ? 'text-emerald-600' : 'text-rose-600'">
                         {{ formatCurrency(item.value) }}
                       </td>
                     </tr>
-                    <tr v-if="discrepancyMetrics.items.length === 0">
+                    <tr v-if="!discrepancyMetrics.items.data || discrepancyMetrics.items.data.length === 0">
                       <td colspan="3" class="px-4 py-6 text-center text-slate-500 italic">No discrepancies found.</td>
                     </tr>
                   </tbody>
                 </table>
+              </div>
+              
+              <!-- Pagination links -->
+              <div v-if="discrepancyMetrics.items.links && discrepancyMetrics.items.links.length > 3" class="p-4 border-t border-amber-200/50 flex justify-center flex-wrap gap-1">
+                <template v-for="(link, pIndex) in discrepancyMetrics.items.links" :key="pIndex">
+                  <div v-if="link.url === null" class="mr-1 mb-1 px-3 py-1 text-xs text-amber-500 border border-amber-200 rounded" v-html="link.label"></div>
+                  <Link v-else :href="link.url + (link.url.includes('?') ? '&' : '?') + 'per_page=' + perPage" class="mr-1 mb-1 px-3 py-1 text-xs border rounded hover:bg-amber-500/20 focus:border-amber-500 focus:text-amber-700" :class="{ 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600 hover:text-white': link.active, 'border-amber-300 text-amber-700': !link.active }" v-html="link.label"></Link>
+                </template>
               </div>
             </div>
           </Transition>
@@ -203,26 +228,36 @@ import { computed, ref } from 'vue';
 import { PackageIcon, ActivityIcon, HardDriveIcon, ShieldIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-vue-next';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import { formatCurrency } from '@/utils/formatters.js';
+import { router, Link } from '@inertiajs/vue3';
 
 const props = defineProps({
-  equipment: Array,
-  supplies: Array,
+  aggregateMetrics: {
+    type: Object,
+    default: () => ({ equipmentCount: 0, suppliesCount: 0, equipmentValue: 0, suppliesValue: 0, equipmentByCategory: {}, suppliesByCategory: {} })
+  },
   equipmentCategories: Array,
   supplyCategories: Array,
   divisionTotals: Array,
   discrepancyMetrics: {
     type: Object,
-    default: () => ({ count: 0, value: 0, items: [] })
+    default: () => ({ count: 0, value: 0, items: { data: [], links: [] } })
   },
+  filters: Object,
 });
 
 const totalEquipmentValue = computed(() => {
-  return props.equipment.reduce((sum, item) => sum + (Number(item.total_value) || 0), 0);
+  return props.aggregateMetrics.equipmentValue || 0;
 });
 
 const totalSuppliesValue = computed(() => {
-  return props.supplies.reduce((sum, item) => sum + (Number(item.total_amount) || 0), 0);
+  return props.aggregateMetrics.suppliesValue || 0;
 });
+
+const perPage = ref(props.filters?.per_page || 5);
+
+const updatePagination = () => {
+  router.get(route('dashboard'), { per_page: perPage.value }, { preserveState: true, preserveScroll: true });
+};
 
 const showAllDivisions = ref(false);
 const showAllEquipmentCats = ref(false);
@@ -238,7 +273,7 @@ const equipmentByCategoryList = computed(() => {
   return props.equipmentCategories.map(cat => ({
     code: cat.code,
     name: cat.name,
-    count: props.equipment.filter(e => e.category === cat.code).length
+    count: props.aggregateMetrics.equipmentByCategory[cat.code] || 0
   }));
 });
 
@@ -248,12 +283,10 @@ const visibleEquipmentCats = computed(() => {
 
 const suppliesByCategoryList = computed(() => {
   return props.supplyCategories.map(cat => {
-    const suppliesInCat = props.supplies.filter(s => s.category === cat.code);
     return {
       code: cat.code,
       name: cat.name,
-      count: suppliesInCat.length,
-      totalItems: suppliesInCat.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0)
+      count: props.aggregateMetrics.suppliesByCategory[cat.code] || 0
     };
   });
 });
