@@ -17,7 +17,7 @@
         <p class="text-sm font-semibold text-slate-800">{{ getDivisionName(data.division_id) || '-' }}</p>
       </div>
       <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Article</p>
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Article/Product Name</p>
         <p class="text-sm font-semibold text-slate-800">{{ data.article || '-' }}</p>
       </div>
       <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm" :class="{'sm:col-span-2': isExpiryExempt}">

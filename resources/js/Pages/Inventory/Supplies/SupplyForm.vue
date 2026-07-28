@@ -31,7 +31,7 @@
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Article</label>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Article/Product Name</label>
         <input type="text" v-model="form.article" class="w-full bg-slate-50 border border-slate-300 shadow-inner rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" />
         <div v-if="form.errors.article" class="text-red-500 text-xs mt-1">{{ form.errors.article }}</div>
       </div>

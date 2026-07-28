@@ -156,7 +156,7 @@ const tabs = [
                                 </template>
                                 <template v-else-if="tab === 'equipment' || tab === 'supplies'">
                                     <th class="py-4 px-6 font-bold text-sm">Category</th>
-                                    <th class="py-4 px-6 font-bold text-sm">Article</th>
+                                    <th class="py-4 px-6 font-bold text-sm">Article/Product Name</th>
                                 </template>
                                 <template v-else-if="tab === 'reports'">
                                     <th class="py-4 px-6 font-bold text-sm">Report Name</th>

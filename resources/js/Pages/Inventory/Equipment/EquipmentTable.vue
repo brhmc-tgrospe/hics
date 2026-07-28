@@ -85,7 +85,7 @@ const isColumnVisible = (column) => {
                         </th>
                         <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                             <button @click="$emit('sort', 'article')" class="flex items-center gap-1 hover:text-slate-800 focus:outline-none">
-                                Article
+                                ARTICLE/PRODUCT NAME
                                 <span class="flex flex-col">
                                     <svg class="w-2.5 h-2.5 -mb-1" :class="{ 'text-blue-600': sortField === 'article' && sortDirection === 'asc', 'text-slate-400': !(sortField === 'article' && sortDirection === 'asc') }" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
                                     <svg class="w-2.5 h-2.5" :class="{ 'text-blue-600': sortField === 'article' && sortDirection === 'desc', 'text-slate-400': !(sortField === 'article' && sortDirection === 'desc') }" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
