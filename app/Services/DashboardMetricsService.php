@@ -96,7 +96,7 @@ class DashboardMetricsService
      * @param int $perPage
      * @return array
      */
-    public function getDiscrepancyMetrics(User $user, $perPage = 5)
+    public function getDiscrepancyMetrics(User $user, $perPageQty = 5, $perPageValue = 5)
     {
         $isSuper = $user->hasRole(['Developer', 'Superadmin']);
 
@@ -122,22 +122,28 @@ class DashboardMetricsService
 
         $unionQuery = $eqQuery->unionAll($supQuery);
 
-        // We can get total value by summing the absolute value of shortage_overage_value on each table directly first
-        // Or we can just calculate it from the union query.
         $totalValueResult = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$unionQuery->toSql()}) as combined"))
             ->mergeBindings($unionQuery)
             ->selectRaw('SUM(value) as total_value, COUNT(*) as total_count')
             ->first();
 
-        $paginatedItems = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$unionQuery->toSql()}) as combined"))
+        $paginatedQtyItems = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$unionQuery->toSql()}) as combined"))
+            ->mergeBindings($unionQuery)
+            ->orderByRaw('ABS(qty) DESC')
+            ->paginate($perPageQty, ['*'], 'page_qty')
+            ->withQueryString();
+
+        $paginatedValueItems = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$unionQuery->toSql()}) as combined"))
             ->mergeBindings($unionQuery)
             ->orderByRaw('ABS(value) DESC')
-            ->paginate($perPage);
+            ->paginate($perPageValue, ['*'], 'page_value')
+            ->withQueryString();
 
         return [
             'count' => $totalValueResult->total_count ?? 0,
             'value' => (float)($totalValueResult->total_value ?? 0),
-            'items' => $paginatedItems
+            'items_qty' => $paginatedQtyItems,
+            'items_value' => $paginatedValueItems
         ];
     }
 }

@@ -20,8 +20,9 @@ class DashboardController extends Controller
 
         $divisionTotals = $metricsService->getDivisionTotals($user);
         
-        $perPage = $request->input('per_page', 5);
-        $discrepancyMetrics = $metricsService->getDiscrepancyMetrics($user, $perPage);
+        $perPageQty = $request->input('per_page_qty', 5);
+        $perPageValue = $request->input('per_page_value', 5);
+        $discrepancyMetrics = $metricsService->getDiscrepancyMetrics($user, $perPageQty, $perPageValue);
 
         return Inertia::render('Dashboard/Index', [
             'aggregateMetrics' => $aggregateMetrics,
@@ -29,7 +30,7 @@ class DashboardController extends Controller
             'supplyCategories' => $supplyCategories,
             'divisionTotals' => $divisionTotals,
             'discrepancyMetrics' => $discrepancyMetrics,
-            'filters' => $request->only(['per_page']),
+            'filters' => $request->only(['per_page_qty', 'per_page_value']),
         ]);
     }
 }
