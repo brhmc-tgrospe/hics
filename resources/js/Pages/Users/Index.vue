@@ -112,9 +112,20 @@ watch(() => props.users.data, () => {
 }, { deep: true });
 
 const canDeleteUser = (user) => {
-    return page.props.auth.user?.permissions?.includes('delete_users') && 
-        (page.props.auth.user?.roles?.some(r => ['Superadmin', 'Developer'].includes(r)) || 
-        user.division_id === page.props.auth.user?.division_id);
+    const currentUser = page.props.auth.user;
+    if (!currentUser) return false;
+    
+    // Developer cannot delete other developers
+    const isCurrentUserDeveloper = currentUser.roles?.includes('Developer');
+    const isTargetDeveloper = user.roles?.some(r => r.name === 'Developer');
+    
+    if (isCurrentUserDeveloper && isTargetDeveloper) {
+        return false;
+    }
+
+    return currentUser.permissions?.includes('delete_users') && 
+        (currentUser.roles?.some(r => ['Superadmin', 'Developer'].includes(r)) || 
+        user.division_id === currentUser.division_id);
 };
 
 const selectAll = computed({
@@ -279,7 +290,7 @@ const executeBulkDelete = () => {
                                             <Edit class="w-4 h-4" />
                                         </button>
                                         <button 
-                                            v-if="$page.props.auth.user?.permissions?.includes('delete_users') && ($page.props.auth.user?.roles?.some(r => ['Superadmin', 'Developer'].includes(r)) || user.division_id === $page.props.auth.user?.division_id)"
+                                            v-if="canDeleteUser(user)"
                                             @click="deleteUser(user)" 
                                             class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
                                             title="Delete"

@@ -11,6 +11,11 @@ class DeleteUserAction
     {
         $user = auth()->user();
 
+        // Developers cannot delete Developers
+        if ($user->hasRole('Developer') && $targetUser->hasRole('Developer')) {
+            throw ValidationException::withMessages(['error' => 'You do not have permission to delete a Developer. Please use phpMyAdmin.']);
+        }
+
         // Admins cannot delete other Admins, Superadmins, or Developers
         if ($user->hasRole('Admin') && !$user->hasRole(['Developer', 'Superadmin'])) {
             if ($targetUser->hasRole(['Admin', 'Superadmin', 'Developer'])) {
