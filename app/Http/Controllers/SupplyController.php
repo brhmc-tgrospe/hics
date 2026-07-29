@@ -44,6 +44,7 @@ class SupplyController extends Controller
             'on_hand_per_count' => 'required|integer',
             'shortage_overage_qty' => 'nullable|integer',
             'shortage_overage_value' => 'nullable|numeric',
+            'total_amount' => 'nullable|numeric',
             'status' => 'nullable|string',
             'division_id' => [
                 'required',
@@ -97,6 +98,7 @@ class SupplyController extends Controller
             'on_hand_per_count' => 'required|integer',
             'shortage_overage_qty' => 'nullable|integer',
             'shortage_overage_value' => 'nullable|numeric',
+            'total_amount' => 'nullable|numeric',
             'status' => 'nullable|string',
             'division_id' => 'required|integer|exists:divisions,id',
             'area_id' => 'required|integer|exists:areas,id',
