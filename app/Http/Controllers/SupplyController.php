@@ -253,7 +253,7 @@ class SupplyController extends Controller
         $divisionHeadDesignation = null;
 
         if ($report->report_type === 'Division') {
-            $division = \App\Models\Division::find($report->scope_id);
+            $division = \App\Models\Division::query()->find($report->scope_id);
             if ($division) {
                 $scopeName = "Division: {$division->div_name}";
                 $mi = $division->head_middle_initial ? ' ' . trim($division->head_middle_initial) . '.' : '';
