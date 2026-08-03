@@ -16,13 +16,17 @@ const props = defineProps({
     filters: {
         type: Object,
         default: () => ({})
+    },
+    categories: {
+        type: Array,
+        default: () => []
     }
 });
 
 const page = usePage();
 const authUser = computed(() => page.props.auth.user);
 const userRoles = computed(() => authUser.value?.roles || []);
-const canDelete = computed(() => userRoles.value.includes('Developer') || userRoles.value.includes('Superadmin')); // Superadmin isn't supposed to permanently delete, wait, prompt said "Only the Developer should be able to delete the permanently logs by date range."
+const canDelete = computed(() => userRoles.value.includes('Developer') || userRoles.value.includes('Superadmin'));
 const isDeveloper = computed(() => userRoles.value.includes('Developer'));
 
 const search = ref(props.filters.search || '');
@@ -101,6 +105,91 @@ const getSubjectName = (log) => {
 const getCauserName = (log) => {
     if (!log.causer) return 'System';
     return `${log.causer.first_name} ${log.causer.last_name}`;
+};
+
+const categoryMap = computed(() => {
+    const map = {};
+    if (props.categories && Array.isArray(props.categories)) {
+        props.categories.forEach(cat => {
+            map[cat.code] = cat.name;
+        });
+    }
+    return map;
+});
+
+const getCategoryLabel = (categoryCode) => {
+    if (!categoryCode) return '';
+    const name = categoryMap.value[categoryCode];
+    if (name) {
+        return `${name} (${categoryCode})`;
+    }
+    return categoryCode;
+};
+
+const getLogDetails = (log) => {
+    if (log.description === 'Login') {
+        return {
+            title: 'User logged in',
+            meta: null
+        };
+    }
+    if (log.description === 'Logout') {
+        return {
+            title: 'User logged out',
+            meta: null
+        };
+    }
+
+    const attrs = log.attribute_changes?.attributes || log.properties?.attributes || (log.properties && typeof log.properties === 'object' && !Array.isArray(log.properties) ? log.properties : {});
+    const oldAttrs = log.attribute_changes?.old || log.properties?.old || {};
+
+    const article = attrs.article || oldAttrs.article;
+    const rawCategory = attrs.category || oldAttrs.category;
+    const category = getCategoryLabel(rawCategory);
+    const areaName = attrs.area_name || oldAttrs.area_name;
+    const divName = attrs.div_name || oldAttrs.div_name;
+    const reportType = attrs.report_type || oldAttrs.report_type;
+    const yearOfReport = attrs.year_of_report || oldAttrs.year_of_report;
+    const username = attrs.username || oldAttrs.username;
+
+    let title = log.description || `${log.event ? log.event.charAt(0).toUpperCase() + log.event.slice(1) : 'Action'} on ${getSubjectName(log)}`;
+
+    if (['created', 'updated', 'deleted'].includes(title.toLowerCase())) {
+        const actionWord = title.charAt(0).toUpperCase() + title.slice(1);
+        if (article) {
+            title = `${actionWord} ${getSubjectName(log).toLowerCase()}: ${article}`;
+        } else {
+            title = `${actionWord} ${getSubjectName(log).toLowerCase()}`;
+        }
+    }
+
+    const meta = [];
+    if (article) {
+        meta.push({ label: 'Article', value: article });
+    }
+    if (rawCategory) {
+        meta.push({ label: 'Category', value: category });
+    }
+    if (reportType) {
+        meta.push({ label: 'Report Type', value: reportType });
+    }
+    if (yearOfReport) {
+        meta.push({ label: 'Year', value: yearOfReport });
+    }
+    if (areaName) {
+        meta.push({ label: 'Area', value: areaName });
+    }
+    if (divName) {
+        meta.push({ label: 'Division', value: divName });
+    }
+    if (username) {
+        meta.push({ label: 'Username', value: username });
+    }
+
+    return {
+        title,
+        meta: meta.length > 0 ? meta : null
+    };
 };
 </script>
 
@@ -208,7 +297,7 @@ const getCauserName = (log) => {
                         </div>
                         <select 
                             v-model="actionType"
-                            class="w-full sm:w-auto bg-white/50 backdrop-blur border border-white/80 rounded-xl pl-4 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium text-slate-700"
+                            class="w-full sm:w-auto bg-white/50 backdrop-blur border border-white/80 rounded-xl pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium text-slate-700 cursor-pointer"
                         >
                             <option value="All">All Actions</option>
                             <option value="Created">Created</option>
@@ -307,9 +396,19 @@ const getCauserName = (log) => {
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-xs font-bold text-slate-700">{{ getSubjectName(log) }}</td>
-                                    <td class="px-6 py-4 text-xs text-slate-500">
-                                        <div class="max-w-md truncate" :title="JSON.stringify(log.properties, null, 2)">
-                                            {{ log.description !== 'Login' && log.description !== 'Logout' ? log.description : 'Authentication event' }}
+                                    <td class="px-6 py-4 text-xs text-slate-700">
+                                        <div class="flex flex-col gap-1 max-w-xl">
+                                            <div class="font-bold text-slate-800 flex items-center gap-2">
+                                                <span>{{ getLogDetails(log).title }}</span>
+                                            </div>
+                                            <div v-if="getLogDetails(log).meta" class="flex flex-wrap items-center gap-1.5 text-[11px] mt-0.5">
+                                                <template v-for="(item, idx) in getLogDetails(log).meta" :key="idx">
+                                                    <span class="inline-flex items-center gap-1 bg-slate-100/90 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200/80 font-medium">
+                                                        <span class="text-slate-400 font-semibold uppercase text-[9px] tracking-wider">{{ item.label }}:</span>
+                                                        <span class="text-slate-800 font-semibold">{{ item.value }}</span>
+                                                    </span>
+                                                </template>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

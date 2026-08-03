@@ -16,9 +16,14 @@ class Supply extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logFillable()
+            ->logUnguarded()
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(function(string $eventName) {
+                $article = $this->article ?: 'Supply';
+                $category = $this->category ? " ({$this->category})" : '';
+                return ucfirst($eventName) . " supply: {$article}{$category}";
+            });
     }
     
     public function tapActivity($activity, string $eventName)

@@ -21,7 +21,10 @@ class User extends Authenticatable
         return LogOptions::defaults()
             ->logFillable()
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(function(string $eventName) {
+                return ucfirst($eventName) . " user: {$this->first_name} {$this->last_name} ({$this->username})";
+            });
     }
     
     public function tapActivity($activity, string $eventName)

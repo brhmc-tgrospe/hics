@@ -19,7 +19,12 @@ class SupplyReport extends Model
         return LogOptions::defaults()
             ->logFillable()
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(function(string $eventName) {
+                $type = $this->report_type ?: 'Report';
+                $cat = $this->category ? " ({$this->category})" : '';
+                return ucfirst($eventName) . " supply {$type}{$cat}";
+            });
     }
     
     public function tapActivity($activity, string $eventName)

@@ -16,9 +16,14 @@ class Equipment extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logFillable()
+            ->logUnguarded()
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(function(string $eventName) {
+                $article = $this->article ?: 'Equipment';
+                $category = $this->category ? " ({$this->category})" : '';
+                return ucfirst($eventName) . " equipment: {$article}{$category}";
+            });
     }
     
     public function tapActivity($activity, string $eventName)

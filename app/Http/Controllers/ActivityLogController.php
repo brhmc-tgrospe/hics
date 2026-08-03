@@ -40,6 +40,7 @@ class ActivityLogController extends Controller
                   ->orWhere('log_name', 'like', "%{$searchTerm}%")
                   ->orWhere('event', 'like', "%{$searchTerm}%")
                   ->orWhere('subject_type', 'like', "%{$searchTerm}%")
+                  ->orWhere('properties', 'like', "%{$searchTerm}%")
                   ->orWhereHasMorph('causer', [\App\Models\User::class], function($causerQuery) use ($searchTerm) {
                       $causerQuery->where('first_name', 'like', "%{$searchTerm}%")
                                   ->orWhere('last_name', 'like', "%{$searchTerm}%")
@@ -73,10 +74,12 @@ class ActivityLogController extends Controller
         }
 
         $activities = $query->latest()->paginate($perPage)->withQueryString();
+        $categories = \App\Domain\Shared\Models\Category::all(['code', 'name', 'type']);
 
         return Inertia::render('ActivityLogs/Index', [
             'activities' => $activities,
             'filters' => $request->only(['search', 'action_type', 'per_page', 'date_from', 'date_to']),
+            'categories' => $categories,
         ]);
     }
 

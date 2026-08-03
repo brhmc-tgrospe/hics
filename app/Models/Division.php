@@ -18,7 +18,10 @@ class Division extends Model
         return LogOptions::defaults()
             ->logFillable()
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(function(string $eventName) {
+                return ucfirst($eventName) . " division: {$this->div_name}";
+            });
     }
     
     public function tapActivity($activity, string $eventName)
