@@ -28,38 +28,39 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'username' => ['required', 'string'],
+            'username' => ['required_without:email', 'nullable', 'string'],
+            'email' => ['required_without:username', 'nullable', 'string'],
             'password' => ['required', 'string'],
         ];
+    }
+
+    /**
+     * Get the login identifier (either username or email).
+     */
+    public function loginIdentifier(): string
+    {
+        return (string) ($this->input('username') ?? $this->input('email'));
     }
 
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
 
-        if (Auth::validate($this->only('username', 'password'))) {
-            $user = Auth::getProvider()->retrieveByCredentials($this->only('username', 'password'));
+        $login = $this->loginIdentifier();
+        $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-            // Temporarily disabled for user training
-            // $sessionLifetime = config('session.lifetime') * 60;
+        $credentials = [
+            $fieldType => $login,
+            'password' => $this->input('password'),
+        ];
 
-            // $hasActiveSession = \Illuminate\Support\Facades\DB::table('sessions')
-            //     ->where('user_id', $user->id)
-            //     ->where('last_activity', '>=', now()->subSeconds($sessionLifetime)->getTimestamp())
-            //     ->exists();
-
-            // if ($hasActiveSession && ! $this->boolean('confirm_logout')) {
-            //     throw ValidationException::withMessages([
-            //         'confirm_logout' => 'This account is already logged in on another device.',
-            //     ]);
-            // }
-        }
-
-        if (! Auth::attempt($this->only('username', 'password'), $this->boolean('remember'))) {
+        if (! Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            $errorField = $this->has('username') ? 'username' : 'email';
+
             throw ValidationException::withMessages([
-                'username' => trans('auth.failed'),
+                $errorField => trans('auth.failed'),
             ]);
         }
 
@@ -80,9 +81,10 @@ class LoginRequest extends FormRequest
         event(new Lockout($this));
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
+        $errorField = $this->has('username') ? 'username' : 'email';
 
         throw ValidationException::withMessages([
-            'username' => trans('auth.throttle', [
+            $errorField => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
@@ -94,6 +96,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('username')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->loginIdentifier()).'|'.$this->ip());
     }
 }

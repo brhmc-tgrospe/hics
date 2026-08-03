@@ -77,7 +77,7 @@ const cancelLogout = () => {
             </div>
         </div>
 
-        <div v-if="form.errors.username || form.errors.password" class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+        <div v-if="form.errors.username || form.errors.email || form.errors.password" class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -89,7 +89,7 @@ const cancelLogout = () => {
                         Login Failed
                     </p>
                     <p class="text-sm text-red-600 mt-1">
-                        {{ form.errors.username || form.errors.password }}
+                        {{ form.errors.username || form.errors.email || form.errors.password }}
                     </p>
                 </div>
             </div>
@@ -97,19 +97,20 @@ const cancelLogout = () => {
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="username" value="Username" />
+                <InputLabel for="username" value="Email/Username" />
 
                 <TextInput
                     id="username"
                     type="text"
                     class="mt-1 block w-full"
                     v-model="form.username"
+                    placeholder="Enter email or username"
                     required
                     autofocus
                     autocomplete="username"
                 />
 
-                <InputError class="mt-2" :message="form.errors.username" />
+                <InputError class="mt-2" :message="form.errors.username || form.errors.email" />
             </div>
 
             <div class="mt-4 relative">

@@ -63,8 +63,10 @@ class UserController extends Controller
             'role' => 'required|exists:roles,name',
             'password' => 'required|string|min:6|confirmed',
         ], [
-            'username.unique' => 'An existing user is still in the database. Contact the system developer.',
-            'email.unique' => 'An existing user is still in the database. Contact the system developer.'
+            'username.unique' => 'The username is already in use.',
+            'email.unique' => 'The email is already in use.',
+            'password.min' => 'The password must be at least 6 characters.',
+            'password.confirmed' => 'The passwords do not match.',
         ]);
 
         DB::transaction(function () use ($validated, $action) {
@@ -87,8 +89,10 @@ class UserController extends Controller
             'role' => 'required|exists:roles,name',
             'password' => 'nullable|string|min:6|confirmed',
         ], [
-            'username.unique' => 'An existing user is still in the database. Contact the system developer.',
-            'email.unique' => 'An existing user is still in the database. Contact the system developer.'
+            'username.unique' => 'The username is already in use.',
+            'email.unique' => 'The email is already in use.',
+            'password.min' => 'The password must be at least 6 characters.',
+            'password.confirmed' => 'The passwords do not match.',
         ]);
 
         DB::transaction(function () use ($user, $validated, $action) {

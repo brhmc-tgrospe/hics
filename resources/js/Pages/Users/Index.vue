@@ -74,18 +74,6 @@ const closeForm = () => {
     editingData.value = null;
 };
 
-const submit = (formValue) => {
-    if (editingData.value) {
-        router.put(route('users.update', editingData.value.id), formValue, {
-            onSuccess: () => closeForm(),
-        });
-    } else {
-        router.post(route('users.store'), formValue, {
-            onSuccess: () => closeForm(),
-        });
-    }
-};
-
 const isConfirmDeleteOpen = ref(false);
 const userToDelete = ref(null);
 
@@ -359,7 +347,6 @@ const executeBulkDelete = () => {
             :divisions="divisions"
             :areas="areas"
             @close="closeForm"
-            @submit="submit"
         />
 
         <!-- View Modal -->
