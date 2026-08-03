@@ -158,10 +158,10 @@ class SupplyController extends Controller
             'e.g. 12345',
             'YYYY-MM-DD (Required for Medical and Surgical Supplies, Enteral Supplies & Drugs and Medicines)',
             'e.g. box, pc',
-            'Numeric value',
+            'Numeric value (Required',
             'Must be > 0 (Required)',
             'Must be > 0 (Required)',
-            'e.g. Available, Depleted',
+            'e.g. Available, Depleted (Required)',
             'Division ID Number (Required)',
             'Area ID Number (Required)'
         ];
