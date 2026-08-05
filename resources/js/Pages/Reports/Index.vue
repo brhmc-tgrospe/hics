@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { Head, router, Link, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import { FileText, Eye, Trash2, Search, ChevronUp, ChevronDown } from 'lucide-vue-next';
@@ -8,6 +8,7 @@ import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
+import TablePagination from '@/Components/TablePagination.vue';
 
 const props = defineProps({
     reports: {
@@ -339,35 +340,7 @@ const formatDateForPicker = (date) => {
                 </div>
 
                 <!-- Pagination -->
-                <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-medium text-slate-500">Rows per page:</span>
-                        <select
-                          v-model="perPage"
-                          class="bg-white border border-slate-300 rounded-lg pl-2 pr-8 py-1 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
-                        >
-                          <option v-for="size in [10, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
-                        </select>
-                    </div>
-                    
-                    <div class="flex items-center justify-end flex-1">
-                        <div class="flex items-center gap-1">
-                            <template v-for="(link, index) in reports.links" :key="index">
-                                <Link
-                                    v-if="link.url"
-                                    :href="link.url"
-                                    :class="['px-3 py-1 rounded-lg text-xs font-medium transition-colors', link.active ? 'bg-blue-600 text-white' : 'hover:bg-slate-200 text-slate-600']"
-                                    v-html="link.label"
-                                />
-                                <span
-                                    v-else
-                                    class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400"
-                                    v-html="link.label"
-                                ></span>
-                            </template>
-                        </div>
-                    </div>
-                </div>
+                <TablePagination :pagination="reports" v-model:perPage="perPage" />
             </div>
         </div>
 

@@ -27,6 +27,22 @@ class EquipmentDTO
 
     public static function fromArray(array $data): self
     {
+        $unitValue = isset($data['unit_value']) && $data['unit_value'] !== null ? (float)$data['unit_value'] : null;
+        $propCard = isset($data['quantity_per_property_card']) && $data['quantity_per_property_card'] !== null ? (int)$data['quantity_per_property_card'] : null;
+        $physCount = isset($data['quantity_per_physical_count']) && $data['quantity_per_physical_count'] !== null ? (int)$data['quantity_per_physical_count'] : null;
+
+        $shortageOverageQty = isset($data['shortage_overage_qty']) && $data['shortage_overage_qty'] !== null
+            ? (int)$data['shortage_overage_qty']
+            : (($propCard !== null && $physCount !== null) ? ($propCard - $physCount) : null);
+
+        $shortageOverageValue = isset($data['shortage_overage_value']) && $data['shortage_overage_value'] !== null
+            ? (float)$data['shortage_overage_value']
+            : (($shortageOverageQty !== null && $unitValue !== null) ? round($shortageOverageQty * $unitValue, 2) : null);
+
+        $totalValue = isset($data['total_value']) && $data['total_value'] !== null
+            ? (float)$data['total_value']
+            : (($physCount !== null && $unitValue !== null) ? round($physCount * $unitValue, 2) : null);
+
         return new self(
             $data['category'] ?? null,
             $data['article'] ?? null,
@@ -35,17 +51,17 @@ class EquipmentDTO
             $data['property_number'] ?? null,
             $data['serial_number'] ?? null,
             $data['unit_of_measure'] ?? null,
-            isset($data['unit_value']) ? (float)$data['unit_value'] : null,
-            isset($data['total_value']) ? (float)$data['total_value'] : null,
-            isset($data['quantity_per_property_card']) ? (int)$data['quantity_per_property_card'] : null,
-            isset($data['quantity_per_physical_count']) ? (int)$data['quantity_per_physical_count'] : null,
-            isset($data['shortage_overage_qty']) ? (int)$data['shortage_overage_qty'] : null,
-            isset($data['shortage_overage_value']) ? (float)$data['shortage_overage_value'] : null,
+            $unitValue,
+            $totalValue,
+            $propCard,
+            $physCount,
+            $shortageOverageQty,
+            $shortageOverageValue,
             $data['remarks'] ?? null,
             $data['end_user'] ?? null,
             $data['status'] ?? null,
-            isset($data['division_id']) ? (int)$data['division_id'] : null,
-            isset($data['area_id']) ? (int)$data['area_id'] : null
+            isset($data['division_id']) && $data['division_id'] !== null ? (int)$data['division_id'] : null,
+            isset($data['area_id']) && $data['area_id'] !== null ? (int)$data['area_id'] : null
         );
     }
 

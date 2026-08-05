@@ -22,7 +22,7 @@ class SupplyController extends Controller
 
         return Inertia::render('Inventory/Supplies/Index', [
             'supplies' => $supplies,
-            'filters' => $request->only(['search', 'category', 'my_division_only', 'my_area_only']),
+            'filters' => $request->only(['search', 'category', 'my_division_only', 'my_area_only', 'per_page', 'sort_field', 'sort_direction']),
             'categories' => $categories,
             'divisions' => $divisions,
             'areas' => $areas,

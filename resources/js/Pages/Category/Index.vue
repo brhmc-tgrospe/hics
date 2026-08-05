@@ -19,16 +19,18 @@ const isSuperadminOrDeveloper = computed(() => userRoles.value.includes('Superad
 
 const activeTab = ref(props.filters.tab || 'equipment');
 const search = ref(props.filters.search || '');
+const perPage = ref(props.filters.per_page ? Number(props.filters.per_page) : 10);
 const isAdding = ref(false);
 
 const applyFilters = debounce(() => {
     router.get(route('categories.index'), {
         tab: activeTab.value,
         search: search.value,
+        per_page: perPage.value,
     }, { preserveState: true, replace: true, preserveScroll: true });
 }, 300);
 
-watch([search, activeTab], applyFilters);
+watch([search, activeTab, perPage], applyFilters);
 
 const setTab = (tab) => {
     activeTab.value = tab;
@@ -112,7 +114,7 @@ const handleSaved = () => {
                 <CategoryTable 
                     :categories="categories"
                     :isSuperadminOrDeveloper="isSuperadminOrDeveloper"
-                    @update-per-page="(size) => router.get(route('categories.index'), { tab: activeTab, search: search, per_page: size }, { preserveState: true, replace: true, preserveScroll: true })"
+                    @update-per-page="(size) => { perPage = Number(size); applyFilters(); }"
                 />
             </div>
         </div>

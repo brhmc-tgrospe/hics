@@ -34,6 +34,29 @@ class Equipment extends Model
         ]);
     }
 
+    protected static function booted()
+    {
+        static::saving(function (Equipment $equipment) {
+            if ($equipment->quantity_per_property_card !== null && $equipment->quantity_per_physical_count !== null) {
+                if ($equipment->shortage_overage_qty === null || ($equipment->isDirty(['quantity_per_property_card', 'quantity_per_physical_count']) && !$equipment->isDirty('shortage_overage_qty'))) {
+                    $equipment->shortage_overage_qty = $equipment->quantity_per_property_card - $equipment->quantity_per_physical_count;
+                }
+            }
+
+            if ($equipment->shortage_overage_qty !== null && $equipment->unit_value !== null) {
+                if ($equipment->shortage_overage_value === null || ($equipment->isDirty(['shortage_overage_qty', 'unit_value', 'quantity_per_property_card', 'quantity_per_physical_count']) && !$equipment->isDirty('shortage_overage_value'))) {
+                    $equipment->shortage_overage_value = round($equipment->shortage_overage_qty * (float)$equipment->unit_value, 2);
+                }
+            }
+
+            if ($equipment->quantity_per_physical_count !== null && $equipment->unit_value !== null) {
+                if ($equipment->total_value === null || ($equipment->isDirty(['quantity_per_physical_count', 'unit_value']) && !$equipment->isDirty('total_value'))) {
+                    $equipment->total_value = round($equipment->quantity_per_physical_count * (float)$equipment->unit_value, 2);
+                }
+            }
+        });
+    }
+
     protected $table = 'equipment';
 
     protected $guarded = ['id'];

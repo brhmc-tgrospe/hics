@@ -24,21 +24,37 @@ class SupplyDTO
 
     public static function fromArray(array $data): self
     {
+        $unitValue = isset($data['unit_value']) && $data['unit_value'] !== null ? (float)$data['unit_value'] : null;
+        $balancePerCard = isset($data['balance_per_card']) && $data['balance_per_card'] !== null ? (int)$data['balance_per_card'] : null;
+        $onHandPerCount = isset($data['on_hand_per_count']) && $data['on_hand_per_count'] !== null ? (int)$data['on_hand_per_count'] : null;
+
+        $shortageOverageQty = isset($data['shortage_overage_qty']) && $data['shortage_overage_qty'] !== null
+            ? (int)$data['shortage_overage_qty']
+            : (($balancePerCard !== null && $onHandPerCount !== null) ? ($balancePerCard - $onHandPerCount) : null);
+
+        $shortageOverageValue = isset($data['shortage_overage_value']) && $data['shortage_overage_value'] !== null
+            ? (float)$data['shortage_overage_value']
+            : (($shortageOverageQty !== null && $unitValue !== null) ? round($shortageOverageQty * $unitValue, 2) : null);
+
+        $totalAmount = isset($data['total_amount']) && $data['total_amount'] !== null
+            ? (float)$data['total_amount']
+            : (($onHandPerCount !== null && $unitValue !== null) ? round($onHandPerCount * $unitValue, 2) : null);
+
         return new self(
             $data['category'] ?? null,
             $data['article'] ?? null,
             $data['description'] ?? null,
             $data['stock_number'] ?? null,
             $data['unit_of_measure'] ?? null,
-            isset($data['unit_value']) ? (float)$data['unit_value'] : null,
-            isset($data['balance_per_card']) ? (int)$data['balance_per_card'] : null,
-            isset($data['on_hand_per_count']) ? (int)$data['on_hand_per_count'] : null,
-            isset($data['shortage_overage_qty']) ? (int)$data['shortage_overage_qty'] : null,
-            isset($data['shortage_overage_value']) ? (float)$data['shortage_overage_value'] : null,
-            isset($data['total_amount']) ? (float)$data['total_amount'] : null,
+            $unitValue,
+            $balancePerCard,
+            $onHandPerCount,
+            $shortageOverageQty,
+            $shortageOverageValue,
+            $totalAmount,
             $data['status'] ?? null,
-            isset($data['division_id']) ? (int)$data['division_id'] : null,
-            isset($data['area_id']) ? (int)$data['area_id'] : null,
+            isset($data['division_id']) && $data['division_id'] !== null ? (int)$data['division_id'] : null,
+            isset($data['area_id']) && $data['area_id'] !== null ? (int)$data['area_id'] : null,
             $data['expiry_date'] ?? null
         );
     }

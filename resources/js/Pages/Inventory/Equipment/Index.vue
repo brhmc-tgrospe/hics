@@ -30,6 +30,8 @@ const {
     myAreaOnly,
     sortField,
     sortDirection,
+    perPage,
+    handlePerPage,
     toggleSort,
     toggleDivisionFilter,
     toggleAreaFilter,
@@ -292,6 +294,7 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                     @sort="toggleSort"
                     @edit="openEdit"
                     @view="openView"
+                    @update-per-page="handlePerPage"
                 />
             </div>
         </div>

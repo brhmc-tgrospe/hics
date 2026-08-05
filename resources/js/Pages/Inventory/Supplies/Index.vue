@@ -285,6 +285,8 @@ const {
     myAreaOnly,
     sortField,
     sortDirection,
+    perPage,
+    handlePerPage,
     toggleSort,
     toggleDivisionFilter,
     toggleAreaFilter,
@@ -323,20 +325,6 @@ const handleSearch = () => {
 // The composable watches `search` and `category`. So `@input="handleSearch"` in template isn't strictly necessary since there's a watcher.
 // Let's just define a dummy handleSearch if the template calls it.
 const handleSearchDummy = () => {};
-
-const handlePerPage = (size) => {
-    import('@inertiajs/vue3').then(({ router }) => {
-        router.get(route('supplies.index'), {
-            search: searchQuery.value,
-            category: filterCat.value,
-            per_page: size,
-            my_division_only: myDivisionOnly.value ? '1' : '0',
-            my_area_only: myAreaOnly.value ? '1' : '0',
-            sort_field: sortField.value,
-            sort_direction: sortDirection.value,
-        }, { preserveState: true, replace: true });
-    });
-};
 
 const handleSuccess = (data) => {
   closeForm();

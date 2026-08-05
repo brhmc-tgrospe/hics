@@ -22,6 +22,7 @@ export function useInventoryIndex({
     const myAreaOnly = ref(props.filters.my_area_only === '1' || props.filters.my_area_only === true);
     const sortField = ref(props.filters.sort_field || 'id');
     const sortDirection = ref(props.filters.sort_direction || 'desc');
+    const perPage = ref(props.filters.per_page ? Number(props.filters.per_page) : 10);
 
     const applyFilters = debounce(() => {
         router.get(route(indexRouteName), {
@@ -31,10 +32,16 @@ export function useInventoryIndex({
             my_area_only: myAreaOnly.value ? '1' : '0',
             sort_field: sortField.value,
             sort_direction: sortDirection.value,
+            per_page: perPage.value,
         }, { preserveState: true, replace: true, preserveScroll: true });
     }, 300);
 
-    watch([search, category, sortField, sortDirection], applyFilters);
+    watch([search, category, sortField, sortDirection, perPage], applyFilters);
+
+    const handlePerPage = (size) => {
+        perPage.value = Number(size);
+        applyFilters();
+    };
 
     const toggleSort = (field) => {
         if (sortField.value === field) {
@@ -189,6 +196,8 @@ export function useInventoryIndex({
         myAreaOnly,
         sortField,
         sortDirection,
+        perPage,
+        handlePerPage,
         toggleSort,
         toggleDivisionFilter,
         toggleAreaFilter,

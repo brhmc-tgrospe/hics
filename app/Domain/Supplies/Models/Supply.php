@@ -34,6 +34,29 @@ class Supply extends Model
         ]);
     }
 
+    protected static function booted()
+    {
+        static::saving(function (Supply $supply) {
+            if ($supply->balance_per_card !== null && $supply->on_hand_per_count !== null) {
+                if ($supply->shortage_overage_qty === null || ($supply->isDirty(['balance_per_card', 'on_hand_per_count']) && !$supply->isDirty('shortage_overage_qty'))) {
+                    $supply->shortage_overage_qty = $supply->balance_per_card - $supply->on_hand_per_count;
+                }
+            }
+
+            if ($supply->shortage_overage_qty !== null && $supply->unit_value !== null) {
+                if ($supply->shortage_overage_value === null || ($supply->isDirty(['shortage_overage_qty', 'unit_value', 'balance_per_card', 'on_hand_per_count']) && !$supply->isDirty('shortage_overage_value'))) {
+                    $supply->shortage_overage_value = round($supply->shortage_overage_qty * (float)$supply->unit_value, 2);
+                }
+            }
+
+            if ($supply->on_hand_per_count !== null && $supply->unit_value !== null) {
+                if ($supply->total_amount === null || ($supply->isDirty(['on_hand_per_count', 'unit_value']) && !$supply->isDirty('total_amount'))) {
+                    $supply->total_amount = round($supply->on_hand_per_count * (float)$supply->unit_value, 2);
+                }
+            }
+        });
+    }
+
     protected $table = 'supplies';
 
     protected $guarded = ['id'];
