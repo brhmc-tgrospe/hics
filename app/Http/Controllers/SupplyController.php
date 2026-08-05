@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Domain\Supplies\Models\Supply;
 use App\Domain\Supplies\DTOs\SupplyDTO;
 use App\Domain\Supplies\Actions\GetSuppliesAction;
+use App\Domain\Supplies\Actions\GetSupplyReportDataAction;
 use App\Domain\Supplies\Actions\CreateSupplyAction;
 use App\Domain\Supplies\Actions\UpdateSupplyAction;
 use App\Domain\Supplies\Actions\DeleteSupplyAction;
@@ -247,12 +248,11 @@ class SupplyController extends Controller
         return response()->json(['id' => $report->id]);
     }
 
-    public function showReport($id)
+    public function showReport($id, GetSupplyReportDataAction $action)
     {
         $report = \App\Domain\Supply\Models\SupplyReport::findOrFail($id);
         
-        $json = \Illuminate\Support\Facades\Storage::disk('local')->get($report->file_path);
-        $supplies = json_decode($json, true);
+        $supplies = $action->execute($report);
         
         $categoryName = \App\Domain\Shared\Models\Category::where('code', $report->category)
             ->where('type', 'supply')

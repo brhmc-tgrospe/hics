@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Equipment\Actions\CreateEquipmentAction;
 use App\Domain\Equipment\Actions\DeleteEquipmentAction;
 use App\Domain\Equipment\Actions\GetEquipmentAction;
+use App\Domain\Equipment\Actions\GetEquipmentReportDataAction;
 use App\Domain\Equipment\Actions\ImportEquipmentAction;
 use App\Domain\Equipment\Actions\UpdateEquipmentAction;
 use App\Domain\Equipment\DTOs\EquipmentDTO;
@@ -263,12 +264,11 @@ class EquipmentController extends Controller
         return response()->json(['id' => $report->id]);
     }
 
-    public function showReport(int $id)
+    public function showReport(int $id, GetEquipmentReportDataAction $action)
     {
         $report = EquipmentReport::findOrFail($id);
 
-        $json = Storage::disk('local')->get($report->file_path);
-        $equipment = json_decode($json, true);
+        $equipment = $action->execute($report);
 
         $categoryName = Category::where('code', $report->category)
             ->where('type', 'equipment')

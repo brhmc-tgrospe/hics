@@ -3,34 +3,57 @@ import { Head } from '@inertiajs/vue3';
 import { computed, onMounted } from 'vue';
 
 const props = defineProps({
-    report: Object,
-    supplies: Array,
-    categoryName: String,
-    scopeName: String,
-    divisionHeadName: String,
-    divisionHeadDesignation: String,
+    report: {
+        type: Object,
+        default: () => ({}),
+    },
+    supplies: {
+        type: Array,
+        default: () => [],
+    },
+    categoryName: {
+        type: String,
+        default: '',
+    },
+    scopeName: {
+        type: String,
+        default: '',
+    },
+    divisionHeadName: {
+        type: String,
+        default: null,
+    },
+    divisionHeadDesignation: {
+        type: String,
+        default: null,
+    },
 });
 
 const totalAmount = computed(() => {
-    return props.supplies.reduce((sum, item) => sum + (Number(item.unit_value) * Number(item.on_hand_per_count)), 0);
+    return (props.supplies || []).reduce((sum, item) => sum + (Number(item?.unit_value || 0) * Number(item?.on_hand_per_count || 0)), 0);
 });
 
 const reportPeriodText = computed(() => {
-    if (props.report.report_period === '1st Qtr') return `As of March ${props.report.year_of_report}`;
-    if (props.report.report_period === '2nd Qtr') return `As of June ${props.report.year_of_report}`;
-    if (props.report.report_period === '3rd Qtr') return `As of September ${props.report.year_of_report}`;
-    if (props.report.report_period === '4th Qtr') return `As of December ${props.report.year_of_report}`;
+    if (!props.report) return '';
+    if (props.report.report_period === '1st Qtr') return `As of March ${props.report.year_of_report || ''}`;
+    if (props.report.report_period === '2nd Qtr') return `As of June ${props.report.year_of_report || ''}`;
+    if (props.report.report_period === '3rd Qtr') return `As of September ${props.report.year_of_report || ''}`;
+    if (props.report.report_period === '4th Qtr') return `As of December ${props.report.year_of_report || ''}`;
     if (props.report.report_period === 'Custom Month' && props.report.custom_month) {
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        return `As of ${months[props.report.custom_month - 1]} ${props.report.year_of_report}`;
+        return `As of ${months[props.report.custom_month - 1]} ${props.report.year_of_report || ''}`;
     }
-    return `As of December 31, ${props.report.year_of_report}`;
+    return `As of December 31, ${props.report.year_of_report || ''}`;
 });
 
 const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    return isNaN(date.getTime()) ? '' : date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+};
+
+const printReport = () => {
+    window.print();
 };
 
 // Automatically print when page loads
@@ -88,7 +111,7 @@ onMounted(() => {
                     <!-- Accountability Row -->
                     <tr>
                         <th colspan="10" class="border-[3px] border-black p-2 text-left text-[12px] font-normal leading-tight">
-                            For which <span class="font-bold underline">ERIC RAYMOND N. RABORAR, MD,MPA-HEDM,MMHoA,FPSMS</span>, Medical Center Chief II, <span class="font-bold underline">BICOL REGIONAL TRAINING AND TEACHING HOSPITAL</span>, is accountable, having assumed such accountability on <span class="font-bold">{{ formatDate(report.date_of_accountability) }}</span>.
+                            For which <span class="font-bold underline">ERIC RAYMOND N. RABORAR, MD,MPA-HEDM,MMHoA,FPSMS</span>, Medical Center Chief II, <span class="font-bold underline">BICOL REGIONAL TRAINING AND TEACHING HOSPITAL</span>, is accountable, having assumed such accountability on <span class="font-bold">{{ formatDate(report?.date_of_accountability) }}</span>.
                         </th>
                     </tr>
                     <!-- Table Columns -->
@@ -111,19 +134,19 @@ onMounted(() => {
                     </tr>
                 </thead>
                 <tbody class="text-[11px]">
-                    <tr v-for="item in supplies" :key="item.id">
-                        <td class="border-[3px] border-black px-2 py-1 font-semibold">{{ item.article }}</td>
-                        <td class="border-[3px] border-black px-2 py-1">{{ item.description }}</td>
-                        <td class="border-[3px] border-black px-2 py-1 text-center">{{ item.stock_number }}</td>
-                        <td class="border-[3px] border-black px-2 py-1 text-center">{{ item.unit_of_measure }}</td>
-                        <td class="border-[3px] border-black px-2 py-1 text-right">{{ Number(item.unit_value).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
-                        <td class="border-[3px] border-black px-2 py-1 text-center">{{ item.balance_per_card }}</td>
-                        <td class="border-[3px] border-black px-2 py-1 text-center">{{ item.on_hand_per_count }}</td>
-                        <td class="border-[3px] border-black px-2 py-1 text-center">{{ item.shortage_overage_qty !== null ? item.shortage_overage_qty : '' }}</td>
-                        <td class="border-[3px] border-black px-2 py-1 text-right">{{ item.shortage_overage_value !== null ? Number(item.shortage_overage_value).toLocaleString(undefined, {minimumFractionDigits: 2}) : '' }}</td>
-                        <td class="border-[3px] border-black px-2 py-1 text-right">{{ (Number(item.unit_value) * Number(item.on_hand_per_count)).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
+                    <tr v-for="item in (supplies || [])" :key="item?.id">
+                        <td class="border-[3px] border-black px-2 py-1 font-semibold">{{ item?.article }}</td>
+                        <td class="border-[3px] border-black px-2 py-1">{{ item?.description }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-center">{{ item?.stock_number }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-center">{{ item?.unit_of_measure }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-right">{{ Number(item?.unit_value || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-center">{{ item?.balance_per_card }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-center">{{ item?.on_hand_per_count }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-center">{{ item?.shortage_overage_qty !== null && item?.shortage_overage_qty !== undefined ? item?.shortage_overage_qty : '' }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-right">{{ item?.shortage_overage_value !== null && item?.shortage_overage_value !== undefined ? Number(item?.shortage_overage_value || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) : '' }}</td>
+                        <td class="border-[3px] border-black px-2 py-1 text-right">{{ (Number(item?.unit_value || 0) * Number(item?.on_hand_per_count || 0)).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
                     </tr>
-                    <tr v-if="supplies.length === 0">
+                    <tr v-if="!supplies || supplies.length === 0">
                         <td colspan="10" class="border-[3px] border-black px-2 py-4 text-center italic">No supplies found for this category.</td>
                     </tr>
                     <tr>
@@ -138,7 +161,7 @@ onMounted(() => {
             </table>
 
             <!-- Signatories -->
-            <div v-if="!report.report_type || report.report_type === 'General'" class="mt-10 grid grid-cols-3 gap-8 text-[13px]">
+            <div v-if="!report?.report_type || report?.report_type === 'General'" class="mt-10 grid grid-cols-3 gap-8 text-[13px]">
                 <div class="flex flex-col items-center text-center">
                     <p class="mb-10 font-semibold w-full text-left pl-6">Certified Correct by:</p>
                     <div class="w-10/12">
@@ -168,13 +191,13 @@ onMounted(() => {
                 </div>
             </div>
             
-            <div v-if="report.report_type === 'Division' || report.report_type === 'Area'" class="mt-8 grid grid-cols-3 gap-8 text-[13px]">
+            <div v-if="report?.report_type === 'Division' || report?.report_type === 'Area'" class="mt-8 grid grid-cols-3 gap-8 text-[13px]">
                 <div>
                     <p class="mb-8 font-semibold">Certified Correct by:</p>
                     <div class="w-11/12">
                         <div class="border-b-[2px] border-black w-full mb-1"></div>
                         <div class="text-center">
-                            <p>{{ report.report_type === 'Area' ? 'Unit Head' : 'Unit Head' }}</p>
+                            <p>{{ report?.report_type === 'Area' ? 'Unit Head' : 'Unit Head' }}</p>
                         </div>
                     </div>
                 </div>

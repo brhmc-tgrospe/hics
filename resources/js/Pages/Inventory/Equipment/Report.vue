@@ -3,28 +3,46 @@ import { Head } from '@inertiajs/vue3';
 import { computed, onMounted } from 'vue';
 
 const props = defineProps({
-    report: Object,
-    equipment: Array,
-    categoryName: String,
-    scopeName: String,
-    divisionHeadName: String,
-    divisionHeadDesignation: String,
+    report: {
+        type: Object,
+        default: () => ({}),
+    },
+    equipment: {
+        type: Array,
+        default: () => [],
+    },
+    categoryName: {
+        type: String,
+        default: '',
+    },
+    scopeName: {
+        type: String,
+        default: '',
+    },
+    divisionHeadName: {
+        type: String,
+        default: null,
+    },
+    divisionHeadDesignation: {
+        type: String,
+        default: null,
+    },
 });
 
 const totalAmount = computed(() => {
-    return props.equipment.reduce((sum, item) => sum + (Number(item.total_value) || 0), 0);
+    return (props.equipment || []).reduce((sum, item) => sum + (Number(item?.total_value) || 0), 0);
 });
 
 const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    return isNaN(date.getTime()) ? '' : date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 };
 
 const formatDateShort = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`;
+    return isNaN(date.getTime()) ? '' : `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`;
 };
 
 // Automatically print when page loads
@@ -84,13 +102,13 @@ onMounted(() => {
                             <div class="text-[15px] font-bold uppercase">REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT</div>
                             <div class="text-[14px] font-bold uppercase">{{ categoryName }}</div>
                             <div v-if="scopeName" class="text-[14px] font-bold uppercase mt-1">{{ scopeName }}</div>
-                            <div class="text-[13px] font-normal mt-1 mb-2">As of December 31, {{ report.year_of_report }}</div>
+                            <div class="text-[13px] font-normal mt-1 mb-2">As of December 31, {{ report?.year_of_report }}</div>
                         </th>
                     </tr>
                     <!-- Accountability Row -->
                     <tr>
                         <th colspan="10" class="border-[3px] border-black p-2 text-left text-[12px] font-normal leading-tight">
-                            For which <span class="font-bold underline">ERIC RAYMOND N. RABORAR, MD,MPA-HEDM,MMHoA,FPSMS</span>, Medical Center Chief II, <span class="font-bold underline">BICOL REGIONAL TRAINING AND TEACHING HOSPITAL</span>, is accountable, having assumed such accountability on <span class="font-bold">{{ formatDate(report.date_of_accountability) }}</span>.
+                            For which <span class="font-bold underline">ERIC RAYMOND N. RABORAR, MD,MPA-HEDM,MMHoA,FPSMS</span>, Medical Center Chief II, <span class="font-bold underline">BICOL REGIONAL TRAINING AND TEACHING HOSPITAL</span>, is accountable, having assumed such accountability on <span class="font-bold">{{ formatDate(report?.date_of_accountability) }}</span>.
                         </th>
                     </tr>
                     <!-- Table Columns -->
@@ -108,19 +126,19 @@ onMounted(() => {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in equipment" :key="item.id">
-                        <td class="border-[3px] border-black px-1 py-1 font-semibold">{{ item.article }}</td>
-                        <td class="border-[3px] border-black px-1 py-1">{{ item.description }}</td>
-                        <td class="border-[3px] border-black px-1 py-1 text-center">{{ formatDateShort(item.date_acquired) }}</td>
-                        <td class="border-[3px] border-black px-1 py-1 text-center">{{ item.property_number }}</td>
-                        <td class="border-[3px] border-black px-1 py-1 text-center">{{ item.unit_of_measure }}</td>
-                        <td class="border-[3px] border-black px-1 py-1 text-right">{{ Number(item.unit_value).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
-                        <td class="border-[3px] border-black px-1 py-1 text-right">{{ Number(item.total_value).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
-                        <td class="border-[3px] border-black px-1 py-1 text-center">{{ item.quantity_per_property_card }}</td>
-                        <td class="border-[3px] border-black px-1 py-1 text-center">{{ item.quantity_per_physical_count }}</td>
-                        <td class="border-[3px] border-black px-1 py-1">{{ item.remarks }}</td>
+                    <tr v-for="item in (equipment || [])" :key="item?.id">
+                        <td class="border-[3px] border-black px-1 py-1 font-semibold">{{ item?.article }}</td>
+                        <td class="border-[3px] border-black px-1 py-1">{{ item?.description }}</td>
+                        <td class="border-[3px] border-black px-1 py-1 text-center">{{ formatDateShort(item?.date_acquired) }}</td>
+                        <td class="border-[3px] border-black px-1 py-1 text-center">{{ item?.property_number }}</td>
+                        <td class="border-[3px] border-black px-1 py-1 text-center">{{ item?.unit_of_measure }}</td>
+                        <td class="border-[3px] border-black px-1 py-1 text-right">{{ Number(item?.unit_value || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
+                        <td class="border-[3px] border-black px-1 py-1 text-right">{{ Number(item?.total_value || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) }}</td>
+                        <td class="border-[3px] border-black px-1 py-1 text-center">{{ item?.quantity_per_property_card }}</td>
+                        <td class="border-[3px] border-black px-1 py-1 text-center">{{ item?.quantity_per_physical_count }}</td>
+                        <td class="border-[3px] border-black px-1 py-1">{{ item?.remarks }}</td>
                     </tr>
-                    <tr v-if="equipment.length === 0">
+                    <tr v-if="!equipment || equipment.length === 0">
                         <td colspan="10" class="border-[3px] border-black px-1 py-4 text-center italic">No equipment found for this category.</td>
                     </tr>
                     <tr>
@@ -136,7 +154,7 @@ onMounted(() => {
             </table>
 
             <!-- Signatories -->
-            <div v-if="!report.report_type || report.report_type === 'General'" class="mt-8 grid grid-cols-3 gap-8 text-[13px]">
+            <div v-if="!report?.report_type || report?.report_type === 'General'" class="mt-8 grid grid-cols-3 gap-8 text-[13px]">
                 <div>
                     <p class="mb-8 font-semibold">Certified Correct by:</p>
                     <div class="w-11/12">
@@ -172,7 +190,7 @@ onMounted(() => {
                 </div>
             </div>
             
-            <div v-if="report.report_type === 'Division' || report.report_type === 'Area'" class="mt-8 grid grid-cols-3 gap-8 text-[13px]">
+            <div v-if="report?.report_type === 'Division' || report?.report_type === 'Area'" class="mt-8 grid grid-cols-3 gap-8 text-[13px]">
                 <div>
                     <p class="mb-8 font-semibold">Certified Correct by:</p>
                     <div class="w-11/12">

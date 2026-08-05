@@ -1,6 +1,6 @@
 <template>
   <div class="bg-white/60 p-6 rounded-3xl">
-    <h3 class="text-lg font-bold text-slate-800 mb-4">{{ editingId ? 'Edit' : 'Add' }} Supplies Record</h3>
+    <h3 class="text-lg font-bold text-slate-800 mb-4">{{ currentEditingId ? 'Edit' : 'Add' }} Supplies Record</h3>
     <form @submit.prevent="submit" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       
       <div>
@@ -31,8 +31,8 @@
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Article/Product Name</label>
-        <input type="text" v-model="form.article" class="w-full bg-slate-50 border border-slate-300 shadow-inner rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" />
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Article/Product Name <span class="text-red-500">*</span></label>
+        <input type="text" required v-model="form.article" class="w-full bg-slate-50 border border-slate-300 shadow-inner rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" />
         <div v-if="form.errors.article" class="text-red-500 text-xs mt-1">{{ form.errors.article }}</div>
       </div>
 
@@ -67,7 +67,7 @@
       </div>
 
       <div class="sm:col-span-2">
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Description</label>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Description <span class="text-red-500">*</span></label>
         <textarea rows="3" required v-model="form.description" class="w-full bg-slate-50 border border-slate-300 shadow-inner rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800"></textarea>
         <div v-if="form.errors.description" class="text-red-500 text-xs mt-1">{{ form.errors.description }}</div>
       </div>
@@ -133,14 +133,33 @@ import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 
 const props = defineProps({
-  editingId: Number,
-  initialData: Object,
-  categories: Array,
-  divisions: Array,
-  areas: Array,
+  editingData: {
+    type: Object,
+    default: null,
+  },
+  editingId: {
+    type: Number,
+    default: null,
+  },
+  initialData: {
+    type: Object,
+    default: null,
+  },
+  categories: {
+    type: Array,
+    required: true,
+  },
+  divisions: {
+    type: Array,
+    required: true,
+  },
+  areas: {
+    type: Array,
+    required: true,
+  },
 });
 
-const emit = defineEmits(['close', 'success']);
+const emit = defineEmits(['close', 'success', 'saved']);
 
 const user = usePage().props.auth?.user;
 const normalizeSupplyStatus = (status) => {
@@ -151,25 +170,28 @@ const normalizeSupplyStatus = (status) => {
   return status;
 };
 
+const currentEditingData = computed(() => props.editingData || props.initialData || null);
+const currentEditingId = computed(() => props.editingId || currentEditingData.value?.id || null);
+
 const form = useForm({
-  category: initData.category || '',
-  division_id: initData.division_id || (user && !user.roles?.some(r => ['Superadmin', 'Developer'].includes(r)) ? user.division_id : ''),
-  area_id: initData.area_id || (user && !user.roles?.some(r => ['Superadmin', 'Developer', 'Admin'].includes(r)) ? user.area_id : ''),
-  article: initData.article || '',
-  description: initData.description || '',
-  stock_number: initData.stock_number || '',
-  expiry_date: initData.expiry_date ? new Date(initData.expiry_date) : null,
-  unit_of_measure: initData.unit_of_measure || '',
-  unit_value: initData.unit_value ?? '',
-  balance_per_card: initData.balance_per_card ?? '',
-  on_hand_per_count: initData.on_hand_per_count ?? '',
-  shortage_overage_qty: initData.shortage_overage_qty ?? '',
-  shortage_overage_value: initData.shortage_overage_value ?? '',
-  total_amount: initData.total_amount ?? '',
-  status: normalizeSupplyStatus(initData.status),
+  category: '',
+  division_id: '',
+  area_id: '',
+  article: '',
+  description: '',
+  stock_number: '',
+  expiry_date: null,
+  unit_of_measure: '',
+  unit_value: '',
+  balance_per_card: '',
+  on_hand_per_count: '',
+  shortage_overage_qty: '',
+  shortage_overage_value: '',
+  total_amount: '',
+  status: '',
 });
 
-watch(() => props.initialData, (newVal) => {
+watch(currentEditingData, (newVal) => {
   if (newVal) {
     form.category = newVal.category || '';
     form.division_id = newVal.division_id || (user && !user.roles?.some(r => ['Superadmin', 'Developer'].includes(r)) ? user.division_id : '');
@@ -186,8 +208,19 @@ watch(() => props.initialData, (newVal) => {
     form.shortage_overage_value = newVal.shortage_overage_value ?? '';
     form.total_amount = newVal.total_amount ?? '';
     form.status = normalizeSupplyStatus(newVal.status);
+  } else {
+    form.reset();
+    form.clearErrors();
+    if (user) {
+      if (!user.roles?.some(r => ['Superadmin', 'Developer'].includes(r))) {
+        form.division_id = user.division_id || '';
+      }
+      if (!user.roles?.some(r => ['Superadmin', 'Developer', 'Admin'].includes(r))) {
+        form.area_id = user.area_id || '';
+      }
+    }
   }
-}, { deep: true });
+}, { deep: true, immediate: true });
 
 const exemptCategories = ['ictsupply', 'officesup', 'hksupp'];
 const isExpiryExempt = computed(() => {
@@ -217,28 +250,53 @@ watch([
 
 const submit = () => {
   form.clearErrors();
-  if (!form.article || form.article.toString().trim() === '') {
-    form.setError('article', 'This field is required.');
-    return;
+  let hasError = false;
+
+  const checkRequired = (field, name = null) => {
+    if (!form[field] || form[field].toString().trim() === '') {
+      form.setError(field, `${name || 'This field'} is required.`);
+      hasError = true;
+    }
+  };
+
+  checkRequired('category', 'Category');
+  checkRequired('division_id', 'Division');
+  checkRequired('area_id', 'Area');
+  checkRequired('article', 'Article');
+  checkRequired('description', 'Description');
+  if (!isExpiryExempt.value) {
+    if (!form.expiry_date) {
+      form.setError('expiry_date', 'Expiry Date is required.');
+      hasError = true;
+    }
   }
+
+  if (hasError) return;
 
   form.transform((data) => ({
     ...data,
     expiry_date: data.expiry_date instanceof Date ? data.expiry_date.toLocaleDateString('en-CA') : data.expiry_date,
   }));
 
-  if (props.editingId) {
-    form.put(`/supplies/${props.editingId}`, {
+  const targetId = currentEditingId.value;
+  if (targetId) {
+    form.put(route('supplies.update', targetId), {
       onSuccess: () => {
         const articleName = form.article;
+        form.reset();
         emit('success', { article: articleName, mode: 'edited' });
+        emit('saved', { article: articleName, mode: 'edited' });
+        emit('close');
       },
     });
   } else {
-    form.post('/supplies', {
+    form.post(route('supplies.store'), {
       onSuccess: () => {
         const articleName = form.article;
+        form.reset();
         emit('success', { article: articleName, mode: 'added' });
+        emit('saved', { article: articleName, mode: 'added' });
+        emit('close');
       },
     });
   }

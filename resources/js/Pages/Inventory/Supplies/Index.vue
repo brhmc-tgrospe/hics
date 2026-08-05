@@ -84,6 +84,7 @@
       <Modal :show="isFormOpen" maxWidth="2xl" @close="closeForm">
           <SupplyForm
             v-if="isFormOpen"
+            :editing-data="formData"
             :editing-id="editingId"
             :initial-data="formData"
             :categories="categories"
@@ -91,6 +92,7 @@
             :areas="areas"
             @close="closeForm"
             @success="handleSuccess"
+            @saved="handleSuccess"
           />
       </Modal>
 

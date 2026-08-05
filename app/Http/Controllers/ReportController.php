@@ -20,9 +20,11 @@ class ReportController extends Controller
         $user = auth()->user();
         
         $supplyQuery = DB::table('supply_reports')
+            ->whereNull('deleted_at')
             ->select('id', 'category', 'date_of_accountability', 'year_of_report', 'file_path', 'report_type', 'scope_id', 'user_id', 'created_at', DB::raw("'supply' as type"), 'report_period', 'custom_month');
 
         $equipmentQuery = DB::table('equipment_reports')
+            ->whereNull('deleted_at')
             ->select('id', 'category', 'date_of_accountability', 'year_of_report', 'file_path', 'report_type', 'scope_id', 'user_id', 'created_at', DB::raw("'equipment' as type"), DB::raw("NULL as report_period"), DB::raw("NULL as custom_month"));
 
         $query = $supplyQuery->unionAll($equipmentQuery);
