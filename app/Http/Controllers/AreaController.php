@@ -22,10 +22,19 @@ class AreaController extends Controller
             $query->where('area_name', 'like', "%{$request->search}%");
         }
 
-        // Apply division filter
-        $myDivisionOnly = $request->boolean('my_division_only', true);
-        if ($myDivisionOnly && $user->division_id) {
-            $query->where('division_id', $user->division_id);
+        // Apply division / area filters
+        if ($request->filled('division_id')) {
+            $query->where('division_id', $request->division_id);
+            if ($request->filled('area_id')) {
+                $query->where('id', $request->area_id);
+            }
+        } elseif ($request->filled('area_id')) {
+            $query->where('id', $request->area_id);
+        } else {
+            $myDivisionOnly = $request->boolean('my_division_only', true);
+            if ($myDivisionOnly && $user->division_id) {
+                $query->where('division_id', $user->division_id);
+            }
         }
         
         // Encoders and Secretaries can only see their specific area
@@ -37,11 +46,13 @@ class AreaController extends Controller
         $areas = $query->paginate($perPage)->withQueryString();
 
         $divisions = \App\Models\Division::select('id', 'div_name as name')->get();
+        $allAreas = \App\Models\Area::select('id', 'area_name as name', 'division_id')->get();
 
         return Inertia::render('Areas/Index', [
             'areas' => $areas,
-            'filters' => $request->only(['search', 'per_page', 'my_division_only']),
+            'filters' => $request->only(['search', 'per_page', 'my_division_only', 'division_id', 'area_id']),
             'divisions' => $divisions,
+            'allAreas' => $allAreas,
             'userDivisionId' => $user->division_id,
         ]);
     }

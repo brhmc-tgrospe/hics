@@ -11,13 +11,17 @@ class GetSuppliesAction
     {
         $query = Supply::query();
 
-        if (!empty($filters['my_division_only']) && filter_var($filters['my_division_only'], FILTER_VALIDATE_BOOLEAN)) {
+        if (!empty($filters['division_id'])) {
+            $query->where('division_id', $filters['division_id']);
+        } elseif (!empty($filters['my_division_only']) && filter_var($filters['my_division_only'], FILTER_VALIDATE_BOOLEAN)) {
             if (auth()->check()) {
                 $query->where('division_id', auth()->user()->division_id);
             }
         }
 
-        if (!empty($filters['my_area_only']) && filter_var($filters['my_area_only'], FILTER_VALIDATE_BOOLEAN)) {
+        if (!empty($filters['area_id'])) {
+            $query->where('area_id', $filters['area_id']);
+        } elseif (!empty($filters['my_area_only']) && filter_var($filters['my_area_only'], FILTER_VALIDATE_BOOLEAN)) {
             if (auth()->check()) {
                 $query->where('division_id', auth()->user()->division_id)
                       ->where('area_id', auth()->user()->area_id);

@@ -34,6 +34,8 @@ export function useInventoryPermissions() {
         return false;
     };
 
+    const canFilterDivisionArea = computed(() => isSuperadmin.value || isAdmin.value);
+
     return {
         authUser,
         userRoles,
@@ -42,6 +44,7 @@ export function useInventoryPermissions() {
         isSecretary,
         isAdmin,
         isEncoder,
+        canFilterDivisionArea,
         canEditItem,
         canDeleteItem,
     };

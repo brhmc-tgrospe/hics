@@ -57,24 +57,47 @@ class ReportController extends Controller
             });
         }
 
-        // Toggles
-        if ($request->boolean('my_division_only')) {
-            $wrappedQuery->where(function($q) use ($user) {
-                $areaIds = Area::where('division_id', $user->division_id)->pluck('id')->toArray();
-                $q->where(function($subq) use ($user) {
-                      $subq->where('report_type', 'Division')
-                           ->where('scope_id', $user->division_id);
-                  })
-                  ->orWhere(function($subq) use ($areaIds) {
-                      $subq->where('report_type', 'Area')
-                           ->whereIn('scope_id', $areaIds);
-                  });
-            });
-        }
-
-        if ($request->boolean('my_area_only')) {
+        // Division and Area Filter Dropdowns
+        if ($request->filled('division_id')) {
+            $divisionId = $request->division_id;
+            if ($request->filled('area_id')) {
+                $wrappedQuery->where('report_type', 'Area')
+                             ->where('scope_id', $request->area_id);
+            } else {
+                $areaIds = Area::where('division_id', $divisionId)->pluck('id')->toArray();
+                $wrappedQuery->where(function($q) use ($divisionId, $areaIds) {
+                    $q->where(function($subq) use ($divisionId) {
+                        $subq->where('report_type', 'Division')
+                             ->where('scope_id', $divisionId);
+                    })->orWhere(function($subq) use ($areaIds) {
+                        $subq->where('report_type', 'Area')
+                             ->whereIn('scope_id', $areaIds);
+                    });
+                });
+            }
+        } elseif ($request->filled('area_id')) {
             $wrappedQuery->where('report_type', 'Area')
-                         ->where('scope_id', $user->area_id);
+                         ->where('scope_id', $request->area_id);
+        } else {
+            // Toggles
+            if ($request->boolean('my_division_only')) {
+                $wrappedQuery->where(function($q) use ($user) {
+                    $areaIds = Area::where('division_id', $user->division_id)->pluck('id')->toArray();
+                    $q->where(function($subq) use ($user) {
+                          $subq->where('report_type', 'Division')
+                               ->where('scope_id', $user->division_id);
+                      })
+                      ->orWhere(function($subq) use ($areaIds) {
+                          $subq->where('report_type', 'Area')
+                               ->whereIn('scope_id', $areaIds);
+                      });
+                });
+            }
+
+            if ($request->boolean('my_area_only')) {
+                $wrappedQuery->where('report_type', 'Area')
+                             ->where('scope_id', $user->area_id);
+            }
         }
 
         // Filters
@@ -179,11 +202,15 @@ class ReportController extends Controller
         });
 
         $categories = Category::all()->toArray();
+        $divisions = Division::select(['id', 'div_name as name'])->get()->toArray();
+        $areas = Area::select(['id', 'area_name as name', 'division_id'])->get()->toArray();
 
         return Inertia::render('Reports/Index', [
             'reports' => $paginated,
-            'filters' => $request->only(['date_from', 'date_to', 'category', 'my_division_only', 'my_area_only', 'per_page', 'creator_search', 'sort_by', 'sort_dir']),
-            'categories' => $categories
+            'filters' => $request->only(['date_from', 'date_to', 'category', 'my_division_only', 'my_area_only', 'division_id', 'area_id', 'per_page', 'creator_search', 'sort_by', 'sort_dir']),
+            'categories' => $categories,
+            'divisions' => $divisions,
+            'areas' => $areas,
         ]);
     }
 

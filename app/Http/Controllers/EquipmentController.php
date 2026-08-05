@@ -32,7 +32,7 @@ class EquipmentController extends Controller
 
         return Inertia::render('Inventory/Equipment/Index', [
             'equipment' => $equipment,
-            'filters' => $request->only(['search', 'category', 'status', 'my_division_only', 'my_area_only', 'per_page', 'sort_field', 'sort_direction']),
+            'filters' => $request->only(['search', 'category', 'status', 'my_division_only', 'my_area_only', 'division_id', 'area_id', 'per_page', 'sort_field', 'sort_direction']),
             'categories' => $categories,
             'divisions' => $divisions,
             'areas' => $areas,

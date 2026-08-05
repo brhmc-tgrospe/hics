@@ -9,6 +9,8 @@ import '@vuepic/vue-datepicker/dist/main.css';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import TablePagination from '@/Components/TablePagination.vue';
+import DivisionAreaFilter from '@/Components/DivisionAreaFilter.vue';
+import { useInventoryPermissions } from '@/Composables/useInventoryPermissions';
 
 const props = defineProps({
     reports: {
@@ -22,17 +24,28 @@ const props = defineProps({
     categories: {
         type: Array,
         default: () => []
+    },
+    divisions: {
+        type: Array,
+        default: () => []
+    },
+    areas: {
+        type: Array,
+        default: () => []
     }
 });
 
 const page = usePage();
 const authUser = computed(() => page.props.auth.user);
+const { canFilterDivisionArea } = useInventoryPermissions();
 
 const category = ref(props.filters.category || 'All');
 const dateFrom = ref(props.filters.date_from || null);
 const dateTo = ref(props.filters.date_to || null);
 const myDivisionOnly = ref(props.filters.my_division_only === '1' || props.filters.my_division_only === true);
 const myAreaOnly = ref(props.filters.my_area_only === '1' || props.filters.my_area_only === true);
+const divisionId = ref(props.filters.division_id !== undefined ? String(props.filters.division_id) : (myDivisionOnly.value && authUser.value?.division_id ? String(authUser.value.division_id) : ''));
+const areaId = ref(props.filters.area_id !== undefined ? String(props.filters.area_id) : (myAreaOnly.value && authUser.value?.area_id ? String(authUser.value.area_id) : ''));
 const perPage = ref(props.filters.per_page || 10);
 const creatorSearch = ref(props.filters.creator_search || '');
 const sortBy = ref(props.filters.sort_by || 'created_at');
@@ -72,11 +85,29 @@ const toggleSelection = (id, type) => {
     }
 };
 
+const syncTogglesFromDropdowns = () => {
+    const userDiv = authUser.value?.division_id ? String(authUser.value.division_id) : null;
+    const userArea = authUser.value?.area_id ? String(authUser.value.area_id) : null;
+
+    if (areaId.value && userArea && String(areaId.value) === userArea && (!divisionId.value || String(divisionId.value) === userDiv)) {
+        myAreaOnly.value = true;
+        myDivisionOnly.value = false;
+    } else if (divisionId.value && userDiv && String(divisionId.value) === userDiv && !areaId.value) {
+        myDivisionOnly.value = true;
+        myAreaOnly.value = false;
+    } else {
+        myDivisionOnly.value = false;
+        myAreaOnly.value = false;
+    }
+};
+
 const applyFilters = debounce(() => {
     router.get(route('reports.index'), {
         category: category.value,
         date_from: dateFrom.value ? (dateFrom.value instanceof Date ? dateFrom.value.toLocaleDateString('en-CA') : dateFrom.value) : null,
         date_to: dateTo.value ? (dateTo.value instanceof Date ? dateTo.value.toLocaleDateString('en-CA') : dateTo.value) : null,
+        division_id: divisionId.value,
+        area_id: areaId.value,
         my_division_only: myDivisionOnly.value ? '1' : '0',
         my_area_only: myAreaOnly.value ? '1' : '0',
         per_page: perPage.value,
@@ -87,6 +118,11 @@ const applyFilters = debounce(() => {
 }, 300);
 
 watch([category, dateFrom, dateTo, perPage, creatorSearch], applyFilters);
+
+watch([divisionId, areaId], () => {
+    syncTogglesFromDropdowns();
+    applyFilters();
+});
 
 const toggleSort = (column) => {
     if (sortBy.value === column) {
@@ -100,13 +136,29 @@ const toggleSort = (column) => {
 
 const toggleDivisionFilter = () => {
     myDivisionOnly.value = !myDivisionOnly.value;
-    if (myDivisionOnly.value) myAreaOnly.value = false;
+    if (myDivisionOnly.value) {
+        myAreaOnly.value = false;
+        divisionId.value = authUser.value?.division_id ? String(authUser.value.division_id) : '';
+        areaId.value = '';
+    } else {
+        divisionId.value = '';
+        areaId.value = '';
+    }
     applyFilters();
 };
 
 const toggleAreaFilter = () => {
     myAreaOnly.value = !myAreaOnly.value;
-    if (myAreaOnly.value) myDivisionOnly.value = false;
+    if (myAreaOnly.value) {
+        myDivisionOnly.value = false;
+        divisionId.value = authUser.value?.division_id ? String(authUser.value.division_id) : '';
+        areaId.value = authUser.value?.area_id ? String(authUser.value.area_id) : '';
+    } else {
+        areaId.value = '';
+        if (divisionId.value && authUser.value?.division_id && String(divisionId.value) === String(authUser.value.division_id)) {
+            myDivisionOnly.value = true;
+        }
+    }
     applyFilters();
 };
 
@@ -200,6 +252,15 @@ const formatDateForPicker = (date) => {
                         <option v-for="c in categories" :key="c.code" :value="c.code">{{ c.name }}</option>
                     </select>
                 </div>
+
+                <!-- Division & Area Filters (Admin / Superadmin / Developer) -->
+                <DivisionAreaFilter
+                    v-if="canFilterDivisionArea"
+                    v-model:divisionId="divisionId"
+                    v-model:areaId="areaId"
+                    :divisions="divisions"
+                    :areas="areas"
+                />
                 
                 <!-- Date Filters -->
                 <div class="w-full sm:w-auto flex items-center gap-2">

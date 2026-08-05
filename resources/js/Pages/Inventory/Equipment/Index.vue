@@ -6,6 +6,7 @@ import EquipmentTable from './EquipmentTable.vue';
 import EquipmentForm from './EquipmentForm.vue';
 import ViewEquipmentDetails from './ViewEquipmentDetails.vue';
 import Modal from '@/Components/Modal.vue';
+import DivisionAreaFilter from '@/Components/DivisionAreaFilter.vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 
@@ -20,12 +21,14 @@ const props = defineProps({
     areas: Array,
 });
 
-const { authUser, userPermissions, isSuperadmin, isSecretary } = useInventoryPermissions();
+const { authUser, userPermissions, isSuperadmin, isSecretary, canFilterDivisionArea } = useInventoryPermissions();
 const canCreate = computed(() => userPermissions.value.includes('create_equipment'));
 
 const {
     search,
     category,
+    divisionId,
+    areaId,
     myDivisionOnly,
     myAreaOnly,
     sortField,
@@ -234,13 +237,13 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
 
             <div class="bg-white/50 backdrop-blur-xl rounded-3xl border border-white/80 shadow-2xl overflow-hidden flex flex-col">
                 <div class="p-4 border-b border-white/60 bg-slate-900/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto flex-wrap">
                         <div class="relative w-full sm:w-64">
                             <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             <input 
                                 type="text" 
                                 placeholder="Search..." 
-                                v-model="search"
+                                v-model="search" 
                                 class="w-full pl-9 pr-4 py-2 bg-white/50 backdrop-blur border border-white/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium text-slate-700"
                             />
                         </div>
@@ -251,6 +254,15 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                             <option value="All">All Categories</option>
                             <option v-for="c in categories" :key="c.code" :value="c.code">{{ c.name }}</option>
                         </select>
+
+                        <!-- Division & Area Filters (Admin / Superadmin / Developer) -->
+                        <DivisionAreaFilter
+                            v-if="canFilterDivisionArea"
+                            v-model:divisionId="divisionId"
+                            v-model:areaId="areaId"
+                            :divisions="divisions"
+                            :areas="areas"
+                        />
                         <!-- Division Filter Toggle -->
                         <button 
                             @click="toggleDivisionFilter"

@@ -32,6 +32,14 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'division_id' => fn () => \App\Models\Division::firstOrCreate(
+                ['div_code' => 'GEN'],
+                ['div_name' => 'General Division']
+            )->id,
+            'area_id' => fn (array $attributes) => \App\Models\Area::firstOrCreate(
+                ['area_name' => 'General Area', 'division_id' => $attributes['division_id']],
+                ['area_name' => 'General Area', 'division_id' => $attributes['division_id']]
+            )->id,
         ];
     }
 

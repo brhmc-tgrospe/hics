@@ -20,14 +20,34 @@ export function useInventoryIndex({
     const category = ref(props.filters.category || 'All');
     const myDivisionOnly = ref(props.filters.my_division_only === '1' || props.filters.my_division_only === true);
     const myAreaOnly = ref(props.filters.my_area_only === '1' || props.filters.my_area_only === true);
+    const divisionId = ref(props.filters.division_id !== undefined ? String(props.filters.division_id) : (myDivisionOnly.value && authUser.value?.division_id ? String(authUser.value.division_id) : ''));
+    const areaId = ref(props.filters.area_id !== undefined ? String(props.filters.area_id) : (myAreaOnly.value && authUser.value?.area_id ? String(authUser.value.area_id) : ''));
     const sortField = ref(props.filters.sort_field || 'id');
     const sortDirection = ref(props.filters.sort_direction || 'desc');
     const perPage = ref(props.filters.per_page ? Number(props.filters.per_page) : 10);
+
+    const syncTogglesFromDropdowns = () => {
+        const userDiv = authUser.value?.division_id ? String(authUser.value.division_id) : null;
+        const userArea = authUser.value?.area_id ? String(authUser.value.area_id) : null;
+
+        if (areaId.value && userArea && String(areaId.value) === userArea && (!divisionId.value || String(divisionId.value) === userDiv)) {
+            myAreaOnly.value = true;
+            myDivisionOnly.value = false;
+        } else if (divisionId.value && userDiv && String(divisionId.value) === userDiv && !areaId.value) {
+            myDivisionOnly.value = true;
+            myAreaOnly.value = false;
+        } else {
+            myDivisionOnly.value = false;
+            myAreaOnly.value = false;
+        }
+    };
 
     const applyFilters = debounce(() => {
         router.get(route(indexRouteName), {
             search: search.value,
             category: category.value,
+            division_id: divisionId.value,
+            area_id: areaId.value,
             my_division_only: myDivisionOnly.value ? '1' : '0',
             my_area_only: myAreaOnly.value ? '1' : '0',
             sort_field: sortField.value,
@@ -37,6 +57,11 @@ export function useInventoryIndex({
     }, 300);
 
     watch([search, category, sortField, sortDirection, perPage], applyFilters);
+
+    watch([divisionId, areaId], () => {
+        syncTogglesFromDropdowns();
+        applyFilters();
+    });
 
     const handlePerPage = (size) => {
         perPage.value = Number(size);
@@ -54,13 +79,29 @@ export function useInventoryIndex({
 
     const toggleDivisionFilter = () => {
         myDivisionOnly.value = !myDivisionOnly.value;
-        if (myDivisionOnly.value) myAreaOnly.value = false;
+        if (myDivisionOnly.value) {
+            myAreaOnly.value = false;
+            divisionId.value = authUser.value?.division_id ? String(authUser.value.division_id) : '';
+            areaId.value = '';
+        } else {
+            divisionId.value = '';
+            areaId.value = '';
+        }
         applyFilters();
     };
 
     const toggleAreaFilter = () => {
         myAreaOnly.value = !myAreaOnly.value;
-        if (myAreaOnly.value) myDivisionOnly.value = false;
+        if (myAreaOnly.value) {
+            myDivisionOnly.value = false;
+            divisionId.value = authUser.value?.division_id ? String(authUser.value.division_id) : '';
+            areaId.value = authUser.value?.area_id ? String(authUser.value.area_id) : '';
+        } else {
+            areaId.value = '';
+            if (divisionId.value && authUser.value?.division_id && String(divisionId.value) === String(authUser.value.division_id)) {
+                myDivisionOnly.value = true;
+            }
+        }
         applyFilters();
     };
 
@@ -192,6 +233,8 @@ export function useInventoryIndex({
     return {
         search,
         category,
+        divisionId,
+        areaId,
         myDivisionOnly,
         myAreaOnly,
         sortField,

@@ -9,7 +9,7 @@ class GetUsersAction
 {
     public function execute(array $filters = []): LengthAwarePaginator
     {
-        $query = User::query()->with(['division', 'roles']);
+        $query = User::query()->with(['division', 'roles', 'area']);
 
         $user = auth()->user();
 
@@ -26,12 +26,29 @@ class GetUsersAction
         }
 
         $divisionOnly = $filters['division_only'] ?? true;
-        $divisionFilter = $filters['division_filter'] ?? null;
+        $divisionId = $filters['division_id'] ?? $filters['division_filter'] ?? null;
+        $areaId = $filters['area_id'] ?? null;
         
-        if ($divisionFilter && $user->hasRole(['Developer', 'Superadmin'])) {
-            $query->where('division_id', $divisionFilter);
-        } elseif ($divisionOnly === true || $divisionOnly === 'true') {
-            $query->where('division_id', $user->division_id);
+        if ($user->hasRole(['Developer', 'Superadmin', 'Admin'])) {
+            if (!empty($divisionId)) {
+                $query->where('division_id', $divisionId);
+                if (!empty($areaId)) {
+                    $query->where('area_id', $areaId);
+                }
+            } elseif (!empty($areaId)) {
+                $query->where('area_id', $areaId);
+            } elseif ($divisionOnly === true || $divisionOnly === 'true' || $divisionOnly === '1' || $divisionOnly === 1) {
+                if ($user->division_id) {
+                    $query->where('division_id', $user->division_id);
+                }
+            }
+        } else {
+            if ($user->division_id) {
+                $query->where('division_id', $user->division_id);
+            }
+            if ($user->area_id) {
+                $query->where('area_id', $user->area_id);
+            }
         }
 
         if (!empty($filters['search'])) {

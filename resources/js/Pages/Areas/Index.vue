@@ -10,17 +10,24 @@ import '@vueform/toggle/themes/default.css';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import TablePagination from '@/Components/TablePagination.vue';
+import DivisionAreaFilter from '@/Components/DivisionAreaFilter.vue';
+import { useInventoryPermissions } from '@/Composables/useInventoryPermissions';
 
 const props = defineProps({
     areas: Object,
     filters: Object,
     divisions: Array,
+    allAreas: Array,
     userDivisionId: Number,
 });
 
+const { canFilterDivisionArea } = useInventoryPermissions();
+
 const search = ref(props.filters?.search || '');
 const per_page = ref(props.filters?.per_page || 10);
-const my_division_only = ref(props.filters?.my_division_only !== undefined ? props.filters.my_division_only : true);
+const my_division_only = ref(props.filters?.my_division_only !== undefined ? (props.filters.my_division_only === '1' || props.filters.my_division_only === true || props.filters.my_division_only === 'true') : true);
+const divisionId = ref(props.filters?.division_id !== undefined ? String(props.filters.division_id) : (my_division_only.value && props.userDivisionId ? String(props.userDivisionId) : ''));
+const areaId = ref(props.filters?.area_id !== undefined ? String(props.filters.area_id) : '');
 const isAdding = ref(false);
 const editingData = ref(null);
 
@@ -29,15 +36,39 @@ const form = ref({
     division_id: props.userDivisionId || '',
 });
 
+const syncTogglesFromDropdowns = () => {
+    if (divisionId.value && props.userDivisionId && String(divisionId.value) === String(props.userDivisionId)) {
+        my_division_only.value = true;
+    } else {
+        my_division_only.value = false;
+    }
+};
+
 const applyFilters = debounce(() => {
     router.get(route('areas.index'), {
         search: search.value,
         per_page: per_page.value,
-        my_division_only: my_division_only.value,
+        my_division_only: my_division_only.value ? '1' : '0',
+        division_id: divisionId.value,
+        area_id: areaId.value,
     }, { preserveState: true, replace: true, preserveScroll: true });
 }, 300);
 
-watch([search, per_page, my_division_only], applyFilters);
+watch([search, per_page], applyFilters);
+
+watch(my_division_only, (val) => {
+    if (val) {
+        divisionId.value = props.userDivisionId ? String(props.userDivisionId) : '';
+    } else if (props.userDivisionId && String(divisionId.value) === String(props.userDivisionId)) {
+        divisionId.value = '';
+    }
+    applyFilters();
+});
+
+watch([divisionId, areaId], () => {
+    syncTogglesFromDropdowns();
+    applyFilters();
+});
 
 const openAdd = () => {
     editingData.value = null;
@@ -184,17 +215,28 @@ const executeBulkDelete = () => {
             </div>
 
             <!-- Filters -->
-            <div class="bg-white/60 backdrop-blur-xl border border-white p-4 rounded-3xl shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div class="relative w-full sm:w-96">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search class="w-5 h-5 text-slate-400" />
+            <div class="bg-white/60 backdrop-blur-xl border border-white p-4 rounded-3xl shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between flex-wrap">
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto flex-wrap">
+                    <div class="relative w-full sm:w-80">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search class="w-5 h-5 text-slate-400" />
+                        </div>
+                        <input 
+                            v-model="search"
+                            type="text" 
+                            class="w-full pl-10 pr-4 py-2 bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="Search by name..."
+                        >
                     </div>
-                    <input 
-                        v-model="search"
-                        type="text" 
-                        class="w-full pl-10 pr-4 py-2 bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        placeholder="Search by name..."
-                    >
+
+                    <!-- Division & Area Filters (Admin / Superadmin / Developer) -->
+                    <DivisionAreaFilter
+                        v-if="canFilterDivisionArea"
+                        v-model:divisionId="divisionId"
+                        v-model:areaId="areaId"
+                        :divisions="divisions"
+                        :areas="allAreas"
+                    />
                 </div>
                 <div class="flex items-center gap-6">
                     <div class="flex items-center gap-2" v-if="$page.props.auth.user?.roles?.some(r => ['Admin', 'Superadmin', 'Developer'].includes(r)) && userDivisionId">

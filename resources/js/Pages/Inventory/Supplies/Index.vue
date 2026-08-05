@@ -184,7 +184,7 @@
       <!-- Toolbar & Table Container -->
       <div class="bg-white/50 backdrop-blur-xl rounded-3xl border border-white/80 shadow-2xl overflow-hidden flex flex-col">
         <div class="p-4 border-b border-white/60 bg-slate-900/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto flex-wrap">
             <div class="relative w-full sm:w-64">
               <SearchIcon class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
@@ -201,6 +201,15 @@
               <option value="All">All Categories</option>
               <option v-for="cat in categories" :key="cat.code" :value="cat.code">{{ cat.name }}</option>
             </select>
+
+            <!-- Division & Area Filters (Admin / Superadmin / Developer) -->
+            <DivisionAreaFilter
+                v-if="canFilterDivisionArea"
+                v-model:divisionId="divisionId"
+                v-model:areaId="areaId"
+                :divisions="divisions"
+                :areas="areas"
+            />
             <!-- Division Filter Toggle -->
             <button 
                 @click="toggleDivisionFilter"
@@ -261,6 +270,7 @@ import SupplyForm from './SupplyForm.vue';
 import SuppliesTable from './SuppliesTable.vue';
 import ViewSupplyDetails from './ViewSupplyDetails.vue';
 import Modal from '@/Components/Modal.vue';
+import DivisionAreaFilter from '@/Components/DivisionAreaFilter.vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 
@@ -275,12 +285,14 @@ const props = defineProps({
   areas: Array,
 });
 
-const { authUser, userPermissions, isSuperadmin, isSecretary } = useInventoryPermissions();
+const { authUser, userPermissions, isSuperadmin, isSecretary, canFilterDivisionArea } = useInventoryPermissions();
 const canCreate = computed(() => userPermissions.value.includes('create_supplies'));
 
 const {
     search: searchQuery,
     category: filterCat,
+    divisionId,
+    areaId,
     myDivisionOnly,
     myAreaOnly,
     sortField,
