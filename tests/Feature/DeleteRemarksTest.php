@@ -154,7 +154,7 @@ class DeleteRemarksTest extends TestCase
             'area_id' => $this->area->id,
         ]);
 
-        $response = $this->actingAs($this->user)->post(route('equipment.bulk_delete'), [
+        $response = $this->actingAs($this->user)->delete(route('equipment.bulk_delete'), [
             'ids' => [$equip1->id, $equip2->id],
             'remarks' => 'Bulk disposal of obsolete monitors'
         ]);
@@ -237,7 +237,7 @@ class DeleteRemarksTest extends TestCase
             'area_id' => $this->area->id,
         ]);
 
-        $response = $this->actingAs($this->user)->post(route('supplies.bulk_delete'), [
+        $response = $this->actingAs($this->user)->delete(route('supplies.bulk_delete'), [
             'ids' => [$supply1->id, $supply2->id],
             'remarks' => 'Damaged by water leak'
         ]);
