@@ -95,8 +95,12 @@
     <ConfirmModal 
         :show="isConfirmDeleteOpen" 
         title="Delete Supply" 
-        description="Are you sure you want to delete this supply record?" 
+        description="Are you sure you want to delete this supply record? Please provide a reason for deletion." 
         confirmText="Delete"
+        :requireInput="true"
+        inputLabel="Reason / Remarks for deletion"
+        inputPlaceholder="e.g., Unserviceable / Consumed / Damaged"
+        v-model="deleteRemarks"
         @close="isConfirmDeleteOpen = false; itemToDelete = null" 
         @confirm="executeDelete" 
     />
@@ -104,8 +108,12 @@
     <ConfirmModal 
         :show="isConfirmBulkDeleteOpen" 
         title="Delete Selected Supplies" 
-        :description="`Are you sure you want to delete ${selectedItems.length} records?`" 
+        :description="`Are you sure you want to delete ${selectedItems.length} records? Please provide a reason for deletion.`" 
         confirmText="Delete Selected"
+        :requireInput="true"
+        inputLabel="Reason / Remarks for deletion"
+        inputPlaceholder="e.g., Bulk disposal / Expired / Damaged"
+        v-model="bulkDeleteRemarks"
         @close="isConfirmBulkDeleteOpen = false" 
         @confirm="executeBulkDelete" 
     />
@@ -156,9 +164,11 @@ const {
     selectAll,
     isConfirmDeleteOpen,
     itemToDelete,
+    deleteRemarks,
     handleDelete,
     executeDelete,
     isConfirmBulkDeleteOpen,
+    bulkDeleteRemarks,
     handleBulkDelete,
     executeBulkDelete
 } = useInventoryTable({

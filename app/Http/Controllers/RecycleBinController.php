@@ -40,6 +40,7 @@ class RecycleBinController extends Controller
                     'category' => $categories[$item->category] ?? $item->category,
                     'article' => $item->article,
                     'type' => 'equipment',
+                    'delete_remarks' => $item->delete_remarks,
                     'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
                 ]);
                 break;
@@ -50,6 +51,7 @@ class RecycleBinController extends Controller
                     'category' => $categories[$item->category] ?? $item->category,
                     'article' => $item->article,
                     'type' => 'supplies',
+                    'delete_remarks' => $item->delete_remarks,
                     'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
                 ]);
                 break;

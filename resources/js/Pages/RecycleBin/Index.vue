@@ -158,6 +158,7 @@ const tabs = [
                                 <template v-else-if="tab === 'equipment' || tab === 'supplies'">
                                     <th class="py-4 px-6 font-bold text-sm">Category</th>
                                     <th class="py-4 px-6 font-bold text-sm">Article/Product Name</th>
+                                    <th class="py-4 px-6 font-bold text-sm">Deletion Remarks</th>
                                 </template>
                                 <template v-else-if="tab === 'reports'">
                                     <th class="py-4 px-6 font-bold text-sm">Report Name</th>
@@ -199,6 +200,12 @@ const tabs = [
                                 <template v-else-if="tab === 'equipment' || tab === 'supplies'">
                                     <td class="py-3 px-6 text-sm font-semibold text-slate-800">{{ item.category }}</td>
                                     <td class="py-3 px-6 text-sm text-slate-600">{{ item.article }}</td>
+                                    <td class="py-3 px-6 text-sm text-slate-600 max-w-xs truncate" :title="item.delete_remarks">
+                                        <span v-if="item.delete_remarks" class="inline-block px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs font-medium">
+                                            {{ item.delete_remarks }}
+                                        </span>
+                                        <span v-else class="text-slate-400 italic text-xs">No remarks</span>
+                                    </td>
                                 </template>
                                 <template v-else-if="tab === 'reports'">
                                     <td class="py-3 px-6 text-sm font-semibold text-slate-800">{{ item.name }}</td>

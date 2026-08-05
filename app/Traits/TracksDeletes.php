@@ -23,6 +23,9 @@ trait TracksDeletes
         static::restoring(function (Model $model) {
             if (in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive($model))) {
                 $model->deleted_by = null;
+                if (array_key_exists('delete_remarks', $model->getAttributes())) {
+                    $model->delete_remarks = null;
+                }
             }
         });
     }

@@ -128,11 +128,15 @@ class EquipmentController extends Controller
         return redirect()->route('equipment.index')->with('success', "{$equipment->article} has been successfully updated.");
     }
 
-    public function destroy(Equipment $equipment, DeleteEquipmentAction $action)
+    public function destroy(Request $request, Equipment $equipment, DeleteEquipmentAction $action)
     {
         Gate::authorize('delete', $equipment);
 
-        $action->execute($equipment);
+        $validated = $request->validate([
+            'remarks' => 'required|string|max:1000',
+        ]);
+
+        $action->execute($equipment, $validated['remarks']);
 
         return redirect()->route('equipment.index')->with('success', "{$equipment->article} has been successfully deleted.");
     }
@@ -142,18 +146,19 @@ class EquipmentController extends Controller
         $validated = $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'integer|exists:equipment,id',
+            'remarks' => 'required|string|max:1000',
         ]);
 
         $count = 0;
         foreach ($validated['ids'] as $id) {
             $equipment = Equipment::find($id);
             if ($equipment && Gate::allows('delete', $equipment)) {
-                $action->execute($equipment);
+                $action->execute($equipment, $validated['remarks']);
                 $count++;
             }
         }
 
-        return redirect()->route('equipment.index')->with('success', "{$count} have been deleted.");
+        return redirect()->route('equipment.index')->with('success', "{$count} items have been deleted.");
     }
 
     public function template()

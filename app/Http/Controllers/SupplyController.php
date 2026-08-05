@@ -120,11 +120,15 @@ class SupplyController extends Controller
         return redirect()->route('supplies.index')->with('success', "{$supply->article} has been successfully updated.");
     }
 
-    public function destroy(Supply $supply, DeleteSupplyAction $action)
+    public function destroy(Request $request, Supply $supply, DeleteSupplyAction $action)
     {
         \Illuminate\Support\Facades\Gate::authorize('delete', $supply);
 
-        $action->execute($supply);
+        $validated = $request->validate([
+            'remarks' => 'required|string|max:1000',
+        ]);
+
+        $action->execute($supply, $validated['remarks']);
         return redirect()->route('supplies.index')->with('success', "{$supply->article} has been successfully deleted.");
     }
 
@@ -132,19 +136,20 @@ class SupplyController extends Controller
     {
         $validated = $request->validate([
             'ids' => 'required|array',
-            'ids.*' => 'integer|exists:supplies,id'
+            'ids.*' => 'integer|exists:supplies,id',
+            'remarks' => 'required|string|max:1000',
         ]);
 
         $count = 0;
         foreach ($validated['ids'] as $id) {
             $supply = Supply::find($id);
             if ($supply && \Illuminate\Support\Facades\Gate::allows('delete', $supply)) {
-                $action->execute($supply);
+                $action->execute($supply, $validated['remarks']);
                 $count++;
             }
         }
 
-        return redirect()->route('supplies.index')->with('success', "{$count} have been deleted.");
+        return redirect()->route('supplies.index')->with('success', "{$count} items have been deleted.");
     }
 
     public function template()
