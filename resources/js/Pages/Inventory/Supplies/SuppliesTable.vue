@@ -64,7 +64,7 @@
             <td v-if="isColumnVisible('status')" class="px-6 py-4 text-center">
               <span 
                 class="px-2 py-1 rounded-full text-[10px] font-bold uppercase"
-                :class="item.status === 'Available' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'"
+                :class="item.status?.toLowerCase() === 'available' ? 'bg-green-100 text-green-700' : (item.status?.toLowerCase() === 'depleted' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700')"
               >
                 {{ item.status || 'Unknown' }}
               </span>

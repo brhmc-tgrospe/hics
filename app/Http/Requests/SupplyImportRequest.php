@@ -29,6 +29,26 @@ class SupplyImportRequest extends FormRequest
                 return; // Will fail the basic 'rows' requirement
             }
 
+            // Strip UTF-8 BOM if present
+            if (isset($header[0])) {
+                $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', $header[0]);
+            }
+
+            // Normalize header names
+            $header = array_map(function ($col) {
+                $col = strtolower(trim((string)$col));
+                $col = str_replace([' ', '-'], '_', $col);
+                return match ($col) {
+                    'unit_val', 'unitval', 'unit_cost', 'cost' => 'unit_value',
+                    'stock_no', 'stockno' => 'stock_number',
+                    'card_balance', 'qty_card', 'card_qty' => 'balance_per_card',
+                    'count', 'physical_count', 'qty_count' => 'on_hand_per_count',
+                    'uom' => 'unit_of_measure',
+                    'div_id' => 'division_id',
+                    default => $col,
+                };
+            }, $header);
+
             $rows = [];
             $lineNumber = 2; // Line 1 is header
             while (($row = fgetcsv($file)) !== false) {
@@ -40,10 +60,33 @@ class SupplyImportRequest extends FormRequest
 
                 if (count($header) === count($row)) {
                     $data = array_combine($header, $row);
-                    // Clean empty strings to null
+                    // Clean empty strings to null and sanitize values
                     foreach ($data as $key => $value) {
-                        if (trim($value) === '') {
+                        if ($value === null) {
+                            continue;
+                        }
+                        $value = trim((string)$value);
+                        if ($value === '') {
                             $data[$key] = null;
+                            continue;
+                        }
+
+                        // Sanitize numeric fields
+                        if (in_array($key, ['unit_value', 'balance_per_card', 'on_hand_per_count', 'division_id', 'area_id'])) {
+                            $cleanNumeric = preg_replace('/[^\d.-]/', '', $value);
+                            $data[$key] = $cleanNumeric !== '' ? $cleanNumeric : null;
+                        } else {
+                            $data[$key] = $value;
+                        }
+
+                        // Normalize status
+                        if ($key === 'status' && $data[$key] !== null) {
+                            $lowerStatus = strtolower(trim($data[$key]));
+                            if (in_array($lowerStatus, ['depleted', 'out of stock', 'unserviceable', 'inactive'])) {
+                                $data[$key] = 'Depleted';
+                            } else {
+                                $data[$key] = 'Available';
+                            }
                         }
                     }
                     $data['_line'] = $lineNumber; // Store line number for custom error messages
@@ -71,6 +114,8 @@ class SupplyImportRequest extends FormRequest
             'rows' => 'required|array|min:1',
             'rows.*.category' => 'required|string',
             'rows.*.description' => 'required|string',
+            'rows.*.unit_value' => 'required|numeric|gte:0',
+            'rows.*.status' => 'nullable|string',
             'rows.*.division_id' => [
                 'required',
                 function ($attribute, $value, $fail) {
@@ -110,24 +155,26 @@ class SupplyImportRequest extends FormRequest
      */
     protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
     {
-        $errors = $validator->errors()->all();
-        $firstError = $errors[0];
+        $messageBag = $validator->getMessageBag();
+        $errors = is_object($messageBag) ? $messageBag->all() : (array)$validator->errors();
+        $firstError = $errors[0] ?? 'Invalid data provided.';
         
-        // Extract line number if it's a 'rows' error
-        $firstKey = array_keys($validator->errors()->messages())[0];
-        if (preg_match('/^rows\.(\d+)\.(.+)$/', $firstKey, $matches)) {
+        $messages = is_object($messageBag) ? $messageBag->messages() : [];
+        $firstKey = !empty($messages) ? array_keys($messages)[0] : '';
+        
+        if ($firstKey && preg_match('/^rows\.(\d+)\.(.+)$/', $firstKey, $matches)) {
             $index = $matches[1];
             $attributeName = str_replace('_id', '', $matches[2]);
             $line = $this->input("rows.{$index}._line", $index + 2);
             $firstError = "Line {$line}: The {$attributeName} field is required or invalid.";
             
             // Handle required_if specifically for expiry date
-            if (str_contains($errors[0], 'expiry date field is required when')) {
+            if (isset($errors[0]) && str_contains($errors[0], 'expiry date field is required when')) {
                 $firstError = "Line {$line}: Expiry date is required for Medical and Surgical Supplies, Enteral Supplies, and Drugs and Medicines.";
             }
 
             // Check if it's a custom error message from closure
-            $originalError = $validator->errors()->first($firstKey);
+            $originalError = is_object($messageBag) ? $messageBag->first($firstKey) : ($errors[0] ?? '');
             if (str_contains($originalError, "Line {$line}:")) {
                  $firstError = $originalError;
             }

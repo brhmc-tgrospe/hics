@@ -25,23 +25,55 @@ class EquipmentDTO
         public ?int $area_id
     ) {}
 
+    private static function parseNumeric(mixed $val): ?float
+    {
+        if ($val === null || $val === '') {
+            return null;
+        }
+        if (is_numeric($val)) {
+            return (float)$val;
+        }
+        $cleaned = preg_replace('/[^\d.-]/', '', (string)$val);
+        return $cleaned !== '' && is_numeric($cleaned) ? (float)$cleaned : null;
+    }
+
+    private static function parseInt(mixed $val): ?int
+    {
+        $num = self::parseNumeric($val);
+        return $num !== null ? (int)round($num) : null;
+    }
+
+    private static function normalizeStatus(?string $status): ?string
+    {
+        if (!$status) {
+            return 'Serviceable';
+        }
+        $lower = strtolower(trim($status));
+        return match ($lower) {
+            'unserviceable', 'damaged', 'condemned', 'depleted', 'inactive' => 'Unserviceable',
+            default => 'Serviceable',
+        };
+    }
+
     public static function fromArray(array $data): self
     {
-        $unitValue = isset($data['unit_value']) && $data['unit_value'] !== null ? (float)$data['unit_value'] : null;
-        $propCard = isset($data['quantity_per_property_card']) && $data['quantity_per_property_card'] !== null ? (int)$data['quantity_per_property_card'] : null;
-        $physCount = isset($data['quantity_per_physical_count']) && $data['quantity_per_physical_count'] !== null ? (int)$data['quantity_per_physical_count'] : null;
+        $unitValue = self::parseNumeric($data['unit_value'] ?? null);
+        $propCard = self::parseInt($data['quantity_per_property_card'] ?? null);
+        $physCount = self::parseInt($data['quantity_per_physical_count'] ?? null);
 
         $shortageOverageQty = isset($data['shortage_overage_qty']) && $data['shortage_overage_qty'] !== null
-            ? (int)$data['shortage_overage_qty']
+            ? self::parseInt($data['shortage_overage_qty'])
             : (($propCard !== null && $physCount !== null) ? ($propCard - $physCount) : null);
 
         $shortageOverageValue = isset($data['shortage_overage_value']) && $data['shortage_overage_value'] !== null
-            ? (float)$data['shortage_overage_value']
+            ? self::parseNumeric($data['shortage_overage_value'])
             : (($shortageOverageQty !== null && $unitValue !== null) ? round($shortageOverageQty * $unitValue, 2) : null);
 
         $totalValue = isset($data['total_value']) && $data['total_value'] !== null
-            ? (float)$data['total_value']
+            ? self::parseNumeric($data['total_value'])
             : (($physCount !== null && $unitValue !== null) ? round($physCount * $unitValue, 2) : null);
+
+        $status = self::normalizeStatus($data['status'] ?? null);
 
         return new self(
             $data['category'] ?? null,
@@ -59,9 +91,9 @@ class EquipmentDTO
             $shortageOverageValue,
             $data['remarks'] ?? null,
             $data['end_user'] ?? null,
-            $data['status'] ?? null,
-            isset($data['division_id']) && $data['division_id'] !== null ? (int)$data['division_id'] : null,
-            isset($data['area_id']) && $data['area_id'] !== null ? (int)$data['area_id'] : null
+            $status,
+            isset($data['division_id']) && $data['division_id'] !== null ? self::parseInt($data['division_id']) : null,
+            isset($data['area_id']) && $data['area_id'] !== null ? self::parseInt($data['area_id']) : null
         );
     }
 

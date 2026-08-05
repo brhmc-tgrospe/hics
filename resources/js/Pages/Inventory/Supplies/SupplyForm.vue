@@ -143,7 +143,13 @@ const props = defineProps({
 const emit = defineEmits(['close', 'success']);
 
 const user = usePage().props.auth?.user;
-const initData = props.initialData || {};
+const normalizeSupplyStatus = (status) => {
+  if (!status) return '';
+  const s = status.toString().trim().toLowerCase();
+  if (s === 'available') return 'Available';
+  if (s === 'depleted') return 'Depleted';
+  return status;
+};
 
 const form = useForm({
   category: initData.category || '',
@@ -154,14 +160,34 @@ const form = useForm({
   stock_number: initData.stock_number || '',
   expiry_date: initData.expiry_date ? new Date(initData.expiry_date) : null,
   unit_of_measure: initData.unit_of_measure || '',
-  unit_value: initData.unit_value || '',
-  balance_per_card: initData.balance_per_card || '',
-  on_hand_per_count: initData.on_hand_per_count || '',
-  shortage_overage_qty: initData.shortage_overage_qty || '',
-  shortage_overage_value: initData.shortage_overage_value || '',
-  total_amount: initData.total_amount || '',
-  status: initData.status || '',
+  unit_value: initData.unit_value ?? '',
+  balance_per_card: initData.balance_per_card ?? '',
+  on_hand_per_count: initData.on_hand_per_count ?? '',
+  shortage_overage_qty: initData.shortage_overage_qty ?? '',
+  shortage_overage_value: initData.shortage_overage_value ?? '',
+  total_amount: initData.total_amount ?? '',
+  status: normalizeSupplyStatus(initData.status),
 });
+
+watch(() => props.initialData, (newVal) => {
+  if (newVal) {
+    form.category = newVal.category || '';
+    form.division_id = newVal.division_id || (user && !user.roles?.some(r => ['Superadmin', 'Developer'].includes(r)) ? user.division_id : '');
+    form.area_id = newVal.area_id || (user && !user.roles?.some(r => ['Superadmin', 'Developer', 'Admin'].includes(r)) ? user.area_id : '');
+    form.article = newVal.article || '';
+    form.description = newVal.description || '';
+    form.stock_number = newVal.stock_number || '';
+    form.expiry_date = newVal.expiry_date ? new Date(newVal.expiry_date) : null;
+    form.unit_of_measure = newVal.unit_of_measure || '';
+    form.unit_value = newVal.unit_value ?? '';
+    form.balance_per_card = newVal.balance_per_card ?? '';
+    form.on_hand_per_count = newVal.on_hand_per_count ?? '';
+    form.shortage_overage_qty = newVal.shortage_overage_qty ?? '';
+    form.shortage_overage_value = newVal.shortage_overage_value ?? '';
+    form.total_amount = newVal.total_amount ?? '';
+    form.status = normalizeSupplyStatus(newVal.status);
+  }
+}, { deep: true });
 
 const exemptCategories = ['ictsupply', 'officesup', 'hksupp'];
 const isExpiryExempt = computed(() => {

@@ -29,6 +29,27 @@ class EquipmentImportRequest extends FormRequest
                 return; // Will fail the basic 'rows' requirement
             }
 
+            // Strip UTF-8 BOM if present
+            if (isset($header[0])) {
+                $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', $header[0]);
+            }
+
+            // Normalize header names
+            $header = array_map(function ($col) {
+                $col = strtolower(trim((string)$col));
+                $col = str_replace([' ', '-'], '_', $col);
+                return match ($col) {
+                    'unit_val', 'unitval', 'unit_cost', 'cost' => 'unit_value',
+                    'prop_no', 'property_no', 'propno' => 'property_number',
+                    'serial_no', 'serialno' => 'serial_number',
+                    'qty_card', 'card_qty', 'prop_card_qty' => 'quantity_per_property_card',
+                    'qty_physical', 'physical_qty', 'count' => 'quantity_per_physical_count',
+                    'uom' => 'unit_of_measure',
+                    'div_id' => 'division_id',
+                    default => $col,
+                };
+            }, $header);
+
             $rows = [];
             $lineNumber = 2; // Line 1 is header
             while (($row = fgetcsv($file)) !== false) {
@@ -40,10 +61,33 @@ class EquipmentImportRequest extends FormRequest
 
                 if (count($header) === count($row)) {
                     $data = array_combine($header, $row);
-                    // Clean empty strings to null
+                    // Clean empty strings to null and sanitize values
                     foreach ($data as $key => $value) {
-                        if (trim($value) === '') {
+                        if ($value === null) {
+                            continue;
+                        }
+                        $value = trim((string)$value);
+                        if ($value === '') {
                             $data[$key] = null;
+                            continue;
+                        }
+
+                        // Sanitize numeric fields
+                        if (in_array($key, ['unit_value', 'quantity_per_property_card', 'quantity_per_physical_count', 'division_id', 'area_id'])) {
+                            $cleanNumeric = preg_replace('/[^\d.-]/', '', $value);
+                            $data[$key] = $cleanNumeric !== '' ? $cleanNumeric : null;
+                        } else {
+                            $data[$key] = $value;
+                        }
+
+                        // Normalize status
+                        if ($key === 'status' && $data[$key] !== null) {
+                            $lowerStatus = strtolower(trim($data[$key]));
+                            if (in_array($lowerStatus, ['unserviceable', 'damaged', 'condemned', 'depleted', 'inactive'])) {
+                                $data[$key] = 'Unserviceable';
+                            } else {
+                                $data[$key] = 'Serviceable';
+                            }
                         }
                     }
                     $data['_line'] = $lineNumber; // Store line number for custom error messages
@@ -103,6 +147,7 @@ class EquipmentImportRequest extends FormRequest
             'rows.*.unit_value' => 'required|numeric|gt:0',
             'rows.*.quantity_per_property_card' => 'required|numeric|gt:0',
             'rows.*.quantity_per_physical_count' => 'required|numeric|gt:0',
+            'rows.*.status' => 'nullable|string',
         ];
     }
 
@@ -111,19 +156,21 @@ class EquipmentImportRequest extends FormRequest
      */
     protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
     {
-        $errors = $validator->errors()->all();
-        $firstError = $errors[0];
+        $messageBag = $validator->getMessageBag();
+        $errors = is_object($messageBag) ? $messageBag->all() : (array)$validator->errors();
+        $firstError = $errors[0] ?? 'Invalid data provided.';
         
-        // Extract line number if it's a 'rows' error
-        $firstKey = array_keys($validator->errors()->messages())[0];
-        if (preg_match('/^rows\.(\d+)\.(.+)$/', $firstKey, $matches)) {
+        $messages = is_object($messageBag) ? $messageBag->messages() : [];
+        $firstKey = !empty($messages) ? array_keys($messages)[0] : '';
+        
+        if ($firstKey && preg_match('/^rows\.(\d+)\.(.+)$/', $firstKey, $matches)) {
             $index = $matches[1];
             $attributeName = str_replace('_id', '', $matches[2]);
             $line = $this->input("rows.{$index}._line", $index + 2);
             $firstError = "Line {$line}: The {$attributeName} field is required or invalid.";
             
             // Check if it's a custom error message from closure
-            $originalError = $validator->errors()->first($firstKey);
+            $originalError = is_object($messageBag) ? $messageBag->first($firstKey) : ($errors[0] ?? '');
             if (str_contains($originalError, "Line {$line}:")) {
                  $firstError = $originalError;
             }

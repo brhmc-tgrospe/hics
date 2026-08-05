@@ -12,7 +12,7 @@ class ImportSupplyAction
         private UpdateSupplyAction $updateAction
     ) {}
 
-    public function execute(SupplyDTO $dto): Supply
+    public function execute(SupplyDTO $dto): array
     {
         $supply = null;
 
@@ -21,10 +21,22 @@ class ImportSupplyAction
             $supply = Supply::where('stock_number', $dto->stock_number)->first();
         }
 
+        // Fallback: Match by division, area, and description/article if stock_number is not present
+        if (!$supply && !empty($dto->division_id) && !empty($dto->area_id) && !empty($dto->description)) {
+            $query = Supply::where('division_id', $dto->division_id)
+                ->where('area_id', $dto->area_id)
+                ->where('description', $dto->description);
+            
+            if (!empty($dto->article)) {
+                $query->where('article', $dto->article);
+            }
+            $supply = $query->first();
+        }
+
         if ($supply) {
-            return $this->updateAction->execute($supply, $dto);
+            return ['record' => $this->updateAction->execute($supply, $dto), 'action' => 'updated'];
         } else {
-            return $this->createAction->execute($dto);
+            return ['record' => $this->createAction->execute($dto), 'action' => 'created'];
         }
     }
 }

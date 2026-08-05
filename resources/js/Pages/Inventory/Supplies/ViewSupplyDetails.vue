@@ -63,7 +63,7 @@
       <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Status</p>
         <p class="text-sm font-semibold text-slate-800">
-          <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase', data.status === 'Available' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700']">
+          <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase', data.status?.toLowerCase() === 'available' ? 'bg-green-100 text-green-700' : (data.status?.toLowerCase() === 'depleted' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700')]">
             {{ data.status || 'Unknown' }}
           </span>
         </p>

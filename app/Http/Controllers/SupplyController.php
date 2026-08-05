@@ -181,18 +181,28 @@ class SupplyController extends Controller
         \Illuminate\Support\Facades\Gate::authorize('create', Supply::class);
 
         $rows = $request->input('rows', []);
+        $created = 0;
+        $updated = 0;
         
-        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $action) {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $action, &$created, &$updated) {
             foreach ($rows as $data) {
                 unset($data['_line']);
                 $dto = SupplyDTO::fromArray($data);
-                $action->execute($dto);
+                $result = $action->execute($dto);
+                if ($result['action'] === 'created') {
+                    $created++;
+                } else {
+                    $updated++;
+                }
             }
         });
 
-        $imported = count($rows);
+        $messages = [];
+        if ($created > 0) $messages[] = "{$created} new records created";
+        if ($updated > 0) $messages[] = "{$updated} existing records updated";
+        $summary = implode(', ', $messages);
 
-        return redirect()->route('supplies.index')->with('success', "Successfully imported {$imported} supplies records.");
+        return redirect()->route('supplies.index')->with('success', "Successfully imported: {$summary}.");
     }
 
     public function generateReport(Request $request)

@@ -52,11 +52,23 @@ const form = useForm({
     area_id: ''
 });
 
+const normalizeEquipmentStatus = (status) => {
+    if (!status) return '';
+    const s = status.toString().trim().toLowerCase();
+    if (s === 'serviceable') return 'Serviceable';
+    if (s === 'unserviceable') return 'Unserviceable';
+    return status;
+};
+
 watch(() => props.editingData, (newVal) => {
     if (newVal) {
         Object.keys(form).forEach(key => {
             if (newVal[key] !== undefined) {
-                form[key] = newVal[key];
+                if (key === 'status') {
+                    form.status = normalizeEquipmentStatus(newVal.status);
+                } else {
+                    form[key] = newVal[key];
+                }
             }
         });
     } else {

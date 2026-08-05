@@ -140,7 +140,7 @@ const isColumnVisible = (column) => {
                         <td v-if="isColumnVisible('total_value')" class="px-6 py-4 text-xs font-bold text-slate-800 text-right">{{ formatCurrency(item.total_value) }}</td>
                         <td v-if="isColumnVisible('end_user')" class="px-6 py-4 text-xs text-slate-600">{{ item.end_user }}</td>
                         <td v-if="isColumnVisible('status')" class="px-6 py-4 text-center">
-                            <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase', item.status === 'Serviceable' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">
+                            <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase', item.status?.toLowerCase() === 'serviceable' ? 'bg-green-100 text-green-700' : (item.status?.toLowerCase() === 'unserviceable' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700')]">
                                 {{ item.status || 'Unknown' }}
                             </span>
                         </td>

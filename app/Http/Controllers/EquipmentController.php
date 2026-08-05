@@ -203,18 +203,28 @@ class EquipmentController extends Controller
         Gate::authorize('create', Equipment::class);
 
         $rows = $request->input('rows', []);
+        $created = 0;
+        $updated = 0;
 
-        DB::transaction(function () use ($rows, $action) {
+        DB::transaction(function () use ($rows, $action, &$created, &$updated) {
             foreach ($rows as $data) {
                 unset($data['_line']);
                 $dto = EquipmentDTO::fromArray($data);
-                $action->execute($dto);
+                $result = $action->execute($dto);
+                if ($result['action'] === 'created') {
+                    $created++;
+                } else {
+                    $updated++;
+                }
             }
         });
 
-        $imported = count($rows);
+        $messages = [];
+        if ($created > 0) $messages[] = "{$created} new records created";
+        if ($updated > 0) $messages[] = "{$updated} existing records updated";
+        $summary = implode(', ', $messages);
 
-        return redirect()->route('equipment.index')->with('success', "Successfully imported {$imported} equipment records.");
+        return redirect()->route('equipment.index')->with('success', "Successfully imported: {$summary}.");
     }
 
     public function generateReport(Request $request)

@@ -12,7 +12,7 @@ class ImportEquipmentAction
         private UpdateEquipmentAction $updateAction
     ) {}
 
-    public function execute(EquipmentDTO $dto): Equipment
+    public function execute(EquipmentDTO $dto): array
     {
         $equipment = null;
 
@@ -26,10 +26,22 @@ class ImportEquipmentAction
             $equipment = Equipment::where('property_number', $dto->property_number)->first();
         }
 
+        // Fallback: Match by division, area, and description/article
+        if (!$equipment && !empty($dto->division_id) && !empty($dto->area_id) && !empty($dto->description)) {
+            $query = Equipment::where('division_id', $dto->division_id)
+                ->where('area_id', $dto->area_id)
+                ->where('description', $dto->description);
+            
+            if (!empty($dto->article)) {
+                $query->where('article', $dto->article);
+            }
+            $equipment = $query->first();
+        }
+
         if ($equipment) {
-            return $this->updateAction->execute($equipment, $dto);
+            return ['record' => $this->updateAction->execute($equipment, $dto), 'action' => 'updated'];
         } else {
-            return $this->createAction->execute($dto);
+            return ['record' => $this->createAction->execute($dto), 'action' => 'created'];
         }
     }
 }
