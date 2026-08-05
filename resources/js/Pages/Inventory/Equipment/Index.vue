@@ -84,51 +84,82 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
 
     <InventoryLayout>
         <div class="space-y-6">
-            <div class="flex justify-between items-center">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Equipment Inventory</h2>
                     <p class="text-sm text-slate-500 font-medium mt-2">Manage and track hospital equipment</p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <input 
-                        type="file" 
-                        accept=".csv" 
-                        ref="fileInput" 
-                        class="hidden" 
-                        @change="handleFileUpload" 
-                    />
-                    <button 
-                        v-if="canCreate"
-                        @click="openAdd"
-                        class="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold shadow-xl shadow-slate-200 flex items-center gap-2 hover:bg-slate-800 transition-colors w-full sm:w-auto justify-center"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        Add
-                    </button>
-                    <a 
-                        v-if="canCreate"
-                        :href="route('equipment.template')" 
-                        class="px-4 py-2 bg-white/50 text-slate-700 border border-slate-300 rounded-xl text-sm font-semibold shadow-sm flex items-center gap-2 hover:bg-slate-50 transition-colors w-full sm:w-auto justify-center"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        Template
-                    </a>
-                    <button 
-                        v-if="canCreate"
-                        @click="$refs.fileInput.click()"
-                        class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold shadow-xl shadow-emerald-200 flex items-center gap-2 hover:bg-emerald-700 transition-colors w-full sm:w-auto justify-center"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                        Import CSV
-                    </button>
-                    <button 
-                        v-if="$page.props.auth.user.permissions.includes('generate_reports')"
-                        @click="isReporting = true"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold shadow-xl shadow-blue-200 flex items-center gap-2 hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        Generate Report
-                    </button>
+                <div class="flex flex-col items-end gap-2 w-full sm:w-auto">
+                    <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap w-full sm:w-auto justify-end">
+                        <input 
+                            type="file" 
+                            accept=".csv" 
+                            ref="fileInput" 
+                            class="hidden" 
+                            @change="handleFileUpload" 
+                        />
+                        <button 
+                            v-if="canCreate"
+                            @click="openAdd"
+                            class="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold shadow-xl shadow-slate-200 flex items-center gap-2 hover:bg-slate-800 transition-colors w-full sm:w-auto justify-center"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Add
+                        </button>
+                        <a 
+                            v-if="canCreate"
+                            :href="route('equipment.template')" 
+                            class="px-4 py-2 bg-white/50 text-slate-700 border border-slate-300 rounded-xl text-sm font-semibold shadow-sm flex items-center gap-2 hover:bg-slate-50 transition-colors w-full sm:w-auto justify-center"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Template
+                        </a>
+                        <button 
+                            v-if="canCreate"
+                            @click="$refs.fileInput.click()"
+                            class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold shadow-xl shadow-emerald-200 flex items-center gap-2 hover:bg-emerald-700 transition-colors w-full sm:w-auto justify-center"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            Import CSV
+                        </button>
+                        <button 
+                            v-if="$page.props.auth.user.permissions.includes('generate_reports')"
+                            @click="isReporting = true"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold shadow-xl shadow-blue-200 flex items-center gap-2 hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Generate Report
+                        </button>
+                    </div>
+
+                    <!-- My Division and My Area toggles below action buttons -->
+                    <div class="flex items-center gap-2 justify-end w-full sm:w-auto">
+                        <button 
+                            @click="toggleDivisionFilter"
+                            :class="[
+                                'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border whitespace-nowrap',
+                                myDivisionOnly 
+                                    ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200' 
+                                    : 'bg-white/50 text-slate-600 border-white/80 hover:bg-white/70'
+                            ]"
+                        >
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            My Division
+                        </button>
+
+                        <button 
+                            @click="toggleAreaFilter"
+                            :class="[
+                                'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border whitespace-nowrap',
+                                myAreaOnly 
+                                    ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200' 
+                                    : 'bg-white/50 text-slate-600 border-white/80 hover:bg-white/70'
+                            ]"
+                        >
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            My Area
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -263,33 +294,6 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                             :divisions="divisions"
                             :areas="areas"
                         />
-                        <!-- Division Filter Toggle -->
-                        <button 
-                            @click="toggleDivisionFilter"
-                            :class="[
-                                'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border whitespace-nowrap',
-                                myDivisionOnly 
-                                    ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200' 
-                                    : 'bg-white/50 text-slate-600 border-white/80 hover:bg-white/70'
-                            ]"
-                        >
-                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                            My Division
-                        </button>
-
-                        <!-- Area Filter Toggle -->
-                        <button 
-                            @click="toggleAreaFilter"
-                            :class="[
-                                'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border whitespace-nowrap',
-                                myAreaOnly 
-                                    ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200' 
-                                    : 'bg-white/50 text-slate-600 border-white/80 hover:bg-white/70'
-                            ]"
-                        >
-                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            My Area
-                        </button>
                     </div>
 
                 </div>
