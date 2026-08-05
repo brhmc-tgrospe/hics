@@ -75,6 +75,9 @@
 <script setup>
 import { formatCurrency } from '@/utils/formatters.js';
 import { computed } from 'vue';
+import { useSupplyCategoryRules } from '@/Composables/useSupplyCategoryRules';
+
+const { isExpiryExemptSupply } = useSupplyCategoryRules();
 
 const props = defineProps({
   data: {
@@ -103,9 +106,8 @@ const getDivisionName = (id) => {
   return dept ? dept.name : id;
 };
 
-const exemptCategories = ['ictsupply', 'officesup', 'hksupp'];
 const isExpiryExempt = computed(() => {
-  return exemptCategories.includes(props.data.category);
+  return isExpiryExemptSupply(props.data.category);
 });
 
 const formatDate = (date) => {

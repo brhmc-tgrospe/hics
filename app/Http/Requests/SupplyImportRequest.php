@@ -146,8 +146,24 @@ class SupplyImportRequest extends FormRequest
             ],
             'rows.*.balance_per_card' => 'required|numeric|gt:0',
             'rows.*.on_hand_per_count' => 'required|numeric|gt:0',
-            'rows.*.expiry_date' => 'required_if:rows.*.category,mssup,enteral,drmeds|nullable|date',
+            'rows.*.expiry_date' => 'nullable|date',
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $rows = $this->input('rows', []);
+            foreach ($rows as $index => $row) {
+                $category = $row['category'] ?? null;
+                $expiry = $row['expiry_date'] ?? null;
+                
+                if (\App\Domain\Supplies\Services\SupplyCategoryExpirationPolicy::isExpiryRequired($category) && empty($expiry)) {
+                    $line = $row['_line'] ?? ($index + 2);
+                    $validator->errors()->add("rows.{$index}.expiry_date", "Line {$line}: Expiry date is required for the specified category.");
+                }
+            }
+        });
     }
 
     /**
@@ -168,11 +184,6 @@ class SupplyImportRequest extends FormRequest
             $line = $this->input("rows.{$index}._line", $index + 2);
             $firstError = "Line {$line}: The {$attributeName} field is required or invalid.";
             
-            // Handle required_if specifically for expiry date
-            if (isset($errors[0]) && str_contains($errors[0], 'expiry date field is required when')) {
-                $firstError = "Line {$line}: Expiry date is required for Medical and Surgical Supplies, Enteral Supplies, and Drugs and Medicines.";
-            }
-
             // Check if it's a custom error message from closure
             $originalError = is_object($messageBag) ? $messageBag->first($firstKey) : ($errors[0] ?? '');
             if (str_contains($originalError, "Line {$line}:")) {

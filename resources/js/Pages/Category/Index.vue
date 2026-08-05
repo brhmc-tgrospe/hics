@@ -44,8 +44,14 @@ const closeForm = () => {
     isAdding.value = false;
 };
 
-const handleSaved = () => {
+const handleSaved = (payload) => {
     closeForm();
+    if (payload?.type) {
+        const targetTab = payload.type === 'supply' ? 'supplies' : 'equipment';
+        if (activeTab.value !== targetTab) {
+            activeTab.value = targetTab;
+        }
+    }
 };
 </script>
 

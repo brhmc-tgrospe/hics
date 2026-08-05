@@ -75,7 +75,11 @@ class SupplyController extends Controller
                     }
                 }
             ],
-            'expiry_date' => 'required_if:category,mssup,enteral,drmeds|nullable|date',
+            'expiry_date' => [
+                \Illuminate\Validation\Rule::requiredIf(fn() => \App\Domain\Supplies\Services\SupplyCategoryExpirationPolicy::isExpiryRequired($request->input('category'))),
+                'nullable',
+                'date',
+            ],
         ]);
 
         $dto = SupplyDTO::fromArray($validated);
@@ -103,7 +107,11 @@ class SupplyController extends Controller
             'status' => 'nullable|string',
             'division_id' => 'required|integer|exists:divisions,id',
             'area_id' => 'required|integer|exists:areas,id',
-            'expiry_date' => 'required_unless:category,ictsupply,officesup,hksupp|nullable|date',
+            'expiry_date' => [
+                \Illuminate\Validation\Rule::requiredIf(fn() => \App\Domain\Supplies\Services\SupplyCategoryExpirationPolicy::isExpiryRequired($request->input('category'))),
+                'nullable',
+                'date',
+            ],
         ]);
 
         $dto = SupplyDTO::fromArray($validated);
@@ -157,7 +165,7 @@ class SupplyController extends Controller
             'Name of the item (Required)',
             'Detailed description (Required)',
             'e.g. 12345',
-            'YYYY-MM-DD (Required for Medical and Surgical Supplies, Enteral Supplies & Drugs and Medicines)',
+            'YYYY-MM-DD (Required for Medical and Surgical, Enteral, Drugs and Medicines, Food Supplies)',
             'e.g. box, pc',
             'Numeric value (Required',
             'Must be > 0 (Required)',

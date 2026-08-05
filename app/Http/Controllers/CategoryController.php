@@ -4,14 +4,17 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use Illuminate\Http\Request;
-use App\Domain\Shared\Models\Category;
 use App\Domain\Shared\Actions\GetCategoriesAction;
+use App\Domain\Shared\Actions\CreateCategoryAction;
+use App\Domain\Shared\Actions\BulkDeleteCategoriesAction;
+use App\Domain\Shared\DTOs\CategoryDTO;
+use App\Http\Requests\StoreCategoryRequest;
 
 class CategoryController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, GetCategoriesAction $action)
     {
-        $categories = app(GetCategoriesAction::class)->execute($request->all());
+        $categories = $action->execute($request->all());
 
         return Inertia::render('Category/Index', [
             'categories' => $categories,
@@ -19,30 +22,18 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request, CreateCategoryAction $action)
     {
-        $user = $request->user();
-        if (!$user->hasRole('Superadmin') && !$user->hasRole('Developer')) {
-            abort(403, 'Unauthorized action.');
-        }
+        $dto = CategoryDTO::fromArray($request->validated());
+        $category = $action->execute($dto);
 
-        $validated = $request->validate([
-            'code' => 'required|string|unique:categories,code',
-            'name' => 'required|string',
-            'type' => 'required|string|in:equipment,supply',
-        ], [
-            'code.unique' => 'An existing category is still in the database. Contact the system developer.'
-        ]);
-
-        Category::create($validated);
-
-        return redirect()->back()->with('success', 'Category created successfully.');
+        return redirect()->back()->with('success', "Category '{$category->name}' created successfully.");
     }
 
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request, BulkDeleteCategoriesAction $action)
     {
         $user = $request->user();
-        if (!$user->hasRole('Superadmin') && !$user->hasRole('Developer')) {
+        if (!$user || (!$user->hasRole('Superadmin') && !$user->hasRole('Developer'))) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -51,7 +42,7 @@ class CategoryController extends Controller
             'ids.*' => 'integer|exists:categories,id'
         ]);
 
-        $count = Category::whereIn('id', $validated['ids'])->delete();
+        $count = $action->execute($validated['ids']);
 
         return redirect()->back()->with('success', "{$count} categories deleted.");
     }

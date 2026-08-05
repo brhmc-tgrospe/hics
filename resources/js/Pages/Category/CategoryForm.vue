@@ -1,31 +1,47 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
+import { watch } from 'vue';
 
 const props = defineProps({
     activeTab: {
         type: String,
-        required: true
+        default: 'equipment'
     }
 });
 
 const emit = defineEmits(['close', 'saved']);
 
-// Map plural tabs to singular type
-const getType = () => {
-    return props.activeTab === 'supplies' ? 'supply' : 'equipment';
+const resolveInitialType = (tab) => {
+    return tab === 'supplies' || tab === 'supply' ? 'supply' : 'equipment';
 };
 
 const form = useForm({
-    code: '',
+    type: resolveInitialType(props.activeTab),
     name: '',
-    type: getType(),
+    code: '',
 });
 
+watch(() => props.activeTab, (newTab) => {
+    form.type = resolveInitialType(newTab);
+});
+
+const setType = (type) => {
+    form.type = type;
+    form.clearErrors('type');
+};
+
 const submit = () => {
+    if (!form.name || form.name.trim() === '') {
+        form.setError('name', 'Category name is required.');
+        return;
+    }
+
     form.post(route('categories.store'), {
         preserveScroll: true,
         onSuccess: () => {
-            emit('saved');
+            const savedType = form.type;
+            form.reset();
+            emit('saved', { type: savedType });
         },
     });
 };
@@ -33,55 +49,105 @@ const submit = () => {
 
 <template>
     <div class="p-6">
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-slate-900">Add Category</h3>
-            <button @click="$emit('close')" class="text-slate-400 hover:text-slate-600 transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
+            <div>
+                <h3 class="text-xl font-bold text-slate-900">Add Category</h3>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">Create a new category for equipment or supplies</p>
+            </div>
+            <button 
+                type="button" 
+                @click="$emit('close')" 
+                class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors"
+                aria-label="Close modal"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
             </button>
         </div>
 
-        <form @submit.prevent="submit" class="space-y-4">
+        <form @submit.prevent="submit" class="space-y-5">
+            <!-- Category Type Selector -->
             <div>
-                <label for="code" class="block text-sm font-semibold text-slate-700 mb-1">Code</label>
-                <input
-                    id="code"
-                    v-model="form.code"
-                    type="text"
-                    required
-                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="e.g. CAT-001"
-                />
-                <div v-if="form.errors.code" class="mt-1 text-sm text-red-600">{{ form.errors.code }}</div>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                    Category Type <span class="text-red-500">*</span>
+                </label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button
+                        type="button"
+                        @click="setType('equipment')"
+                        :class="[
+                            'flex items-center justify-center gap-2.5 px-4 py-3 rounded-2xl border text-sm font-semibold transition-all',
+                            form.type === 'equipment'
+                                ? 'bg-blue-50/80 border-blue-600 text-blue-700 shadow-sm ring-2 ring-blue-500/20'
+                                : 'bg-slate-50/70 border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'
+                        ]"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>Equipment</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        @click="setType('supply')"
+                        :class="[
+                            'flex items-center justify-center gap-2.5 px-4 py-3 rounded-2xl border text-sm font-semibold transition-all',
+                            form.type === 'supply'
+                                ? 'bg-blue-50/80 border-blue-600 text-blue-700 shadow-sm ring-2 ring-blue-500/20'
+                                : 'bg-slate-50/70 border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'
+                        ]"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                        <span>Supplies</span>
+                    </button>
+                </div>
+                <div v-if="form.errors.type" class="mt-1.5 text-xs text-red-600 font-medium">
+                    {{ form.errors.type }}
+                </div>
             </div>
 
+            <!-- Category Name Input -->
             <div>
-                <label for="name" class="block text-sm font-semibold text-slate-700 mb-1">Name</label>
+                <label for="category_name" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                    {{ form.type === 'supply' ? 'Supply' : 'Equipment' }} Category Name <span class="text-red-500">*</span>
+                </label>
                 <input
-                    id="name"
+                    id="category_name"
                     v-model="form.name"
                     type="text"
                     required
-                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="e.g. General Equipment"
+                    autofocus
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all shadow-inner"
+                    :placeholder="form.type === 'supply' ? 'e.g. Medical and Surgical Supplies' : 'e.g. Information & Communication Technology'"
                 />
-                <div v-if="form.errors.name" class="mt-1 text-sm text-red-600">{{ form.errors.name }}</div>
+                <div v-if="form.errors.name" class="mt-1.5 text-xs text-red-600 font-medium">
+                    {{ form.errors.name }}
+                </div>
             </div>
 
-            <div class="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-6">
+            <!-- Modal Footer Actions -->
+            <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 mt-6">
                 <button
                     type="button"
                     @click="$emit('close')"
-                    class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                    class="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
                 >
                     Cancel
                 </button>
                 <button
                     type="submit"
                     :disabled="form.processing"
-                    class="px-6 py-2 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 flex items-center gap-2"
+                    class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl shadow-lg shadow-slate-900/10 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 transition-all disabled:opacity-50 flex items-center gap-2"
                 >
-                    <svg v-if="form.processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    Save Category
+                    <svg v-if="form.processing" class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Save Category</span>
                 </button>
             </div>
         </form>

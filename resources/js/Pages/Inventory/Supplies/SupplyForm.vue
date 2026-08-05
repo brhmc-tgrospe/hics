@@ -131,6 +131,9 @@ import { useForm, usePage } from '@inertiajs/vue3';
 import { watch, computed } from 'vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+import { useSupplyCategoryRules } from '@/Composables/useSupplyCategoryRules';
+
+const { isExpiryExemptSupply } = useSupplyCategoryRules();
 
 const props = defineProps({
   editingData: {
@@ -222,9 +225,8 @@ watch(currentEditingData, (newVal) => {
   }
 }, { deep: true, immediate: true });
 
-const exemptCategories = ['ictsupply', 'officesup', 'hksupp'];
 const isExpiryExempt = computed(() => {
-  return exemptCategories.includes(form.category);
+  return isExpiryExemptSupply(form.category);
 });
 
 const formatDate = (date) => {

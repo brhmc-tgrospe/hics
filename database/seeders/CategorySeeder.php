@@ -31,6 +31,8 @@ class CategorySeeder extends Seeder
             ['code' => 'office', 'name' => 'OFFICE SUPPLIES', 'type' => 'supply'],
             ['code' => 'enteral', 'name' => 'ENTERAL SUPPLIES', 'type' => 'supply'],
             ['code' => 'hksupp', 'name' => 'HOUSEKEEPING SUPPLIES', 'type' => 'supply'],
+            ['code' => 'foodsupplies', 'name' => 'FOOD SUPPLIES', 'type' => 'supply'],
+            ['code' => 'nonfoodsupplies', 'name' => 'NON-FOOD SUPPLIES', 'type' => 'supply'],
         ];
 
         foreach (array_merge($equipment, $supplies) as $category) {
