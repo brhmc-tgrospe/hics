@@ -238,14 +238,15 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                                 :format="formatDate"
                                 :preview-format="formatDate"
                                 class="w-full"
+                                disabled
                             >
                                 <template #trigger>
-                                    <div class="relative w-full">
+                                    <div class="relative w-full opacity-70">
                                         <svg class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                         <input 
                                             :value="formatDate(reportData.date_of_accountability)" 
-                                            readonly 
-                                            class="w-full rounded-xl border border-slate-300 bg-slate-50 text-slate-700 px-4 py-2.5 pl-10 shadow-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer"
+                                            disabled
+                                            class="w-full rounded-xl border border-slate-300 bg-slate-200 text-slate-500 px-4 py-2.5 pl-10 shadow-sm cursor-not-allowed"
                                             placeholder="Select date"
                                         />
                                     </div>
