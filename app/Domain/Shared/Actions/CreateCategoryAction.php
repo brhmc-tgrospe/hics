@@ -16,6 +16,7 @@ class CreateCategoryAction
             'code' => $code,
             'name' => $dto->name,
             'type' => $dto->type,
+            'has_expiration_date' => $dto->type === 'supply' ? $dto->has_expiration_date : false,
         ]);
     }
 

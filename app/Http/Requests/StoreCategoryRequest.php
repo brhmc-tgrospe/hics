@@ -22,6 +22,7 @@ class StoreCategoryRequest extends FormRequest
             'type' => ['required', 'string', 'in:equipment,supply'],
             'name' => ['required', 'string', 'max:255'],
             'code' => ['nullable', 'string', 'max:100'],
+            'has_expiration_date' => ['nullable', 'boolean'],
         ];
     }
 

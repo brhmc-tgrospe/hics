@@ -19,14 +19,21 @@ const form = useForm({
     type: resolveInitialType(props.activeTab),
     name: '',
     code: '',
+    has_expiration_date: false,
 });
 
 watch(() => props.activeTab, (newTab) => {
     form.type = resolveInitialType(newTab);
+    if (form.type !== 'supply') {
+        form.has_expiration_date = false;
+    }
 });
 
 const setType = (type) => {
     form.type = type;
+    if (type !== 'supply') {
+        form.has_expiration_date = false;
+    }
     form.clearErrors('type');
 };
 
@@ -126,6 +133,35 @@ const submit = () => {
                 />
                 <div v-if="form.errors.name" class="mt-1.5 text-xs text-red-600 font-medium">
                     {{ form.errors.name }}
+                </div>
+            </div>
+
+            <!-- Expiration Date Toggle (Supplies Only) -->
+            <div v-if="form.type === 'supply'" class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 transition-all">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <span class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Has Expiration date?</span>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5">
+                            Require expiration date for supplies under this category.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        @click="form.has_expiration_date = !form.has_expiration_date"
+                        :class="[
+                            'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                            form.has_expiration_date ? 'bg-blue-600' : 'bg-slate-300'
+                        ]"
+                        role="switch"
+                        :aria-checked="form.has_expiration_date"
+                    >
+                        <span
+                            :class="[
+                                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                                form.has_expiration_date ? 'translate-x-5' : 'translate-x-0'
+                            ]"
+                        />
+                    </button>
                 </div>
             </div>
 

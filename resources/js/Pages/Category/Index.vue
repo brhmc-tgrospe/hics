@@ -120,6 +120,7 @@ const handleSaved = (payload) => {
                 <CategoryTable 
                     :categories="categories"
                     :isSuperadminOrDeveloper="isSuperadminOrDeveloper"
+                    :activeTab="activeTab"
                     @update-per-page="(size) => { perPage = Number(size); applyFilters(); }"
                 />
             </div>

@@ -13,6 +13,10 @@ const props = defineProps({
     isSuperadminOrDeveloper: {
         type: Boolean,
         default: false
+    },
+    activeTab: {
+        type: String,
+        default: 'equipment'
     }
 });
 
@@ -55,6 +59,8 @@ const executeBulkDelete = () => {
         }
     });
 };
+
+const isSuppliesTab = computed(() => props.activeTab === 'supplies' || props.activeTab === 'supply');
 </script>
 
 <template>
@@ -73,11 +79,12 @@ const executeBulkDelete = () => {
                         <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">ID</th>
                         <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Code</th>
                         <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Name</th>
+                        <th v-if="isSuppliesTab" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Expiration Tracking</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-white/40">
                     <tr v-if="categories.data.length === 0">
-                        <td :colspan="isSuperadminOrDeveloper ? 4 : 3" class="px-6 py-8 text-center text-sm text-slate-500 font-medium">No categories found matching criteria.</td>
+                        <td :colspan="(isSuperadminOrDeveloper ? 4 : 3) + (isSuppliesTab ? 1 : 0)" class="px-6 py-8 text-center text-sm text-slate-500 font-medium">No categories found matching criteria.</td>
                     </tr>
                     <tr v-for="item in categories.data" :key="item.id" class="hover:bg-white/40 transition-colors">
                         <td v-if="isSuperadminOrDeveloper" class="px-6 py-4 text-center">
@@ -91,6 +98,16 @@ const executeBulkDelete = () => {
                         <td class="px-6 py-4 text-xs font-mono font-bold text-slate-500">{{ item.id }}</td>
                         <td class="px-6 py-4 text-sm font-bold text-slate-800">{{ item.code }}</td>
                         <td class="px-6 py-4 text-sm font-medium text-slate-700">{{ item.name }}</td>
+                        <td v-if="isSuppliesTab" class="px-6 py-4">
+                            <span v-if="item.has_expiration_date" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                Required
+                            </span>
+                            <span v-else class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                Exempt
+                            </span>
+                        </td>
                     </tr>
                 </tbody>
             </table>

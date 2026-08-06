@@ -226,7 +226,13 @@ watch(currentEditingData, (newVal) => {
 }, { deep: true, immediate: true });
 
 const isExpiryExempt = computed(() => {
-  return isExpiryExemptSupply(form.category);
+  return isExpiryExemptSupply(form.category, props.categories);
+});
+
+watch(isExpiryExempt, (isExempt) => {
+  if (isExempt) {
+    form.clearErrors('expiry_date');
+  }
 });
 
 const formatDate = (date) => {

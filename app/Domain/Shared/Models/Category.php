@@ -13,5 +13,10 @@ class Category extends Model
         'code',
         'name',
         'type',
+        'has_expiration_date',
+    ];
+
+    protected $casts = [
+        'has_expiration_date' => 'boolean',
     ];
 }

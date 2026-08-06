@@ -26,19 +26,27 @@ class CategorySeeder extends Seeder
         ];
 
         $supplies = [
-            ['code' => 'ictsupply', 'name' => 'INFORMATION AND COMMUNICATION TECHNOLOGY SUPPLIES', 'type' => 'supply'],
-            ['code' => 'mssup', 'name' => 'MEDICAL AND SURGICAL SUPPLIES', 'type' => 'supply'],
-            ['code' => 'office', 'name' => 'OFFICE SUPPLIES', 'type' => 'supply'],
-            ['code' => 'enteral', 'name' => 'ENTERAL SUPPLIES', 'type' => 'supply'],
-            ['code' => 'hksupp', 'name' => 'HOUSEKEEPING SUPPLIES', 'type' => 'supply'],
-            ['code' => 'foodsupplies', 'name' => 'FOOD SUPPLIES', 'type' => 'supply'],
-            ['code' => 'nonfoodsupplies', 'name' => 'NON-FOOD SUPPLIES', 'type' => 'supply'],
+            ['code' => 'ictsupply', 'name' => 'INFORMATION AND COMMUNICATION TECHNOLOGY SUPPLIES', 'type' => 'supply', 'has_expiration_date' => false],
+            ['code' => 'mssup', 'name' => 'MEDICAL AND SURGICAL SUPPLIES', 'type' => 'supply', 'has_expiration_date' => true],
+            ['code' => 'office', 'name' => 'OFFICE SUPPLIES', 'type' => 'supply', 'has_expiration_date' => false],
+            ['code' => 'enteral', 'name' => 'ENTERAL SUPPLIES', 'type' => 'supply', 'has_expiration_date' => true],
+            ['code' => 'hksupp', 'name' => 'HOUSEKEEPING SUPPLIES', 'type' => 'supply', 'has_expiration_date' => false],
+            ['code' => 'foodsupplies', 'name' => 'FOOD SUPPLIES', 'type' => 'supply', 'has_expiration_date' => true],
+            ['code' => 'nonfoodsupplies', 'name' => 'NON-FOOD SUPPLIES', 'type' => 'supply', 'has_expiration_date' => false],
+            ['code' => 'hardwaresup', 'name' => 'HARDWARE SUPPLIES', 'type' => 'supply', 'has_expiration_date' => false],
         ];
 
-        foreach (array_merge($equipment, $supplies) as $category) {
+        foreach ($equipment as $category) {
             \App\Domain\Shared\Models\Category::firstOrCreate(
                 ['code' => $category['code'], 'type' => $category['type']],
-                ['name' => $category['name']]
+                ['name' => $category['name'], 'has_expiration_date' => false]
+            );
+        }
+
+        foreach ($supplies as $category) {
+            \App\Domain\Shared\Models\Category::updateOrCreate(
+                ['code' => $category['code'], 'type' => $category['type']],
+                ['name' => $category['name'], 'has_expiration_date' => $category['has_expiration_date']]
             );
         }
     }
