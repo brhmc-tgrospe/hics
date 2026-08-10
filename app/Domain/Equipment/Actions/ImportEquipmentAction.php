@@ -26,8 +26,8 @@ class ImportEquipmentAction
             $equipment = Equipment::where('property_number', $dto->property_number)->first();
         }
 
-        // Fallback: Match by division, area, and description/article
-        if (!$equipment && !empty($dto->division_id) && !empty($dto->area_id) && !empty($dto->description)) {
+        // Fallback: Match by division, area, and description/article ONLY if unique identifiers are missing
+        if (!$equipment && empty($dto->serial_number) && empty($dto->property_number) && !empty($dto->division_id) && !empty($dto->area_id) && !empty($dto->description)) {
             $query = Equipment::where('division_id', $dto->division_id)
                 ->where('area_id', $dto->area_id)
                 ->where('description', $dto->description);
