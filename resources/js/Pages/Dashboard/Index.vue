@@ -72,6 +72,7 @@
                     <tr class="border-b border-amber-200/50">
                       <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Type</th>
                       <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Item</th>
+                      <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Area</th>
                       <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700 text-right">Variance Qty</th>
                     </tr>
                   </thead>
@@ -79,12 +80,13 @@
                     <tr v-for="item in discrepancyMetrics.items_qty.data" :key="item.type + item.id" class="hover:bg-amber-500/10 transition-colors">
                       <td class="px-4 py-3 font-medium text-slate-800">{{ item.type }}</td>
                       <td class="px-4 py-3 text-slate-800">{{ item.name }}</td>
+                      <td class="px-4 py-3 text-slate-600 text-xs">{{ item.area || 'N/A' }}</td>
                       <td class="px-4 py-3 text-right font-medium" :class="item.qty > 0 ? 'text-emerald-600' : 'text-rose-600'">
                         {{ item.qty > 0 ? '+' : '' }}{{ item.qty }}
                       </td>
                     </tr>
                     <tr v-if="!discrepancyMetrics.items_qty.data || discrepancyMetrics.items_qty.data.length === 0">
-                      <td colspan="3" class="px-4 py-6 text-center text-slate-500 italic">No discrepancies found.</td>
+                      <td colspan="4" class="px-4 py-6 text-center text-slate-500 italic">No discrepancies found.</td>
                     </tr>
                   </tbody>
                 </table>
@@ -136,6 +138,7 @@
                     <tr class="border-b border-amber-200/50">
                       <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Type</th>
                       <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Item</th>
+                      <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700">Area</th>
                       <th class="px-4 py-3 font-medium uppercase text-[10px] tracking-wider text-amber-700 text-right">Variance Value</th>
                     </tr>
                   </thead>
@@ -143,12 +146,13 @@
                     <tr v-for="item in discrepancyMetrics.items_value.data" :key="item.type + item.id" class="hover:bg-amber-500/10 transition-colors">
                       <td class="px-4 py-3 font-medium text-slate-800">{{ item.type }}</td>
                       <td class="px-4 py-3 text-slate-800">{{ item.name }}</td>
+                      <td class="px-4 py-3 text-slate-600 text-xs">{{ item.area || 'N/A' }}</td>
                       <td class="px-4 py-3 text-right font-bold" :class="item.value > 0 ? 'text-emerald-600' : 'text-rose-600'">
                         {{ formatCurrency(item.value) }}
                       </td>
                     </tr>
                     <tr v-if="!discrepancyMetrics.items_value.data || discrepancyMetrics.items_value.data.length === 0">
-                      <td colspan="3" class="px-4 py-6 text-center text-slate-500 italic">No discrepancies found.</td>
+                      <td colspan="4" class="px-4 py-6 text-center text-slate-500 italic">No discrepancies found.</td>
                     </tr>
                   </tbody>
                 </table>

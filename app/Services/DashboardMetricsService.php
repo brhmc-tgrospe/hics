@@ -101,23 +101,25 @@ class DashboardMetricsService
         $isSuper = $user->hasRole(['Developer', 'Superadmin']);
 
         $eqQuery = \Illuminate\Support\Facades\DB::table('equipment')
-            ->whereNotNull('shortage_overage_qty')
-            ->where('shortage_overage_qty', '!=', 0)
-            ->whereNull('deleted_at')
-            ->selectRaw("'Equipment' as type, id, article as name, description, property_number as code, shortage_overage_qty as qty, shortage_overage_value as value");
+            ->leftJoin('areas', 'equipment.area_id', '=', 'areas.id')
+            ->whereNotNull('equipment.shortage_overage_qty')
+            ->where('equipment.shortage_overage_qty', '!=', 0)
+            ->whereNull('equipment.deleted_at')
+            ->selectRaw("'Equipment' as type, equipment.id, equipment.article as name, equipment.description, equipment.property_number as code, equipment.shortage_overage_qty as qty, equipment.shortage_overage_value as value, areas.area_name as area");
 
         $supQuery = \Illuminate\Support\Facades\DB::table('supplies')
-            ->whereNotNull('shortage_overage_qty')
-            ->where('shortage_overage_qty', '!=', 0)
-            ->whereNull('deleted_at')
-            ->selectRaw("'Supply' as type, id, article as name, description, stock_number as code, shortage_overage_qty as qty, shortage_overage_value as value");
+            ->leftJoin('areas', 'supplies.area_id', '=', 'areas.id')
+            ->whereNotNull('supplies.shortage_overage_qty')
+            ->where('supplies.shortage_overage_qty', '!=', 0)
+            ->whereNull('supplies.deleted_at')
+            ->selectRaw("'Supply' as type, supplies.id, supplies.article as name, supplies.description, supplies.stock_number as code, supplies.shortage_overage_qty as qty, supplies.shortage_overage_value as value, areas.area_name as area");
 
         if (!$isSuper && $user->division_id) {
-            $eqQuery->where('division_id', $user->division_id);
-            $supQuery->where('division_id', $user->division_id);
+            $eqQuery->where('equipment.division_id', $user->division_id);
+            $supQuery->where('supplies.division_id', $user->division_id);
         } elseif (!$isSuper) {
-            $eqQuery->where('id', 0);
-            $supQuery->where('id', 0);
+            $eqQuery->where('equipment.id', 0);
+            $supQuery->where('supplies.id', 0);
         }
 
         $unionQuery = $eqQuery->unionAll($supQuery);
