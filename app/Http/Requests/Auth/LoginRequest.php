@@ -54,6 +54,23 @@ class LoginRequest extends FormRequest
             'password' => $this->input('password'),
         ];
 
+        if (Auth::validate($credentials)) {
+            $user = Auth::getProvider()->retrieveByCredentials($credentials);
+
+            $sessionLifetime = config('session.lifetime') * 60;
+
+            $hasActiveSession = \Illuminate\Support\Facades\DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->where('last_activity', '>=', now()->subSeconds($sessionLifetime)->getTimestamp())
+                ->exists();
+
+            if ($hasActiveSession && ! $this->boolean('confirm_logout')) {
+                throw ValidationException::withMessages([
+                    'confirm_logout' => 'This account is already logged in on another device.',
+                ]);
+            }
+        }
+
         if (! Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
