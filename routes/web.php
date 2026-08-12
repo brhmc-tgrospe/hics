@@ -41,6 +41,8 @@ Route::middleware('auth')->group(function () {
     Route::post('supplies/report', [SupplyController::class, 'generateReport'])->name('supplies.report.generate')->middleware('permission:generate_reports');
     Route::get('supplies/report/{id}', [SupplyController::class, 'showReport'])->name('supplies.report.show')->middleware('permission:generate_reports');
     Route::delete('supplies/bulk-delete', [SupplyController::class, 'bulkDestroy'])->name('supplies.bulk_delete')->middleware('permission:delete_supplies');
+    Route::get('supplies/bulk-edit-values', [SupplyController::class, 'bulkEditUnitValues'])->name('supplies.bulk_edit_values')->middleware('permission:edit_supplies');
+    Route::put('supplies/bulk-update-values', [SupplyController::class, 'bulkUpdateUnitValues'])->name('supplies.bulk_update_values')->middleware('permission:edit_supplies');
     
     Route::resource('supplies', SupplyController::class)->except(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::get('supplies', [SupplyController::class, 'index'])->name('supplies.index')->middleware('permission:view_supplies');

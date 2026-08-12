@@ -215,6 +215,19 @@
           </div>
       </Modal>
 
+      <!-- Missing Unit Values Warning -->
+      <div v-if="missingUnitValueCount > 0 && canCreate" class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div class="flex items-center gap-3 flex-1">
+          <AlertTriangleIcon class="w-5 h-5 text-amber-500 flex-shrink-0" />
+          <p class="text-sm text-amber-800">
+            <strong>{{ missingUnitValueCount }} record{{ missingUnitValueCount !== 1 ? 's' : '' }}</strong> {{ missingUnitValueCount !== 1 ? 'have' : 'has' }} missing unit values. Total amounts cannot be computed.
+          </p>
+        </div>
+        <Link :href="route('supplies.bulk_edit_values')" class="px-4 py-2 bg-amber-600 text-white rounded-xl text-sm font-semibold shadow-md flex items-center gap-2 hover:bg-amber-700 transition-colors whitespace-nowrap">
+          Fix Now
+        </Link>
+      </div>
+
       <!-- Toolbar & Table Container -->
       <div class="bg-white/50 backdrop-blur-xl rounded-3xl border border-white/80 shadow-2xl overflow-hidden flex flex-col">
         <div class="p-4 border-b border-white/60 bg-slate-900/5 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -271,7 +284,8 @@
 
 <script setup>
 import { computed } from 'vue';
-import { SearchIcon, PlusIcon } from 'lucide-vue-next';
+import { SearchIcon, PlusIcon, AlertTriangleIcon } from 'lucide-vue-next';
+import { Link } from '@inertiajs/vue3';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import SupplyForm from './SupplyForm.vue';
 import SuppliesTable from './SuppliesTable.vue';
@@ -290,6 +304,7 @@ const props = defineProps({
   categories: Array,
   divisions: Array,
   areas: Array,
+  missingUnitValueCount: { type: Number, default: 0 },
 });
 
 const { authUser, userPermissions, isSuperadmin, isSecretary, canFilterDivisionArea } = useInventoryPermissions();

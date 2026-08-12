@@ -21,12 +21,23 @@ class SupplyController extends Controller
         $divisions = \App\Models\Division::select('id', 'div_name as name')->get()->toArray();
         $areas = \App\Models\Area::select('id', 'area_name as name', 'division_id')->get()->toArray();
 
+        $user = $request->user();
+        $missingQuery = Supply::where(function ($q) {
+            $q->whereNull('unit_value')->orWhere('unit_value', 0);
+        });
+        if ($user->hasRole('Encoder')) {
+            $missingQuery->where('division_id', $user->division_id)->where('area_id', $user->area_id);
+        } elseif ($user->hasRole('Admin')) {
+            $missingQuery->where('division_id', $user->division_id);
+        }
+
         return Inertia::render('Inventory/Supplies/Index', [
             'supplies' => $supplies,
             'filters' => $request->only(['search', 'category', 'my_division_only', 'my_area_only', 'division_id', 'area_id', 'per_page', 'sort_field', 'sort_direction']),
             'categories' => $categories,
             'divisions' => $divisions,
             'areas' => $areas,
+            'missingUnitValueCount' => $missingQuery->count(),
         ]);
     }
 
@@ -307,4 +318,65 @@ class SupplyController extends Controller
             'divisionHeadDesignation' => $divisionHeadDesignation,
         ]);
     }
+
+    public function bulkEditUnitValues()
+    {
+        $user = auth()->user();
+        
+        $query = Supply::where(function ($q) {
+            $q->whereNull('unit_value')->orWhere('unit_value', 0);
+        });
+
+        // Scope by user role
+        if ($user->hasRole('Encoder')) {
+            $query->where('division_id', $user->division_id)
+                  ->where('area_id', $user->area_id);
+        } elseif ($user->hasRole('Admin')) {
+            $query->where('division_id', $user->division_id);
+        }
+        // Superadmin/Developer see all
+
+        $supplies = $query
+            ->select('id', 'article', 'description', 'category', 'unit_of_measure', 'on_hand_per_count', 'balance_per_card', 'unit_value', 'division_id', 'area_id')
+            ->with(['division:id,div_name', 'area:id,area_name'])
+            ->orderBy('category')
+            ->orderBy('article')
+            ->get();
+
+        return Inertia::render('Inventory/Supplies/BulkEditUnitValues', [
+            'supplies' => $supplies,
+        ]);
+    }
+
+    public function bulkUpdateUnitValues(Request $request)
+    {
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|integer|exists:supplies,id',
+            'items.*.unit_value' => 'required|numeric|gt:0',
+        ]);
+
+        $updated = 0;
+        $skipped = 0;
+        \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $request, &$updated, &$skipped) {
+            foreach ($validated['items'] as $item) {
+                $supply = Supply::find($item['id']);
+                if ($supply && $request->user()->can('update', $supply)) {
+                    $supply->unit_value = $item['unit_value'];
+                    $supply->save();
+                    $updated++;
+                } else {
+                    $skipped++;
+                }
+            }
+        });
+
+        $message = "Successfully updated unit values for {$updated} records.";
+        if ($skipped > 0) {
+            $message .= " {$skipped} records were skipped (no permission).";
+        }
+
+        return redirect()->route('supplies.index')->with('success', $message);
+    }
 }
+
