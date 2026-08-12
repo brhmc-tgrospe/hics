@@ -120,7 +120,7 @@ class EquipmentController extends Controller
             'property_number' => 'nullable|string',
             'serial_number' => 'nullable|string',
             'unit_of_measure' => 'nullable|string',
-            'unit_value' => 'nullable|numeric',
+            'unit_value' => 'required|numeric|gt:0',
             'total_value' => 'nullable|numeric',
             'quantity_per_property_card' => 'nullable|integer',
             'quantity_per_physical_count' => 'nullable|integer',

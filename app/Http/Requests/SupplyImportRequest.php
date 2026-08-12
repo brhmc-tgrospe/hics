@@ -114,7 +114,7 @@ class SupplyImportRequest extends FormRequest
             'rows' => 'required|array|min:1',
             'rows.*.category' => 'required|string',
             'rows.*.description' => 'required|string',
-            'rows.*.unit_value' => 'required|numeric|gte:0',
+            'rows.*.unit_value' => 'required|numeric|gt:0',
             'rows.*.status' => 'nullable|string',
             'rows.*.division_id' => [
                 'required',

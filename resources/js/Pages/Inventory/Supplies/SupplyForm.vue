@@ -272,6 +272,12 @@ const submit = () => {
   checkRequired('area_id', 'Area');
   checkRequired('article', 'Article');
   checkRequired('description', 'Description');
+  
+  if (form.unit_value === '' || form.unit_value === null || Number(form.unit_value) <= 0) {
+    form.setError('unit_value', 'Unit value must be greater than 0.');
+    hasError = true;
+  }
+  
   if (!isExpiryExempt.value) {
     if (!form.expiry_date) {
       form.setError('expiry_date', 'Expiry Date is required.');
