@@ -28,9 +28,14 @@ class Equipment extends Model
     
     public function tapActivity($activity, string $eventName)
     {
+        $areaName = $this->area ? $this->area->area_name : $this->area()->withTrashed()->value('area_name');
+        $divName = $this->division ? $this->division->div_name : $this->division()->withTrashed()->value('div_name');
+
         $activity->properties = $activity->properties->merge([
             'division_id' => $this->division_id,
             'area_id' => $this->area_id,
+            'area_name' => $areaName,
+            'div_name' => $divName,
         ]);
     }
 
