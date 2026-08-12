@@ -104,7 +104,7 @@ class MigrateLegacyData extends Command
         $this->info('Data migration completed successfully!');
     }
 
-    private function seedFallbackData($now)
+    private function seedFallbackData(Carbon $now)
     {
         $equipment = [
             [
