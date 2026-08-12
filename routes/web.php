@@ -25,6 +25,8 @@ Route::middleware('auth')->group(function () {
     Route::post('equipment/report', [EquipmentController::class, 'generateReport'])->name('equipment.report.generate')->middleware('permission:generate_reports');
     Route::get('equipment/report/{id}', [EquipmentController::class, 'showReport'])->name('equipment.report.show')->middleware('permission:generate_reports');
     Route::delete('equipment/bulk-delete', [EquipmentController::class, 'bulkDestroy'])->name('equipment.bulk_delete')->middleware('permission:delete_equipment');
+    Route::get('equipment/bulk-edit-values', [EquipmentController::class, 'bulkEditUnitValues'])->name('equipment.bulk_edit_values')->middleware('permission:edit_equipment');
+    Route::put('equipment/bulk-update-values', [EquipmentController::class, 'bulkUpdateUnitValues'])->name('equipment.bulk_update_values')->middleware('permission:edit_equipment');
     
     Route::resource('equipment', EquipmentController::class)->except(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::get('equipment', [EquipmentController::class, 'index'])->name('equipment.index')->middleware('permission:view_equipment');
