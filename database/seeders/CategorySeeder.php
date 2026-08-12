@@ -20,7 +20,6 @@ class CategorySeeder extends Seeder
             ['code' => 'mv', 'name' => 'MOTOR VEHICLES', 'type' => 'equipment'],
             ['code' => 'hhcenter', 'name' => 'HOSPITAL & HEALTH CENTER BUILDING', 'type' => 'equipment'],
             ['code' => 'bldg', 'name' => 'BUILDINGS AND STRUCTURES', 'type' => 'equipment'],
-            ['code' => 'office', 'name' => 'OFFICE EQUIPMENT', 'type' => 'equipment'],
             ['code' => 'ictequip', 'name' => 'INFORMATION AND COMMUNICATION TECHNOLOGY EQUIPMENT', 'type' => 'equipment'],
             ['code' => 'medical', 'name' => 'MEDICAL EQUIPMENT', 'type' => 'equipment'],
         ];
