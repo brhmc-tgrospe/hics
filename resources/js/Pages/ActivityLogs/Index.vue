@@ -141,8 +141,16 @@ const getLogDetails = (log) => {
         };
     }
 
-    const attrs = log.attribute_changes?.attributes || log.properties?.attributes || (log.properties && typeof log.properties === 'object' && !Array.isArray(log.properties) ? log.properties : {});
-    const oldAttrs = log.attribute_changes?.old || log.properties?.old || {};
+    const baseProperties = log.properties && typeof log.properties === 'object' && !Array.isArray(log.properties) ? log.properties : {};
+    const attrs = {
+        ...baseProperties,
+        ...(log.properties?.attributes || {}),
+        ...(log.attribute_changes?.attributes || {})
+    };
+    const oldAttrs = {
+        ...(log.properties?.old || {}),
+        ...(log.attribute_changes?.old || {})
+    };
 
     const article = attrs.article || oldAttrs.article;
     const rawCategory = attrs.category || oldAttrs.category;
