@@ -26,7 +26,7 @@ class Supply extends Model
             });
     }
     
-    public function tapActivity($activity, string $eventName)
+    public function beforeActivityLogged($activity, string $eventName)
     {
         $areaName = $this->area ? $this->area->area_name : $this->area()->withTrashed()->value('area_name');
         $divName = $this->division ? $this->division->div_name : $this->division()->withTrashed()->value('div_name');

@@ -41,33 +41,24 @@ class BackfillActivityLogNames extends Command
         $count = 0;
 
         foreach ($activities as $activity) {
-            $properties = $activity->properties;
+            $properties = $activity->properties instanceof \Illuminate\Support\Collection ? $activity->properties : collect($activity->properties ?? []);
+            $attributeChanges = $activity->attribute_changes instanceof \Illuminate\Support\Collection ? $activity->attribute_changes : collect($activity->attribute_changes ?? []);
+            
             $updated = false;
 
-            if ($properties !== null) {
-                if ($properties instanceof \Illuminate\Support\Collection) {
-                    if (!$properties->has('area_name') && $properties->has('area_id') && $properties->get('area_id')) {
-                        $area = $areas->get($properties->get('area_id'));
-                        $properties->put('area_name', $area ? $area->area_name : null);
-                        $updated = true;
-                    }
-                    if (!$properties->has('div_name') && $properties->has('division_id') && $properties->get('division_id')) {
-                        $div = $divisions->get($properties->get('division_id'));
-                        $properties->put('div_name', $div ? $div->div_name : null);
-                        $updated = true;
-                    }
-                } elseif (is_array($properties)) {
-                    if (!isset($properties['area_name']) && isset($properties['area_id']) && $properties['area_id']) {
-                        $area = $areas->get($properties['area_id']);
-                        $properties['area_name'] = $area ? $area->area_name : null;
-                        $updated = true;
-                    }
-                    if (!isset($properties['div_name']) && isset($properties['division_id']) && $properties['division_id']) {
-                        $div = $divisions->get($properties['division_id']);
-                        $properties['div_name'] = $div ? $div->div_name : null;
-                        $updated = true;
-                    }
-                }
+            $areaId = $properties->get('area_id') ?? $properties->get('attributes')['area_id'] ?? $attributeChanges->get('attributes')['area_id'] ?? null;
+            $divId = $properties->get('division_id') ?? $properties->get('attributes')['division_id'] ?? $attributeChanges->get('attributes')['division_id'] ?? null;
+
+            if ($areaId && !$properties->has('area_name')) {
+                $area = $areas->get($areaId);
+                $properties->put('area_name', $area ? $area->area_name : null);
+                $updated = true;
+            }
+
+            if ($divId && !$properties->has('div_name')) {
+                $div = $divisions->get($divId);
+                $properties->put('div_name', $div ? $div->div_name : null);
+                $updated = true;
             }
 
             if ($updated) {
