@@ -108,6 +108,8 @@ const submitProfile = () => {
                     type="text"
                     class="mt-1 block w-full disabled:opacity-50 disabled:bg-gray-100"
                     v-model="form.username"
+                    @keydown.space.prevent
+                    @input="form.username = form.username.replace(/\s/g, '')"
                     :disabled="!canEditUsername"
                     autocomplete="username"
                 />

@@ -114,6 +114,7 @@ export function useInventoryIndex({
     // General Area Restriction
     const showGeneralAreaModal = ref(false);
     const isInGeneralArea = computed(() => {
+        if (isSuperadmin.value || userRoles.value.includes('Admin')) return false;
         return Boolean(authUser.value?.is_general_area || authUser.value?.area_name?.toLowerCase() === 'general area');
     });
 

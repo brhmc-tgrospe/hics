@@ -23,6 +23,7 @@ class ProfileUpdateRequest extends FormRequest
                 'sometimes',
                 'string',
                 'max:255',
+                'regex:/^\S+$/',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
             'contact_number' => ['nullable', 'string', 'max:255'],
@@ -34,6 +35,18 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+        ];
+    }
+
+    /**
+     * Get custom error messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'username.regex' => 'The username must not contain spaces.',
         ];
     }
 }

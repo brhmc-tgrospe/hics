@@ -91,6 +91,11 @@ class EquipmentController extends Controller
                 'integer',
                 'exists:areas,id',
                 function ($attribute, $value, $fail) use ($request) {
+                    $area = \App\Models\Area::find($value);
+                    if ($area && strtolower(trim($area->area_name)) === 'general area') {
+                        $fail('Items cannot be assigned to the General Area. Please select a designated area.');
+                        return;
+                    }
                     $user = $request->user();
                     if ($user->hasRole('Superadmin') || $user->hasRole('Developer') || $user->hasRole('Admin')) {
                         return;
@@ -130,7 +135,17 @@ class EquipmentController extends Controller
             'end_user' => 'nullable|string',
             'status' => 'nullable|string',
             'division_id' => 'required|integer|exists:divisions,id',
-            'area_id' => 'required|integer|exists:areas,id',
+            'area_id' => [
+                'required',
+                'integer',
+                'exists:areas,id',
+                function ($attribute, $value, $fail) {
+                    $area = \App\Models\Area::find($value);
+                    if ($area && strtolower(trim($area->area_name)) === 'general area') {
+                        $fail('Items cannot be assigned to the General Area. Please select a designated area.');
+                    }
+                },
+            ],
         ]);
 
         $dto = EquipmentDTO::fromArray($validated);

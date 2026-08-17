@@ -199,4 +199,103 @@ class GeneralAreaRestrictionTest extends TestCase
         $response->assertSessionHasErrors('area_id');
         $this->assertEquals($this->regularArea->id, $targetUser->fresh()->area_id);
     }
+
+    public function test_admin_in_general_area_can_create_equipment_in_valid_area()
+    {
+        $admin = User::factory()->create([
+            'division_id' => $this->division->id,
+            'area_id' => $this->generalArea->id,
+        ]);
+        $admin->assignRole('Admin');
+
+        $response = $this->actingAs($admin)->post(route('equipment.store'), [
+            'article' => 'Ultrasound Machine',
+            'description' => 'Medical device',
+            'serial_number' => 'SN-ADMIN-001',
+            'unit_value' => 120000,
+            'quantity_per_property_card' => 1,
+            'quantity_per_physical_count' => 1,
+            'division_id' => $this->division->id,
+            'area_id' => $this->regularArea->id,
+        ]);
+
+        $response->assertRedirect(route('equipment.index'));
+        $this->assertDatabaseHas('equipment', [
+            'serial_number' => 'SN-ADMIN-001',
+            'area_id' => $this->regularArea->id,
+        ]);
+    }
+
+    public function test_admin_in_general_area_can_create_supplies_in_valid_area()
+    {
+        $admin = User::factory()->create([
+            'division_id' => $this->division->id,
+            'area_id' => $this->generalArea->id,
+        ]);
+        $admin->assignRole('Admin');
+
+        $response = $this->actingAs($admin)->post(route('supplies.store'), [
+            'category' => 'DRMEDS',
+            'article' => 'Amoxicillin 500mg',
+            'description' => 'Antibiotic capsules',
+            'expiry_date' => '2026-12-31',
+            'unit_value' => 8.00,
+            'balance_per_card' => 50,
+            'on_hand_per_count' => 50,
+            'division_id' => $this->division->id,
+            'area_id' => $this->regularArea->id,
+        ]);
+
+        $response->assertRedirect(route('supplies.index'));
+        $this->assertDatabaseHas('supplies', [
+            'article' => 'Amoxicillin 500mg',
+            'area_id' => $this->regularArea->id,
+        ]);
+    }
+
+    public function test_admin_cannot_create_equipment_assigned_to_general_area()
+    {
+        $admin = User::factory()->create([
+            'division_id' => $this->division->id,
+            'area_id' => $this->generalArea->id,
+        ]);
+        $admin->assignRole('Admin');
+
+        $response = $this->actingAs($admin)->post(route('equipment.store'), [
+            'article' => 'General Area Item',
+            'description' => 'Testing disallowed area',
+            'serial_number' => 'SN-GEN-001',
+            'unit_value' => 1000,
+            'quantity_per_property_card' => 1,
+            'quantity_per_physical_count' => 1,
+            'division_id' => $this->division->id,
+            'area_id' => $this->generalArea->id,
+        ]);
+
+        $response->assertSessionHasErrors('area_id');
+        $this->assertDatabaseMissing('equipment', ['serial_number' => 'SN-GEN-001']);
+    }
+
+    public function test_admin_cannot_create_supplies_assigned_to_general_area()
+    {
+        $admin = User::factory()->create([
+            'division_id' => $this->division->id,
+            'area_id' => $this->generalArea->id,
+        ]);
+        $admin->assignRole('Admin');
+
+        $response = $this->actingAs($admin)->post(route('supplies.store'), [
+            'category' => 'DRMEDS',
+            'article' => 'General Area Medicine',
+            'description' => 'Testing disallowed area',
+            'unit_value' => 5.00,
+            'balance_per_card' => 10,
+            'on_hand_per_count' => 10,
+            'division_id' => $this->division->id,
+            'area_id' => $this->generalArea->id,
+        ]);
+
+        $response->assertSessionHasErrors('area_id');
+        $this->assertDatabaseMissing('supplies', ['article' => 'General Area Medicine']);
+    }
 }

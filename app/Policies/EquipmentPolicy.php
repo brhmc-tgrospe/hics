@@ -22,15 +22,15 @@ class EquipmentPolicy
 
     public function create(User $user)
     {
+        if ($user->hasRole(['Superadmin', 'Developer', 'Admin'])) {
+            return true;
+        }
+
         if ($user->isInGeneralArea()) {
             return false;
         }
 
-        if ($user->hasRole('Superadmin')) {
-            return true;
-        }
-
-        if ($user->hasRole(['Admin', 'Encoder'])) {
+        if ($user->hasRole('Encoder')) {
             return true;
         }
 

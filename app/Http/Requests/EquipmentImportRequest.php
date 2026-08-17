@@ -12,7 +12,8 @@ class EquipmentImportRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        if ($this->user() && $this->user()->isInGeneralArea()) {
+        $user = $this->user();
+        if ($user && $user->isInGeneralArea() && !$user->hasRole(['Admin', 'Superadmin', 'Developer'])) {
             return false;
         }
         return true;
@@ -135,6 +136,14 @@ class EquipmentImportRequest extends FormRequest
             'rows.*.area_id' => [
                 'required',
                 function ($attribute, $value, $fail) {
+                    $area = \App\Models\Area::find($value);
+                    if ($area && strtolower(trim($area->area_name)) === 'general area') {
+                        $index = explode('.', $attribute)[1];
+                        $line = $this->input("rows.{$index}._line");
+                        $fail("Line {$line}: Items cannot be imported to the General Area. Please specify a designated area.");
+                        return;
+                    }
+
                     $user = $this->user();
                     if ($user->hasRole('Superadmin') || $user->hasRole('Developer') || $user->hasRole('Admin')) {
                         return; // Admins can upload to any area in their division (division checked above)
@@ -157,7 +166,8 @@ class EquipmentImportRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            if ($this->user() && $this->user()->isInGeneralArea()) {
+            $user = $this->user();
+            if ($user && $user->isInGeneralArea() && !$user->hasRole(['Admin', 'Superadmin', 'Developer'])) {
                 $validator->errors()->add('file', 'You are assigned to the General Area and cannot upload items. Please contact your administrator to change your designated area.');
             }
         });

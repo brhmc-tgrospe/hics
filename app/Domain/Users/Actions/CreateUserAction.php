@@ -9,11 +9,15 @@ class CreateUserAction
 {
     public function execute(UserDTO $dto): User
     {
+        if (preg_match('/\s/', $dto->username)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['username' => 'The username must not contain spaces.']);
+        }
+
         $data = $dto->toArray();
         $user = auth()->user();
 
         // If Admin is creating a user, force the division_id to the admin's division and disallow General Area
-        if ($user->hasRole('Admin') && !$user->hasRole(['Developer', 'Superadmin'])) {
+        if ($user && $user->hasRole('Admin') && !$user->hasRole(['Developer', 'Superadmin'])) {
             $data['division_id'] = $user->division_id;
             
             $assignedArea = \App\Models\Area::find($dto->area_id);

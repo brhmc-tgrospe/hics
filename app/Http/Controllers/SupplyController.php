@@ -77,6 +77,11 @@ class SupplyController extends Controller
                 'integer',
                 'exists:areas,id',
                 function ($attribute, $value, $fail) use ($request) {
+                    $area = \App\Models\Area::find($value);
+                    if ($area && strtolower(trim($area->area_name)) === 'general area') {
+                        $fail('Items cannot be assigned to the General Area. Please select a designated area.');
+                        return;
+                    }
                     $user = $request->user();
                     if ($user->hasRole('Superadmin') || $user->hasRole('Developer') || $user->hasRole('Admin')) {
                         return;
@@ -117,7 +122,17 @@ class SupplyController extends Controller
             'total_amount' => 'nullable|numeric',
             'status' => 'nullable|string',
             'division_id' => 'required|integer|exists:divisions,id',
-            'area_id' => 'required|integer|exists:areas,id',
+            'area_id' => [
+                'required',
+                'integer',
+                'exists:areas,id',
+                function ($attribute, $value, $fail) {
+                    $area = \App\Models\Area::find($value);
+                    if ($area && strtolower(trim($area->area_name)) === 'general area') {
+                        $fail('Items cannot be assigned to the General Area. Please select a designated area.');
+                    }
+                },
+            ],
             'expiry_date' => [
                 \Illuminate\Validation\Rule::requiredIf(fn() => \App\Domain\Supplies\Services\SupplyCategoryExpirationPolicy::isExpiryRequired($request->input('category'))),
                 'nullable',

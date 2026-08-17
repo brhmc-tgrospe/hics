@@ -10,10 +10,14 @@ class UpdateUserAction
 {
     public function execute(User $targetUser, UserDTO $dto): User
     {
+        if (preg_match('/\s/', $dto->username)) {
+            throw ValidationException::withMessages(['username' => 'The username must not contain spaces.']);
+        }
+
         $user = auth()->user();
 
         // Admins cannot edit other Admins, Superadmins, or Developers
-        if ($user->hasRole('Admin') && !$user->hasRole(['Developer', 'Superadmin'])) {
+        if ($user && $user->hasRole('Admin') && !$user->hasRole(['Developer', 'Superadmin'])) {
             if ($targetUser->hasRole(['Admin', 'Superadmin', 'Developer'])) {
                 throw ValidationException::withMessages(['error' => 'You do not have permission to edit this user.']);
             }

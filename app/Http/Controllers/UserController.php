@@ -57,7 +57,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users',
+            'username' => ['required', 'string', 'max:255', 'unique:users', 'regex:/^\S+$/'],
             'email' => 'required|string|email|max:255|unique:users',
             'contact_number' => 'nullable|string|max:20',
             'division_id' => 'required|exists:divisions,id',
@@ -78,6 +78,7 @@ class UserController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ], [
             'username.unique' => 'The username is already in use.',
+            'username.regex' => 'The username must not contain spaces.',
             'email.unique' => 'The email is already in use.',
             'password.min' => 'The password must be at least 6 characters.',
             'password.confirmed' => 'The passwords do not match.',
@@ -95,7 +96,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users,username,' . $user->id,
+            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $user->id, 'regex:/^\S+$/'],
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'contact_number' => 'nullable|string|max:20',
             'division_id' => 'required|exists:divisions,id',
@@ -116,6 +117,7 @@ class UserController extends Controller
             'password' => 'nullable|string|min:6|confirmed',
         ], [
             'username.unique' => 'The username is already in use.',
+            'username.regex' => 'The username must not contain spaces.',
             'email.unique' => 'The email is already in use.',
             'password.min' => 'The password must be at least 6 characters.',
             'password.confirmed' => 'The passwords do not match.',

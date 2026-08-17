@@ -116,7 +116,7 @@ const submit = () => {
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">Username</label>
-                        <input v-model="form.username" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required>
+                        <input v-model="form.username" @keydown.space.prevent @input="form.username = form.username.replace(/\s/g, '')" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="e.g. jdoe" required>
                         <div v-if="form.errors.username" class="text-red-500 text-xs mt-1">{{ form.errors.username }}</div>
                     </div>
                     <div>

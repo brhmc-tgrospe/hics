@@ -246,6 +246,15 @@ const executeBulkDelete = () => {
                                         class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                                     />
                                 </th>
+                                <th class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors" @click="sortBy('id')">
+                                    <div class="flex items-center gap-1">
+                                        ID
+                                        <span v-if="sort_field === 'id'">
+                                            <ChevronUp v-if="sort_direction === 'asc'" class="w-4 h-4" />
+                                            <ChevronDown v-else class="w-4 h-4" />
+                                        </span>
+                                    </div>
+                                </th>
                                 <th class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors" @click="sortBy('first_name')">
                                     <div class="flex items-center gap-1">
                                         First Name
@@ -283,6 +292,7 @@ const executeBulkDelete = () => {
                                         class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                                     />
                                 </td>
+                                <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ user.id }}</td>
                                 <td class="px-6 py-4 text-sm font-semibold text-blue-600 cursor-pointer hover:underline" @click="openView(user)">{{ user.first_name }}</td>
                                 <td class="px-6 py-4 text-sm font-semibold text-blue-600 cursor-pointer hover:underline" @click="openView(user)">{{ user.last_name }}</td>
                                 <td class="px-6 py-4 text-sm text-slate-600">{{ user.username }}</td>
@@ -328,7 +338,7 @@ const executeBulkDelete = () => {
                                 </td>
                             </tr>
                             <tr v-if="users.data.length === 0">
-                                <td colspan="9" class="px-6 py-12 text-center text-slate-500">
+                                <td colspan="10" class="px-6 py-12 text-center text-slate-500">
                                     No users found.
                                 </td>
                             </tr>
@@ -359,16 +369,20 @@ const executeBulkDelete = () => {
                 <div v-if="viewingData" class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">User ID</label>
+                            <div class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700">{{ viewingData.id }}</div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Username</label>
+                            <div class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700">{{ viewingData.username }}</div>
+                        </div>
+                        <div>
                             <label class="block text-sm font-bold text-slate-700 mb-1">First Name</label>
                             <div class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700">{{ viewingData.first_name }}</div>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-slate-700 mb-1">Last Name</label>
                             <div class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700">{{ viewingData.last_name }}</div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">Username</label>
-                            <div class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700">{{ viewingData.username }}</div>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-slate-700 mb-1">Email</label>
