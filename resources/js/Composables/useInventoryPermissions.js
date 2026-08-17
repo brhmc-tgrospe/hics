@@ -11,6 +11,9 @@ export function useInventoryPermissions() {
     const isSecretary = computed(() => userRoles.value.includes('Secretary'));
     const isAdmin = computed(() => userRoles.value.includes('Admin'));
     const isEncoder = computed(() => userRoles.value.includes('Encoder'));
+    const isInGeneralArea = computed(() => {
+        return Boolean(authUser.value?.is_general_area || authUser.value?.area_name?.toLowerCase() === 'general area');
+    });
 
     const canEditItem = (item, editPermission) => {
         if (isSuperadmin.value) return true;

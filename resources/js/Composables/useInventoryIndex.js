@@ -111,6 +111,28 @@ export function useInventoryIndex({
     const isViewing = ref(false);
     const viewingData = ref(null);
 
+    // General Area Restriction
+    const showGeneralAreaModal = ref(false);
+    const isInGeneralArea = computed(() => {
+        return Boolean(authUser.value?.is_general_area || authUser.value?.area_name?.toLowerCase() === 'general area');
+    });
+
+    const handleAddClick = () => {
+        if (isInGeneralArea.value) {
+            showGeneralAreaModal.value = true;
+            return;
+        }
+        openAdd();
+    };
+
+    const handleImportClick = () => {
+        if (isInGeneralArea.value) {
+            showGeneralAreaModal.value = true;
+            return;
+        }
+        fileInput.value?.click();
+    };
+
     const openEdit = (data) => {
         editingData.value = data;
         isAdding.value = true;
@@ -139,6 +161,12 @@ export function useInventoryIndex({
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        if (isInGeneralArea.value) {
+            if (fileInput.value) fileInput.value.value = '';
+            showGeneralAreaModal.value = true;
+            return;
+        }
 
         const formData = new FormData();
         formData.append('file', file);
@@ -252,6 +280,10 @@ export function useInventoryIndex({
         openAdd,
         openView,
         closeForm,
+        showGeneralAreaModal,
+        isInGeneralArea,
+        handleAddClick,
+        handleImportClick,
         fileInput,
         showErrorModal,
         errorMessageContent,

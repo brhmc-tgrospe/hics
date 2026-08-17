@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
 import { Eye, EyeOff } from 'lucide-vue-next';
@@ -17,6 +17,19 @@ const page = usePage();
 
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
+
+const isAdmin = computed(() => {
+    const roles = page.props.auth?.user?.roles || [];
+    return roles.includes('Admin') && !roles.includes('Developer') && !roles.includes('Superadmin');
+});
+
+const filteredAreas = computed(() => {
+    let result = (props.areas || []).filter(a => a.division_id == form.division_id);
+    if (isAdmin.value) {
+        result = result.filter(a => a.area_name?.toLowerCase() !== 'general area');
+    }
+    return result;
+});
 
 const form = useForm({
     first_name: '',
@@ -148,7 +161,7 @@ const submit = () => {
                             required
                         >
                             <option value="">Select Area</option>
-                            <option v-for="a in areas.filter(a => a.division_id == form.division_id)" :key="a.id" :value="a.id">{{ a.area_name }}</option>
+                            <option v-for="a in filteredAreas" :key="a.id" :value="a.id">{{ a.area_name }}</option>
                         </select>
                         <div v-if="form.errors.area_id" class="text-red-500 text-xs mt-1">{{ form.errors.area_id }}</div>
                     </div>

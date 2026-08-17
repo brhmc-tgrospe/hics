@@ -33,10 +33,15 @@ class UpdateUserAction
 
         $data = $dto->toArray();
 
-        // Admins cannot change division and cannot assign Admin/Superadmin/Developer roles
+        // Admins cannot change division, cannot assign Admin/Superadmin/Developer roles, and cannot assign General Area
         if ($user->hasRole('Admin') && !$user->hasRole(['Developer', 'Superadmin'])) {
             $data['division_id'] = $user->division_id;
             
+            $assignedArea = \App\Models\Area::find($dto->area_id);
+            if ($assignedArea && strtolower(trim($assignedArea->area_name)) === 'general area') {
+                throw ValidationException::withMessages(['area_id' => 'Admin accounts are not permitted to assign users to the General Area.']);
+            }
+
             if ($dto->role && in_array($dto->role, ['Admin', 'Superadmin', 'Developer'])) {
                 throw ValidationException::withMessages(['error' => 'You do not have permission to assign this role.']);
             }

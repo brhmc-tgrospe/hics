@@ -85,4 +85,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Area::class);
     }
+
+    public function isInGeneralArea(): bool
+    {
+        return strtolower(trim($this->area?->area_name ?? '')) === 'general area';
+    }
 }

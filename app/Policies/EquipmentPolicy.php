@@ -22,6 +22,10 @@ class EquipmentPolicy
 
     public function create(User $user)
     {
+        if ($user->isInGeneralArea()) {
+            return false;
+        }
+
         if ($user->hasRole('Superadmin')) {
             return true;
         }

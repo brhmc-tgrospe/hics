@@ -61,7 +61,19 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'contact_number' => 'nullable|string|max:20',
             'division_id' => 'required|exists:divisions,id',
-            'area_id' => 'required|exists:areas,id',
+            'area_id' => [
+                'required',
+                'exists:areas,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $user = $request->user();
+                    if ($user && $user->hasRole('Admin') && !$user->hasRole(['Developer', 'Superadmin'])) {
+                        $area = \App\Models\Area::find($value);
+                        if ($area && strtolower(trim($area->area_name)) === 'general area') {
+                            $fail('Admin accounts are not permitted to assign users to the General Area.');
+                        }
+                    }
+                },
+            ],
             'role' => 'required|exists:roles,name',
             'password' => 'required|string|min:6|confirmed',
         ], [
@@ -87,7 +99,19 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'contact_number' => 'nullable|string|max:20',
             'division_id' => 'required|exists:divisions,id',
-            'area_id' => 'required|exists:areas,id',
+            'area_id' => [
+                'required',
+                'exists:areas,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $currentUser = $request->user();
+                    if ($currentUser && $currentUser->hasRole('Admin') && !$currentUser->hasRole(['Developer', 'Superadmin'])) {
+                        $area = \App\Models\Area::find($value);
+                        if ($area && strtolower(trim($area->area_name)) === 'general area') {
+                            $fail('Admin accounts are not permitted to assign users to the General Area.');
+                        }
+                    }
+                },
+            ],
             'role' => 'required|exists:roles,name',
             'password' => 'nullable|string|min:6|confirmed',
         ], [

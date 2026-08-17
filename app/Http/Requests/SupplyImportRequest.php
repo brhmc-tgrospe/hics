@@ -12,7 +12,10 @@ class SupplyImportRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true; // Controller handles authorization via Gate
+        if ($this->user() && $this->user()->isInGeneralArea()) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -144,8 +147,8 @@ class SupplyImportRequest extends FormRequest
                     }
                 }
             ],
-            'rows.*.balance_per_card' => 'required|numeric|gt:0',
-            'rows.*.on_hand_per_count' => 'required|numeric|gt:0',
+            'rows.*.balance_per_card' => 'required|integer|min:0',
+            'rows.*.on_hand_per_count' => 'required|integer|min:0',
             'rows.*.expiry_date' => 'nullable|date',
         ];
     }
@@ -153,6 +156,10 @@ class SupplyImportRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            if ($this->user() && $this->user()->isInGeneralArea()) {
+                $validator->errors()->add('file', 'You are assigned to the General Area and cannot upload items. Please contact the administrator to change your designated area.');
+            }
+
             $rows = $this->input('rows', []);
             foreach ($rows as $index => $row) {
                 $category = $row['category'] ?? null;
@@ -177,21 +184,22 @@ class SupplyImportRequest extends FormRequest
         
         $messages = is_object($messageBag) ? $messageBag->messages() : [];
         $firstKey = !empty($messages) ? array_keys($messages)[0] : '';
-        
         if ($firstKey && preg_match('/^rows\.(\d+)\.(.+)$/', $firstKey, $matches)) {
             $index = $matches[1];
-            $attributeName = str_replace('_id', '', $matches[2]);
             $line = $this->input("rows.{$index}._line", $index + 2);
-            $firstError = "Line {$line}: The {$attributeName} field is required or invalid.";
             
-            // Check if it's a custom error message from closure
             $originalError = is_object($messageBag) ? $messageBag->first($firstKey) : ($errors[0] ?? '');
+            
             if (str_contains($originalError, "Line {$line}:")) {
                  $firstError = $originalError;
+            } else {
+                 $cleanError = preg_replace('/rows\.\d+\./', '', $originalError);
+                 $cleanError = str_replace('_', ' ', $cleanError);
+                 $firstError = "Line {$line}: {$cleanError}";
             }
         }
 
-        throw \Illuminate\Validation\ValidationException::withMessages([
+        throw ValidationException::withMessages([
             'file' => "Upload Failed. {$firstError}"
         ]);
     }

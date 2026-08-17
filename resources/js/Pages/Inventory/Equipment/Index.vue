@@ -7,6 +7,7 @@ import EquipmentTable from './EquipmentTable.vue';
 import EquipmentForm from './EquipmentForm.vue';
 import ViewEquipmentDetails from './ViewEquipmentDetails.vue';
 import Modal from '@/Components/Modal.vue';
+import GeneralAreaRestrictionModal from '@/Components/GeneralAreaRestrictionModal.vue';
 import DivisionAreaFilter from '@/Components/DivisionAreaFilter.vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
@@ -48,6 +49,9 @@ const {
     openAdd,
     openView,
     closeForm,
+    showGeneralAreaModal,
+    handleAddClick,
+    handleImportClick,
     fileInput,
     showErrorModal,
     errorMessageContent,
@@ -102,7 +106,7 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                         />
                         <button 
                             v-if="canCreate"
-                            @click="openAdd"
+                            @click="handleAddClick"
                             class="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold shadow-xl shadow-slate-200 flex items-center gap-2 hover:bg-slate-800 transition-colors w-full sm:w-auto justify-center"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -118,7 +122,7 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                         </a>
                         <button 
                             v-if="canCreate"
-                            @click="$refs.fileInput.click()"
+                            @click="handleImportClick"
                             class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold shadow-xl shadow-emerald-200 flex items-center gap-2 hover:bg-emerald-700 transition-colors w-full sm:w-auto justify-center"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
@@ -176,6 +180,11 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                     @saved="handleSaved"
                 />
             </Modal>
+
+            <GeneralAreaRestrictionModal 
+                :show="showGeneralAreaModal" 
+                @close="showGeneralAreaModal = false" 
+            />
 
             <Modal :show="isViewing" maxWidth="2xl" @close="isViewing = false">
                 <ViewEquipmentDetails 

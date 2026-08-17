@@ -40,6 +40,8 @@ class HandleInertiaRequests extends Middleware
                     'email' => $request->user()->email,
                     'division_id' => $request->user()->division_id,
                     'area_id' => $request->user()->area_id,
+                    'area_name' => $request->user()->area?->area_name,
+                    'is_general_area' => $request->user()->isInGeneralArea(),
                     'roles' => $request->user()->getRoleNames(),
                     'permissions' => $request->user()->hasRole('Developer') 
                         ? \Spatie\Permission\Models\Permission::pluck('name') 
