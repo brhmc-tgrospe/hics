@@ -108,7 +108,7 @@ onMounted(() => {
                     <!-- Accountability Row -->
                     <tr>
                         <th colspan="10" class="border-[3px] border-black p-2 text-left text-[12px] font-normal leading-tight">
-                            For which <span class="font-bold underline">ERIC RAYMOND N. RABORAR, MD,MPA-HEDM,MMHoA,FPSMS</span>, Medical Center Chief II, <span class="font-bold underline">BICOL REGIONAL TRAINING AND TEACHING HOSPITAL</span>, is accountable, having assumed such accountability on <span class="font-bold">{{ formatDate(report?.date_of_accountability) }}</span>.
+                            For which <span class="font-bold underline">ERIC RAYMOND N. RABORAR, MD,MPA-HEDM,MMHoA,FPSMS</span>, Medical Center Chief II, <span class="font-bold underline">BICOL REGIONAL HOSPITAL AND MEDICAL CENTER</span>, is accountable, having assumed such accountability on <span class="font-bold">{{ formatDate(report?.date_of_accountability) }}</span>.
                         </th>
                     </tr>
                     <!-- Table Columns -->
