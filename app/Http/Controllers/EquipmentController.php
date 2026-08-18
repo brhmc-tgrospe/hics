@@ -61,7 +61,7 @@ class EquipmentController extends Controller
             'description' => 'required|string',
             'date_acquired' => 'nullable|string',
             'property_number' => 'nullable|string',
-            'serial_number' => 'required|string',
+            'serial_number' => 'nullable|string',
             'unit_of_measure' => 'nullable|string',
             'unit_value' => 'required|numeric|gt:0',
             'total_value' => 'nullable|numeric',
@@ -149,7 +149,7 @@ class EquipmentController extends Controller
         ]);
 
         $dto = EquipmentDTO::fromArray($validated);
-        $action->execute($equipment, $dto);
+        $action->execute($equipment, $dto, false);
 
         return redirect()->route('equipment.index')->with('success', "{$equipment->article} has been successfully updated.");
     }
@@ -208,7 +208,7 @@ class EquipmentController extends Controller
             'Detailed description (Required)',
             'YYYY-MM-DD',
             'Property Number',
-            'Serial Number (Required)',
+            'Serial Number (Optional)',
             'e.g. unit, pc',
             'Numeric value (Required)',
             'Must be > 0 (Required)',

@@ -15,33 +15,37 @@ class ImportEquipmentAction
     public function execute(EquipmentDTO $dto): array
     {
         $equipment = null;
+        $serialNumber = trim((string) ($dto->serial_number ?? ''));
+        $propertyNumber = trim((string) ($dto->property_number ?? ''));
 
-        // Prioritize matching by serial_number
-        if (!empty($dto->serial_number)) {
-            $equipment = Equipment::where('serial_number', $dto->serial_number)->first();
+        // Prioritize matching by serial_number if non-empty
+        if ($serialNumber !== '') {
+            $query = Equipment::where('serial_number', $serialNumber);
+            if (!empty($dto->division_id)) {
+                $query->where('division_id', $dto->division_id);
+            }
+            if (!empty($dto->area_id)) {
+                $query->where('area_id', $dto->area_id);
+            }
+            $equipment = $query->first();
         }
 
-        // Fallback to matching by property_number if serial_number isn't found
-        if (!$equipment && !empty($dto->property_number)) {
-            $equipment = Equipment::where('property_number', $dto->property_number)->first();
-        }
-
-        // Fallback: Match by division, area, and description/article ONLY if unique identifiers are missing
-        if (!$equipment && empty($dto->serial_number) && empty($dto->property_number) && !empty($dto->division_id) && !empty($dto->area_id) && !empty($dto->description)) {
-            $query = Equipment::where('division_id', $dto->division_id)
-                ->where('area_id', $dto->area_id)
-                ->where('description', $dto->description);
-            
-            if (!empty($dto->article)) {
-                $query->where('article', $dto->article);
+        // Fallback to matching by property_number if serial_number isn't found/provided
+        if (!$equipment && $propertyNumber !== '') {
+            $query = Equipment::where('property_number', $propertyNumber);
+            if (!empty($dto->division_id)) {
+                $query->where('division_id', $dto->division_id);
+            }
+            if (!empty($dto->area_id)) {
+                $query->where('area_id', $dto->area_id);
             }
             $equipment = $query->first();
         }
 
         if ($equipment) {
             return ['record' => $this->updateAction->execute($equipment, $dto), 'action' => 'updated'];
-        } else {
-            return ['record' => $this->createAction->execute($dto), 'action' => 'created'];
         }
+
+        return ['record' => $this->createAction->execute($dto), 'action' => 'created'];
     }
 }

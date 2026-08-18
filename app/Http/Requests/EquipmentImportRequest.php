@@ -155,7 +155,7 @@ class EquipmentImportRequest extends FormRequest
                     }
                 }
             ],
-            'rows.*.serial_number' => 'required|string',
+            'rows.*.serial_number' => 'nullable|string',
             'rows.*.unit_value' => 'required|numeric|gt:0',
             'rows.*.quantity_per_property_card' => 'required|integer|min:0',
             'rows.*.quantity_per_physical_count' => 'required|integer|min:0',

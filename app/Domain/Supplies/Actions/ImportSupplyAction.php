@@ -15,28 +15,26 @@ class ImportSupplyAction
     public function execute(SupplyDTO $dto): array
     {
         $supply = null;
+        $stockNumber = trim((string) ($dto->stock_number ?? ''));
 
-        // Match by stock_number if provided
-        if (!empty($dto->stock_number)) {
-            $supply = Supply::where('stock_number', $dto->stock_number)->first();
-        }
+        // Match and update ONLY if a non-empty stock_number is provided
+        if ($stockNumber !== '') {
+            $query = Supply::where('stock_number', $stockNumber);
 
-        // Fallback: Match by division, area, and description/article if stock_number is not present
-        if (!$supply && !empty($dto->division_id) && !empty($dto->area_id) && !empty($dto->description)) {
-            $query = Supply::where('division_id', $dto->division_id)
-                ->where('area_id', $dto->area_id)
-                ->where('description', $dto->description);
-            
-            if (!empty($dto->article)) {
-                $query->where('article', $dto->article);
+            if (!empty($dto->division_id)) {
+                $query->where('division_id', $dto->division_id);
             }
+            if (!empty($dto->area_id)) {
+                $query->where('area_id', $dto->area_id);
+            }
+
             $supply = $query->first();
         }
 
         if ($supply) {
             return ['record' => $this->updateAction->execute($supply, $dto), 'action' => 'updated'];
-        } else {
-            return ['record' => $this->createAction->execute($dto), 'action' => 'created'];
         }
+
+        return ['record' => $this->createAction->execute($dto), 'action' => 'created'];
     }
 }

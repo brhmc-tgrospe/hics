@@ -1,6 +1,6 @@
 <script setup>
 import { useForm, usePage } from '@inertiajs/vue3';
-import { watch, computed } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 
@@ -38,6 +38,8 @@ const filteredAreas = computed(() => {
         return matchesDivision && name !== 'general area';
     });
 });
+
+const isSerialRequired = ref(true);
 
 const form = useForm({
     category: '',
@@ -79,8 +81,10 @@ watch(() => props.editingData, (newVal) => {
                 }
             }
         });
+        isSerialRequired.value = Boolean(newVal.serial_number && newVal.serial_number.toString().trim() !== '');
     } else {
         form.reset();
+        isSerialRequired.value = true;
         
         // Auto-fill division and area for non-admins
         const user = usePage().props.auth?.user;
@@ -95,6 +99,13 @@ watch(() => props.editingData, (newVal) => {
         }
     }
 }, { immediate: true });
+
+watch(isSerialRequired, (val) => {
+    if (!val) {
+        form.serial_number = '';
+        form.clearErrors('serial_number');
+    }
+});
 
 watch([
     () => form.quantity_per_property_card,
@@ -125,7 +136,9 @@ const submit = () => {
     checkRequired('division_id', 'Division');
     checkRequired('area_id', 'Area');
     checkRequired('article', 'Article');
-    checkRequired('serial_number', 'Serial Number');
+    if (isSerialRequired.value) {
+        checkRequired('serial_number', 'Serial Number');
+    }
     checkRequired('description', 'Description');
     checkRequired('status', 'Status');
 
@@ -146,6 +159,7 @@ const submit = () => {
 
     form.transform((data) => ({
         ...data,
+        serial_number: isSerialRequired.value && data.serial_number ? data.serial_number.toString().trim() : null,
         date_acquired: data.date_acquired instanceof Date 
             ? data.date_acquired.toLocaleDateString('en-CA') 
             : data.date_acquired
@@ -196,6 +210,7 @@ const submit = () => {
                 <div v-if="form.errors.division_id" class="text-red-500 text-xs mt-1">{{ form.errors.division_id }}</div>
             </div>
 
+            <!-- Row 2: Area | Serial Number Required Toggle -->
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Area <span class="text-red-500">*</span></label>
                 <select v-model="form.area_id" class="w-full bg-white border border-slate-300 shadow-sm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" :disabled="$page.props.auth.user?.area_id && !($page.props.auth.user?.roles?.includes('Developer') || $page.props.auth.user?.roles?.includes('Superadmin') || $page.props.auth.user?.roles?.includes('Admin'))">
@@ -205,13 +220,35 @@ const submit = () => {
                 <div v-if="form.errors.area_id" class="text-red-500 text-xs mt-1">{{ form.errors.area_id }}</div>
             </div>
 
-            <!-- Row 2: Article | Serial Number -->
-            <div>
+            <div class="flex items-center justify-between p-3 bg-slate-50/80 border border-slate-200 rounded-xl">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Serial Number Required</label>
+                    <span class="text-[11px] text-slate-500">Toggle off if item has no serial number</span>
+                </div>
+                <button 
+                    type="button" 
+                    @click="isSerialRequired = !isSerialRequired"
+                    :class="[
+                        'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-slate-500',
+                        isSerialRequired ? 'bg-slate-900' : 'bg-slate-300'
+                    ]"
+                >
+                    <span 
+                        :class="[
+                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                            isSerialRequired ? 'translate-x-5' : 'translate-x-0'
+                        ]"
+                    />
+                </button>
+            </div>
+
+            <!-- Row 3: Article | Serial Number -->
+            <div :class="isSerialRequired ? '' : 'sm:col-span-2'">
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Article/Product Name <span class="text-red-500">*</span></label>
                 <input type="text" v-model="form.article" class="w-full bg-white border border-slate-300 shadow-sm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" />
                 <div v-if="form.errors.article" class="text-red-500 text-xs mt-1">{{ form.errors.article }}</div>
             </div>
-            <div>
+            <div v-if="isSerialRequired">
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Serial Number <span class="text-red-500">*</span></label>
                 <input type="text" v-model="form.serial_number" class="w-full bg-white border border-slate-300 shadow-sm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-slate-800" />
                 <div v-if="form.errors.serial_number" class="text-red-500 text-xs mt-1">{{ form.errors.serial_number }}</div>
