@@ -220,6 +220,15 @@
           </div>
       </Modal>
 
+      <ImportCsvModal 
+        :show="isImportModalOpen"
+        type="supply"
+        importRouteName="supplies.import"
+        :categories="categories"
+        @close="isImportModalOpen = false"
+        @error="handleImportError"
+      />
+
       <!-- Missing Unit Values Warning -->
       <div v-if="missingUnitValueCount > 0 && canCreate" class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div class="flex items-center gap-3 flex-1">
@@ -296,6 +305,7 @@ import SupplyForm from './SupplyForm.vue';
 import SuppliesTable from './SuppliesTable.vue';
 import ViewSupplyDetails from './ViewSupplyDetails.vue';
 import Modal from '@/Components/Modal.vue';
+import ImportCsvModal from '@/Components/ImportCsvModal.vue';
 import GeneralAreaRestrictionModal from '@/Components/GeneralAreaRestrictionModal.vue';
 import DivisionAreaFilter from '@/Components/DivisionAreaFilter.vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
@@ -341,6 +351,8 @@ const {
     showGeneralAreaModal,
     handleAddClick,
     handleImportClick,
+    isImportModalOpen,
+    handleImportError,
     fileInput,
     showErrorModal,
     errorMessageContent,
