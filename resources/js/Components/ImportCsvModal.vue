@@ -285,7 +285,7 @@ const fieldDefinitions = computed(() => {
     { name: 'on_hand_per_count', requirement: 'Required', description: 'Physical count inventory. Integer > 0', example: '10' },
     { name: 'division_id', requirement: 'Required', description: 'Numeric ID of assigned Division', example: '1' },
     { name: 'area_id', requirement: 'Required', description: 'Numeric ID of assigned Area', example: '4' },
-    { name: 'expiry_date', requirement: 'Conditional', description: 'YYYY-MM-DD. Required for Medical/Drugs/Food supplies', example: '2027-06-30' },
+    { name: 'expiry_date', requirement: 'Conditional', description: 'YYYY-MM-DD. Required for Medical/Drugs/Food supplies/Enteral', example: '2027-06-30' },
     { name: 'stock_number', requirement: 'Optional', description: 'Unique stock code. Updates record if matched; creates new if empty', example: 'STK-00124' },
     { name: 'article', requirement: 'Optional', description: 'Short item name', example: 'Bond Paper' },
     { name: 'unit_of_measure', requirement: 'Optional', description: 'Packaging unit (e.g. ream, box, pc, bottle)', example: 'ream' },
