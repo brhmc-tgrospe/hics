@@ -40,6 +40,14 @@
                 Import CSV
             </button>
             <button 
+                v-if="isSuperadmin"
+                @click="isExporting = true"
+                class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold shadow-xl shadow-indigo-200 flex items-center gap-2 hover:bg-indigo-700 transition-colors w-full sm:w-auto justify-center"
+            >
+                <Download class="w-4 h-4" />
+                Export CSV
+            </button>
+            <button 
                 v-if="$page.props.auth.user.permissions.includes('generate_reports')"
                 @click="isReporting = true"
                 class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold shadow-xl shadow-blue-200 flex items-center gap-2 hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
@@ -99,6 +107,17 @@
       <GeneralAreaRestrictionModal 
         :show="showGeneralAreaModal" 
         @close="showGeneralAreaModal = false" 
+      />
+
+      <ExportInventoryModal 
+        :show="isExporting"
+        title="Export Supplies"
+        export-route="supplies.export"
+        :categories="categories"
+        :divisions="divisions"
+        :areas="areas"
+        :status-options="['Available', 'Depleted']"
+        @close="isExporting = false"
       />
 
       <Modal :show="isViewing" maxWidth="2xl" @close="isViewing = false">
@@ -288,8 +307,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { SearchIcon, PlusIcon, AlertTriangleIcon } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import { SearchIcon, PlusIcon, AlertTriangleIcon, Download } from 'lucide-vue-next';
 import { Link } from '@inertiajs/vue3';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import SupplyForm from './SupplyForm.vue';
@@ -297,6 +316,7 @@ import SuppliesTable from './SuppliesTable.vue';
 import ViewSupplyDetails from './ViewSupplyDetails.vue';
 import Modal from '@/Components/Modal.vue';
 import GeneralAreaRestrictionModal from '@/Components/GeneralAreaRestrictionModal.vue';
+import ExportInventoryModal from '@/Components/ExportInventoryModal.vue';
 import DivisionAreaFilter from '@/Components/DivisionAreaFilter.vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
@@ -315,6 +335,7 @@ const props = defineProps({
 
 const { authUser, userPermissions, isSuperadmin, isSecretary, canFilterDivisionArea } = useInventoryPermissions();
 const canCreate = computed(() => userPermissions.value.includes('create_supplies'));
+const isExporting = ref(false);
 
 const {
     search: searchQuery,

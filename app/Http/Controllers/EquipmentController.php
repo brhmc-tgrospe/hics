@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Equipment\Actions\CreateEquipmentAction;
 use App\Domain\Equipment\Actions\DeleteEquipmentAction;
+use App\Domain\Equipment\Actions\ExportEquipmentAction;
 use App\Domain\Equipment\Actions\GetEquipmentAction;
 use App\Domain\Equipment\Actions\GetEquipmentReportDataAction;
 use App\Domain\Equipment\Actions\ImportEquipmentAction;
@@ -187,6 +188,21 @@ class EquipmentController extends Controller
         return redirect()->route('equipment.index')->with('success', "{$count} items have been deleted.");
     }
 
+    public function export(Request $request, ExportEquipmentAction $action)
+    {
+        abort_unless($request->user()->hasRole(['Developer', 'Superadmin']), 403, 'Unauthorized access.');
+
+        $validated = $request->validate([
+            'format' => 'nullable|string|in:template,full',
+            'division_id' => 'nullable|integer|exists:divisions,id',
+            'area_id' => 'nullable|integer|exists:areas,id',
+            'category' => 'nullable|string',
+            'status' => 'nullable|string',
+        ]);
+
+        return $action->execute($validated);
+    }
+
     public function template()
     {
         $headers = [
@@ -277,7 +293,10 @@ class EquipmentController extends Controller
             $query->where('area_id', $validated['scope_id']);
         }
 
-        $equipment = $query->get();
+        $equipment = $query
+            ->orderByRaw('LOWER(article) ASC')
+            ->orderByRaw('LOWER(description) ASC')
+            ->get();
 
         $filename = 'equipment_report_'.time().'_'.uniqid().'.json';
         Storage::disk('local')->put("reports/{$filename}", $equipment->toJson());

@@ -1,13 +1,14 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
-import { AlertTriangleIcon } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import { AlertTriangleIcon, Download } from 'lucide-vue-next';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import EquipmentTable from './EquipmentTable.vue';
 import EquipmentForm from './EquipmentForm.vue';
 import ViewEquipmentDetails from './ViewEquipmentDetails.vue';
 import Modal from '@/Components/Modal.vue';
 import GeneralAreaRestrictionModal from '@/Components/GeneralAreaRestrictionModal.vue';
+import ExportInventoryModal from '@/Components/ExportInventoryModal.vue';
 import DivisionAreaFilter from '@/Components/DivisionAreaFilter.vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
@@ -26,6 +27,7 @@ const props = defineProps({
 
 const { authUser, userPermissions, isSuperadmin, isSecretary, canFilterDivisionArea } = useInventoryPermissions();
 const canCreate = computed(() => userPermissions.value.includes('create_equipment'));
+const isExporting = ref(false);
 
 const {
     search,
@@ -129,6 +131,14 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                             Import CSV
                         </button>
                         <button 
+                            v-if="isSuperadmin"
+                            @click="isExporting = true"
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold shadow-xl shadow-indigo-200 flex items-center gap-2 hover:bg-indigo-700 transition-colors w-full sm:w-auto justify-center"
+                        >
+                            <Download class="w-4 h-4" />
+                            Export CSV
+                        </button>
+                        <button 
                             v-if="$page.props.auth.user.permissions.includes('generate_reports')"
                             @click="isReporting = true"
                             class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold shadow-xl shadow-blue-200 flex items-center gap-2 hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
@@ -184,6 +194,17 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
             <GeneralAreaRestrictionModal 
                 :show="showGeneralAreaModal" 
                 @close="showGeneralAreaModal = false" 
+            />
+
+            <ExportInventoryModal 
+                :show="isExporting"
+                title="Export Equipment"
+                export-route="equipment.export"
+                :categories="categories"
+                :divisions="divisions"
+                :areas="areas"
+                :status-options="['Serviceable', 'Unserviceable']"
+                @close="isExporting = false"
             />
 
             <Modal :show="isViewing" maxWidth="2xl" @close="isViewing = false">

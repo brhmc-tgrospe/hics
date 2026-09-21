@@ -20,6 +20,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('reports/{type}/{id}', [ReportController::class, 'destroy'])->name('reports.destroy')->middleware('permission:generate_reports');
 
     // Equipment Routes
+    Route::get('equipment/export', [EquipmentController::class, 'export'])->name('equipment.export')->middleware('role:Developer|Superadmin');
     Route::get('equipment/template', [EquipmentController::class, 'template'])->name('equipment.template')->middleware('permission:create_equipment');
     Route::post('equipment/import', [EquipmentController::class, 'import'])->name('equipment.import')->middleware('permission:create_equipment');
     Route::post('equipment/report', [EquipmentController::class, 'generateReport'])->name('equipment.report.generate')->middleware('permission:generate_reports');
@@ -38,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('equipment/{equipment}', [EquipmentController::class, 'destroy'])->name('equipment.destroy')->middleware('permission:delete_equipment');
 
     // Supplies Routes
+    Route::get('supplies/export', [SupplyController::class, 'export'])->name('supplies.export')->middleware('role:Developer|Superadmin');
     Route::get('supplies/template', [SupplyController::class, 'template'])->name('supplies.template')->middleware('permission:create_supplies');
     Route::post('supplies/import', [SupplyController::class, 'import'])->name('supplies.import')->middleware('permission:create_supplies');
     Route::post('supplies/report', [SupplyController::class, 'generateReport'])->name('supplies.report.generate')->middleware('permission:generate_reports');

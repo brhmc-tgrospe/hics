@@ -14,7 +14,7 @@ class GetEquipmentReportDataAction
             $json = Storage::disk('local')->get($report->file_path);
             $decoded = json_decode($json, true);
             if (is_array($decoded)) {
-                return $decoded;
+                return $this->sortItems($decoded);
             }
         }
 
@@ -27,7 +27,10 @@ class GetEquipmentReportDataAction
             $query->where('area_id', $report->scope_id);
         }
 
-        $equipment = $query->get();
+        $equipment = $query
+            ->orderByRaw('LOWER(article) ASC')
+            ->orderByRaw('LOWER(description) ASC')
+            ->get();
 
         $filePath = $report->file_path;
         if (empty($filePath)) {
@@ -39,5 +42,19 @@ class GetEquipmentReportDataAction
         Storage::disk('local')->put($filePath, $equipment->toJson());
 
         return $equipment->toArray();
+    }
+
+    private function sortItems(array $items): array
+    {
+        usort($items, function ($a, $b) {
+            $articleCmp = strcasecmp((string)($a['article'] ?? ''), (string)($b['article'] ?? ''));
+            if ($articleCmp !== 0) {
+                return $articleCmp;
+            }
+
+            return strcasecmp((string)($a['description'] ?? ''), (string)($b['description'] ?? ''));
+        });
+
+        return array_values($items);
     }
 }

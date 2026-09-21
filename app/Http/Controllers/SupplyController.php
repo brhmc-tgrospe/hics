@@ -11,6 +11,7 @@ use App\Domain\Supplies\Actions\GetSupplyReportDataAction;
 use App\Domain\Supplies\Actions\CreateSupplyAction;
 use App\Domain\Supplies\Actions\UpdateSupplyAction;
 use App\Domain\Supplies\Actions\DeleteSupplyAction;
+use App\Domain\Supplies\Actions\ExportSupplyAction;
 
 class SupplyController extends Controller
 {
@@ -178,6 +179,21 @@ class SupplyController extends Controller
         return redirect()->route('supplies.index')->with('success', "{$count} items have been deleted.");
     }
 
+    public function export(Request $request, ExportSupplyAction $action)
+    {
+        abort_unless($request->user()->hasRole(['Developer', 'Superadmin']), 403, 'Unauthorized access.');
+
+        $validated = $request->validate([
+            'format' => 'nullable|string|in:template,full',
+            'division_id' => 'nullable|integer|exists:divisions,id',
+            'area_id' => 'nullable|integer|exists:areas,id',
+            'category' => 'nullable|string',
+            'status' => 'nullable|string',
+        ]);
+
+        return $action->execute($validated);
+    }
+
     public function template()
     {
         $headers = [
@@ -266,7 +282,10 @@ class SupplyController extends Controller
             $query->where('area_id', $validated['scope_id']);
         }
 
-        $supplies = $query->get();
+        $supplies = $query
+            ->orderByRaw('LOWER(article) ASC')
+            ->orderByRaw('LOWER(description) ASC')
+            ->get();
         
         $filename = 'supply_report_' . time() . '_' . uniqid() . '.json';
         \Illuminate\Support\Facades\Storage::disk('local')->put("reports/{$filename}", $supplies->toJson());
@@ -275,7 +294,7 @@ class SupplyController extends Controller
             'category' => $validated['category'],
             'date_of_accountability' => $validated['date_of_accountability'],
             'year_of_report' => $validated['year_of_report'],
-            'fund_cluster' => $validated['fund_cluster'],
+            'fund_cluster' => $validated['fund_cluster'] ?? null,
             'file_path' => "reports/{$filename}",
             'report_type' => $validated['report_type'],
             'report_period' => $validated['report_period'] ?? null,
