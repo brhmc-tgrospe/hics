@@ -126,12 +126,19 @@ export function useInventoryIndex({
         openAdd();
     };
 
+    const isImportModalOpen = ref(false);
+
     const handleImportClick = () => {
         if (isInGeneralArea.value) {
             showGeneralAreaModal.value = true;
             return;
         }
-        fileInput.value?.click();
+        isImportModalOpen.value = true;
+    };
+
+    const handleImportError = (msg) => {
+        errorMessageContent.value = msg || 'Failed to import CSV. Please ensure the format matches the template.';
+        showErrorModal.value = true;
     };
 
     const openEdit = (data) => {
@@ -285,6 +292,8 @@ export function useInventoryIndex({
         isInGeneralArea,
         handleAddClick,
         handleImportClick,
+        isImportModalOpen,
+        handleImportError,
         fileInput,
         showErrorModal,
         errorMessageContent,

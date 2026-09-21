@@ -7,6 +7,7 @@ import EquipmentTable from './EquipmentTable.vue';
 import EquipmentForm from './EquipmentForm.vue';
 import ViewEquipmentDetails from './ViewEquipmentDetails.vue';
 import Modal from '@/Components/Modal.vue';
+import ImportCsvModal from '@/Components/ImportCsvModal.vue';
 import GeneralAreaRestrictionModal from '@/Components/GeneralAreaRestrictionModal.vue';
 import ExportInventoryModal from '@/Components/ExportInventoryModal.vue';
 import DivisionAreaFilter from '@/Components/DivisionAreaFilter.vue';
@@ -54,6 +55,8 @@ const {
     showGeneralAreaModal,
     handleAddClick,
     handleImportClick,
+    isImportModalOpen,
+    handleImportError,
     fileInput,
     showErrorModal,
     errorMessageContent,
@@ -229,6 +232,15 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                     </div>
                 </div>
             </Modal>
+
+            <ImportCsvModal 
+                :show="isImportModalOpen"
+                type="equipment"
+                importRouteName="equipment.import"
+                :categories="categories"
+                @close="isImportModalOpen = false"
+                @error="handleImportError"
+            />
 
             <Modal :show="isReporting" maxWidth="md" @close="isReporting = false">
                 <div class="p-6">
