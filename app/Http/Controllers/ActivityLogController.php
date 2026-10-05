@@ -15,7 +15,10 @@ class ActivityLogController extends Controller
         $isSuperadmin = $user->hasRole('Superadmin') || $user->hasRole('Developer');
         $isAdmin = $user->hasRole('Admin');
         
-        $query = Activity::with(['causer', 'subject']);
+        $query = Activity::with([
+            'causer' => fn ($morphTo) => $morphTo->withTrashed(),
+            'subject' => fn ($morphTo) => $morphTo->withTrashed(),
+        ]);
 
         if (!$isSuperadmin) {
             if ($isAdmin) {
@@ -23,7 +26,7 @@ class ActivityLogController extends Controller
                 $query->where(function($q) use ($user) {
                     $q->whereJsonContains('properties->division_id', $user->division_id)
                       ->orWhereHasMorph('causer', [\App\Models\User::class], function($causerQuery) use ($user) {
-                          $causerQuery->where('division_id', $user->division_id);
+                          $causerQuery->withTrashed()->where('division_id', $user->division_id);
                       });
                 });
             } else {
@@ -42,9 +45,11 @@ class ActivityLogController extends Controller
                   ->orWhere('subject_type', 'like', "%{$searchTerm}%")
                   ->orWhere('properties', 'like', "%{$searchTerm}%")
                   ->orWhereHasMorph('causer', [\App\Models\User::class], function($causerQuery) use ($searchTerm) {
-                      $causerQuery->where('first_name', 'like', "%{$searchTerm}%")
-                                  ->orWhere('last_name', 'like', "%{$searchTerm}%")
-                                  ->orWhere('username', 'like', "%{$searchTerm}%");
+                      $causerQuery->withTrashed()->where(function($userQuery) use ($searchTerm) {
+                          $userQuery->where('first_name', 'like', "%{$searchTerm}%")
+                                    ->orWhere('last_name', 'like', "%{$searchTerm}%")
+                                    ->orWhere('username', 'like', "%{$searchTerm}%");
+                      });
                   });
             });
         }

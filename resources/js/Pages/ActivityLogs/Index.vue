@@ -105,7 +105,13 @@ const getSubjectName = (log) => {
 
 const getCauserName = (log) => {
     if (!log.causer) return 'System';
-    return `${log.causer.first_name} ${log.causer.last_name}`;
+    const fullName = `${log.causer.first_name || ''} ${log.causer.last_name || ''}`.trim();
+    return fullName || log.causer.username || 'System';
+};
+
+const getCauserUsername = (log) => {
+    if (!log.causer || !log.causer.username) return null;
+    return log.causer.username;
 };
 
 const categoryMap = computed(() => {
@@ -398,7 +404,12 @@ const getLogDetails = (log) => {
                                 </tr>
                                 <tr v-for="log in activities.data" :key="log.id" class="hover:bg-white/40 transition-colors">
                                     <td class="px-6 py-4 text-xs font-medium text-slate-600">{{ formatDate(log.created_at) }}</td>
-                                    <td class="px-6 py-4 text-sm font-bold text-slate-800">{{ getCauserName(log) }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-bold text-slate-800">{{ getCauserName(log) }}</div>
+                                        <div v-if="getCauserUsername(log)" class="text-xs font-medium text-slate-500">
+                                            {{ getCauserUsername(log) }}
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-4">
                                         <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase', getEventColor(log.event, log.description)]">
                                             {{ log.description === 'Login' || log.description === 'Logout' ? log.description : log.event }}

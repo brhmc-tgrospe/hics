@@ -20,16 +20,59 @@ class EquipmentImportRequest extends FormRequest
     }
 
     /**
+     * Open the uploaded CSV file as a UTF-8 temporary stream.
+     * Automatically detects and converts Windows-1252, ISO-8859-1, UTF-16, and strips BOM.
+     *
+     * @param string $path
+     * @return resource|false
+     */
+    protected function openCsvStream(string $path)
+    {
+        $content = file_get_contents($path);
+        if ($content === false) {
+            return false;
+        }
+
+        // Handle UTF-16 LE / BE with BOM
+        if (str_starts_with($content, "\xFF\xFE") || str_starts_with($content, "\xFE\xFF")) {
+            $content = mb_convert_encoding($content, 'UTF-8', 'UTF-16');
+        } elseif (!mb_check_encoding($content, 'UTF-8')) {
+            // Excel on Windows commonly exports CSV in Windows-1252 / ISO-8859-1
+            $detected = mb_detect_encoding($content, ['UTF-8', 'Windows-1252', 'ISO-8859-1', 'ASCII'], true);
+            $content = mb_convert_encoding($content, 'UTF-8', $detected ?: 'Windows-1252');
+        }
+
+        // Strip UTF-8 BOM if present
+        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
+
+        // Sanitize any remaining malformed/orphaned byte sequences into valid UTF-8
+        $content = mb_convert_encoding($content, 'UTF-8', 'UTF-8');
+
+        $stream = fopen('php://temp', 'r+');
+        if ($stream !== false) {
+            fwrite($stream, $content);
+            rewind($stream);
+        }
+
+        return $stream;
+    }
+
+    /**
      * Prepare the data for validation.
      */
     protected function prepareForValidation()
     {
         if ($this->hasFile('file') && $this->file('file')->isValid()) {
             $path = $this->file('file')->getRealPath();
-            $file = fopen($path, 'r');
-            $header = fgetcsv($file);
+            $file = $this->openCsvStream($path);
+            if (!$file) {
+                return;
+            }
+
+            $header = fgetcsv($file, escape: '\\');
 
             if (!$header) {
+                fclose($file);
                 return; // Will fail the basic 'rows' requirement
             }
 
@@ -56,9 +99,15 @@ class EquipmentImportRequest extends FormRequest
 
             $rows = [];
             $lineNumber = 2; // Line 1 is header
-            while (($row = fgetcsv($file)) !== false) {
+            while (($row = fgetcsv($file, escape: '\\')) !== false) {
                 // Skip the hint row
                 if ($lineNumber === 2 && str_starts_with($row[0] ?? '', 'Hint:')) {
+                    $lineNumber++;
+                    continue;
+                }
+
+                // Skip completely empty rows
+                if ($row === [null] || empty(array_filter($row, fn($v) => $v !== null && trim((string)$v) !== ''))) {
                     $lineNumber++;
                     continue;
                 }
@@ -74,6 +123,11 @@ class EquipmentImportRequest extends FormRequest
                         if ($value === '') {
                             $data[$key] = null;
                             continue;
+                        }
+
+                        // Ensure UTF-8 clean string
+                        if (!mb_check_encoding($value, 'UTF-8')) {
+                            $value = mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
                         }
 
                         // Sanitize numeric fields

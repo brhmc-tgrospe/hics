@@ -254,18 +254,25 @@ class EquipmentController extends Controller
         $created = 0;
         $updated = 0;
 
-        DB::transaction(function () use ($rows, $action, &$created, &$updated) {
-            foreach ($rows as $data) {
-                unset($data['_line']);
-                $dto = EquipmentDTO::fromArray($data);
-                $result = $action->execute($dto);
-                if ($result['action'] === 'created') {
-                    $created++;
-                } else {
-                    $updated++;
+        try {
+            DB::transaction(function () use ($rows, $action, &$created, &$updated) {
+                foreach ($rows as $data) {
+                    unset($data['_line']);
+                    $dto = EquipmentDTO::fromArray($data);
+                    $result = $action->execute($dto);
+                    if ($result['action'] === 'created') {
+                        $created++;
+                    } else {
+                        $updated++;
+                    }
                 }
-            }
-        });
+            });
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Equipment import failed: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+            return redirect()->route('equipment.index')->with('error', 'Import failed: ' . $e->getMessage());
+        }
 
         $messages = [];
         if ($created > 0) $messages[] = "{$created} new records created";

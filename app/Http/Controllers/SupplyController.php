@@ -240,18 +240,25 @@ class SupplyController extends Controller
         $created = 0;
         $updated = 0;
         
-        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $action, &$created, &$updated) {
-            foreach ($rows as $data) {
-                unset($data['_line']);
-                $dto = SupplyDTO::fromArray($data);
-                $result = $action->execute($dto);
-                if ($result['action'] === 'created') {
-                    $created++;
-                } else {
-                    $updated++;
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $action, &$created, &$updated) {
+                foreach ($rows as $data) {
+                    unset($data['_line']);
+                    $dto = SupplyDTO::fromArray($data);
+                    $result = $action->execute($dto);
+                    if ($result['action'] === 'created') {
+                        $created++;
+                    } else {
+                        $updated++;
+                    }
                 }
-            }
-        });
+            });
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Supplies import failed: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+            return redirect()->route('supplies.index')->with('error', 'Import failed: ' . $e->getMessage());
+        }
 
         $messages = [];
         if ($created > 0) $messages[] = "{$created} new records created";
