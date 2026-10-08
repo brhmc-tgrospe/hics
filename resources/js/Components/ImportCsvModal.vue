@@ -58,7 +58,8 @@
             <ul class="list-disc list-inside space-y-0.5 text-amber-800 pl-1">
               <li>Header row (Line 1) must match the column names listed below exactly.</li>
               <li>Fields marked as <span class="font-bold text-red-600">Required</span> must not be empty or 0.</li>
-              <li><strong>Stock Number</strong>: If provided and matches an existing record, the record will be updated. If left empty, a new record is created.</li>
+              <li v-if="type === 'equipment'"><strong>Serial / Property Number</strong>: If provided (not 0), matches and updates by number. If both are left empty or 0, matches and updates existing records by Category, Article, and Description; otherwise creates a new record.</li>
+              <li v-else><strong>Stock Number</strong>: If provided, matches and updates by stock number. If left empty, matches and updates existing records by Category, Article, and Description; otherwise creates a new record.</li>
             </ul>
           </div>
 
@@ -267,8 +268,8 @@ const fieldDefinitions = computed(() => {
       { name: 'division_id', requirement: 'Required', description: 'Numeric ID of assigned Division', example: '1' },
       { name: 'area_id', requirement: 'Required', description: 'Numeric ID of assigned Area', example: '4' },
       { name: 'article', requirement: 'Optional', description: 'Equipment name / article title', example: 'Infusion Pump' },
-      { name: 'property_number', requirement: 'Optional', description: 'Unique property number identifier', example: 'PROP-2024-001' },
-      { name: 'serial_number', requirement: 'Optional', description: 'Manufacturer serial number', example: 'SN-9821382' },
+      { name: 'property_number', requirement: 'Optional', description: 'Unique property number identifier. Leave empty or 0 if unassigned.', example: 'PROP-2024-001' },
+      { name: 'serial_number', requirement: 'Optional', description: 'Manufacturer serial number. Leave empty or 0 if unassigned.', example: 'SN-9821382' },
       { name: 'date_acquired', requirement: 'Optional', description: 'Acquisition date formatted as YYYY-MM-DD', example: '2024-01-15' },
       { name: 'unit_of_measure', requirement: 'Optional', description: 'Unit descriptor (e.g. unit, set, pc)', example: 'unit' },
       { name: 'remarks', requirement: 'Optional', description: 'Physical condition or location notes', example: 'Operational, ICU Room 2' },
@@ -286,7 +287,7 @@ const fieldDefinitions = computed(() => {
     { name: 'division_id', requirement: 'Required', description: 'Numeric ID of assigned Division', example: '1' },
     { name: 'area_id', requirement: 'Required', description: 'Numeric ID of assigned Area', example: '4' },
     { name: 'expiry_date', requirement: 'Conditional', description: 'YYYY-MM-DD. Required for Medical/Drugs/Food supplies/Enteral', example: '2027-06-30' },
-    { name: 'stock_number', requirement: 'Optional', description: 'Unique stock code. Updates record if matched; creates new if empty', example: 'STK-00124' },
+    { name: 'stock_number', requirement: 'Optional', description: 'Unique stock code. Updates record if matched; if empty, matches by Category + Article + Description', example: 'STK-00124' },
     { name: 'article', requirement: 'Optional', description: 'Short item name', example: 'Bond Paper' },
     { name: 'unit_of_measure', requirement: 'Optional', description: 'Packaging unit (e.g. ream, box, pc, bottle)', example: 'ream' },
     { name: 'status', requirement: 'Optional', description: 'Status (Available, Depleted). Defaults to Available', example: 'Available' },

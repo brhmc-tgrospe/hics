@@ -257,9 +257,17 @@ class EquipmentController extends Controller
         try {
             DB::transaction(function () use ($rows, $action, &$created, &$updated) {
                 foreach ($rows as $data) {
+                    $line = $data['_line'] ?? null;
                     unset($data['_line']);
                     $dto = EquipmentDTO::fromArray($data);
-                    $result = $action->execute($dto);
+                    try {
+                        $result = $action->execute($dto);
+                    } catch (\DomainException $e) {
+                        $linePrefix = $line ? "Line {$line}: " : '';
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'file' => "Upload Failed. {$linePrefix}{$e->getMessage()}",
+                        ]);
+                    }
                     if ($result['action'] === 'created') {
                         $created++;
                     } else {
@@ -267,6 +275,8 @@ class EquipmentController extends Controller
                     }
                 }
             });
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Equipment import failed: ' . $e->getMessage(), [
                 'exception' => $e,

@@ -43,6 +43,19 @@ class EquipmentDTO
         return $num !== null ? (int)round($num) : null;
     }
 
+    private static function normalizeIdentifier(mixed $val): ?string
+    {
+        if ($val === null) {
+            return null;
+        }
+        $trimmed = trim((string) $val);
+        $lower = strtolower($trimmed);
+        if ($trimmed === '' || $trimmed === '0' || in_array($lower, ['n/a', 'na', 'none', 'null'], true)) {
+            return null;
+        }
+        return $trimmed;
+    }
+
     private static function normalizeStatus(?string $status): ?string
     {
         if (!$status) {
@@ -80,8 +93,8 @@ class EquipmentDTO
             $data['article'] ?? null,
             $data['description'] ?? null,
             $data['date_acquired'] ?? null,
-            $data['property_number'] ?? null,
-            $data['serial_number'] ?? null,
+            self::normalizeIdentifier($data['property_number'] ?? null),
+            self::normalizeIdentifier($data['serial_number'] ?? null),
             $data['unit_of_measure'] ?? null,
             $unitValue,
             $totalValue,

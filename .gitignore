@@ -29,3 +29,4 @@ auto_deploy.bat
 nssm-dump.txt
 test_deploy.bat
 composer.json
+rename_remote_control.ps1

@@ -15,31 +15,51 @@ class ImportEquipmentAction
     public function execute(EquipmentDTO $dto): array
     {
         $equipment = null;
-        $serialNumber = trim((string) ($dto->serial_number ?? ''));
-        $propertyNumber = trim((string) ($dto->property_number ?? ''));
+        $serialNumber = $dto->serial_number ? trim($dto->serial_number) : null;
+        $propertyNumber = $dto->property_number ? trim($dto->property_number) : null;
 
-        // Prioritize matching by serial_number if non-empty
-        if ($serialNumber !== '') {
-            $query = Equipment::where('serial_number', $serialNumber);
+        $hasIdentifier = ($serialNumber !== null && $serialNumber !== '') || ($propertyNumber !== null && $propertyNumber !== '');
+
+        $scopedQuery = function () use ($dto) {
+            $query = Equipment::query();
             if (!empty($dto->division_id)) {
                 $query->where('division_id', $dto->division_id);
             }
             if (!empty($dto->area_id)) {
                 $query->where('area_id', $dto->area_id);
             }
-            $equipment = $query->first();
+            return $query;
+        };
+
+        // Tier 1: Match by serial_number if provided
+        if ($serialNumber !== null && $serialNumber !== '') {
+            $equipment = $scopedQuery()->where('serial_number', $serialNumber)->first();
         }
 
-        // Fallback to matching by property_number if serial_number isn't found/provided
-        if (!$equipment && $propertyNumber !== '') {
-            $query = Equipment::where('property_number', $propertyNumber);
-            if (!empty($dto->division_id)) {
-                $query->where('division_id', $dto->division_id);
+        // Tier 2: Match by property_number if serial_number wasn't matched/provided
+        if (!$equipment && $propertyNumber !== null && $propertyNumber !== '') {
+            $equipment = $scopedQuery()->where('property_number', $propertyNumber)->first();
+        }
+
+        // Tier 3: Composite fallback (Category + Article + Description) only when NO identifier was provided
+        if (!$equipment && !$hasIdentifier) {
+            $cleanArticle = strtolower(trim((string) ($dto->article ?? '')));
+            $cleanDesc = strtolower(trim((string) ($dto->description ?? '')));
+
+            $matches = $scopedQuery()
+                ->where('category', $dto->category)
+                ->whereRaw('LOWER(TRIM(COALESCE(article, ""))) = ?', [$cleanArticle])
+                ->whereRaw('LOWER(TRIM(COALESCE(description, ""))) = ?', [$cleanDesc])
+                ->get();
+
+            if ($matches->count() > 1) {
+                $articleDisplay = $dto->article ?: '(No Article)';
+                throw new \DomainException(
+                    "Multiple existing equipment records match Category '{$dto->category}', Article '{$articleDisplay}', and Description in this area. Please assign a unique Serial Number or Property Number to update."
+                );
             }
-            if (!empty($dto->area_id)) {
-                $query->where('area_id', $dto->area_id);
-            }
-            $equipment = $query->first();
+
+            $equipment = $matches->first();
         }
 
         if ($equipment) {

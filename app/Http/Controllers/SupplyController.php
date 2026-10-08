@@ -243,9 +243,17 @@ class SupplyController extends Controller
         try {
             \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $action, &$created, &$updated) {
                 foreach ($rows as $data) {
+                    $line = $data['_line'] ?? null;
                     unset($data['_line']);
                     $dto = SupplyDTO::fromArray($data);
-                    $result = $action->execute($dto);
+                    try {
+                        $result = $action->execute($dto);
+                    } catch (\DomainException $e) {
+                        $linePrefix = $line ? "Line {$line}: " : '';
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'file' => "Upload Failed. {$linePrefix}{$e->getMessage()}",
+                        ]);
+                    }
                     if ($result['action'] === 'created') {
                         $created++;
                     } else {
@@ -253,6 +261,8 @@ class SupplyController extends Controller
                     }
                 }
             });
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Supplies import failed: ' . $e->getMessage(), [
                 'exception' => $e,
