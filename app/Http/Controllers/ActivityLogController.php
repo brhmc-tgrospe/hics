@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Spatie\Activitylog\Models\Activity;
+use App\Models\Activity;
 use Illuminate\Support\Facades\Gate;
 
 class ActivityLogController extends Controller
@@ -44,6 +44,7 @@ class ActivityLogController extends Controller
                   ->orWhere('event', 'like', "%{$searchTerm}%")
                   ->orWhere('subject_type', 'like', "%{$searchTerm}%")
                   ->orWhere('properties', 'like', "%{$searchTerm}%")
+                  ->orWhere('ip_address', 'like', "%{$searchTerm}%")
                   ->orWhereHasMorph('causer', [\App\Models\User::class], function($causerQuery) use ($searchTerm) {
                       $causerQuery->withTrashed()->where(function($userQuery) use ($searchTerm) {
                           $userQuery->where('first_name', 'like', "%{$searchTerm}%")

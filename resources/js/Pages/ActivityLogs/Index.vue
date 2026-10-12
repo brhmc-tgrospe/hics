@@ -114,6 +114,10 @@ const getCauserUsername = (log) => {
     return log.causer.username;
 };
 
+const getIpAddress = (log) => {
+    return log.ip_address || log.properties?.ip_address || null;
+};
+
 const categoryMap = computed(() => {
     const map = {};
     if (props.categories && Array.isArray(props.categories)) {
@@ -393,6 +397,7 @@ const getLogDetails = (log) => {
                                 <tr class="bg-slate-900/5 border-b border-white/60">
                                     <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Date & Time</th>
                                     <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">User</th>
+                                    <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">IP Address</th>
                                     <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Action</th>
                                     <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Subject</th>
                                     <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Details</th>
@@ -400,7 +405,7 @@ const getLogDetails = (log) => {
                             </thead>
                             <tbody class="divide-y divide-white/40">
                                 <tr v-if="activities.data.length === 0">
-                                    <td colspan="5" class="px-6 py-8 text-center text-sm text-slate-500 font-medium">No activity logs found.</td>
+                                    <td colspan="6" class="px-6 py-8 text-center text-sm text-slate-500 font-medium">No activity logs found.</td>
                                 </tr>
                                 <tr v-for="log in activities.data" :key="log.id" class="hover:bg-white/40 transition-colors">
                                     <td class="px-6 py-4 text-xs font-medium text-slate-600">{{ formatDate(log.created_at) }}</td>
@@ -409,6 +414,13 @@ const getLogDetails = (log) => {
                                         <div v-if="getCauserUsername(log)" class="text-xs font-medium text-slate-500">
                                             {{ getCauserUsername(log) }}
                                         </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-xs">
+                                        <span v-if="getIpAddress(log)" class="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium text-slate-600 bg-slate-100/90 px-2 py-0.5 rounded-md border border-slate-200/80">
+                                            <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                                            {{ getIpAddress(log) }}
+                                        </span>
+                                        <span v-else class="text-slate-400 font-mono text-xs">—</span>
                                     </td>
                                     <td class="px-6 py-4">
                                         <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase', getEventColor(log.event, log.description)]">

@@ -34,5 +34,17 @@ class AppServiceProvider extends ServiceProvider
             \App\Domain\Supplies\Models\Supply::class,
             \App\Policies\SupplyPolicy::class
         );
+
+        \Spatie\Activitylog\Actions\LogActivityAction::beforeLogging(function ($activity) {
+            if (empty($activity->ip_address) && request()) {
+                $activity->ip_address = request()->ip();
+            }
+        });
+
+        \Spatie\Activitylog\Models\Activity::creating(function ($activity) {
+            if (empty($activity->ip_address) && request()) {
+                $activity->ip_address = request()->ip();
+            }
+        });
     }
 }

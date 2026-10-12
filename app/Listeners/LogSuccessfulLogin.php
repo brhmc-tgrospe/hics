@@ -13,6 +13,7 @@ class LogSuccessfulLogin
             ->withProperties([
                 'division_id' => $event->user->division_id,
                 'area_id' => $event->user->area_id,
+                'ip_address' => request()?->ip(),
             ])
             ->log('Login');
     }
