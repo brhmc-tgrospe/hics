@@ -102,6 +102,15 @@ Route::middleware('auth')->group(function () {
         Route::post('recycle-bin/restore', [\App\Http\Controllers\RecycleBinController::class, 'restore'])->name('recycle-bin.restore');
         Route::delete('recycle-bin/force-delete', [\App\Http\Controllers\RecycleBinController::class, 'forceDelete'])->name('recycle-bin.force-delete');
     });
+
+    // System Health & Backup Routes (Developer Only)
+    Route::middleware('role:Developer')->prefix('system-health')->name('system-health.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\SystemHealthController::class, 'index'])->name('index');
+        Route::post('/backup', [\App\Http\Controllers\SystemHealthController::class, 'storeBackup'])->name('backup.store');
+        Route::get('/backup/{history}/download', [\App\Http\Controllers\SystemHealthController::class, 'downloadBackup'])->name('backup.download');
+        Route::delete('/backup/{history}', [\App\Http\Controllers\SystemHealthController::class, 'destroyBackup'])->name('backup.destroy');
+        Route::put('/schedule', [\App\Http\Controllers\SystemHealthController::class, 'updateSchedule'])->name('schedule.update');
+    });
 });
 
 require __DIR__.'/auth.php';
