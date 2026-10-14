@@ -21,6 +21,7 @@
                 </button>
             </th>
             <th v-if="isColumnVisible('category')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Category</th>
+            <th v-if="isColumnVisible('division_area')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Division & Area</th>
             <th v-if="isColumnVisible('description')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Description</th>
             <th v-if="isColumnVisible('stock_number')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Stock No.</th>
             <th v-if="isColumnVisible('unit_of_measure')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">UOM</th>
@@ -36,7 +37,7 @@
         </thead>
         <tbody class="divide-y divide-white/40">
           <tr v-if="supplies.data.length === 0">
-            <td colspan="8" class="px-6 py-8 text-center text-sm text-slate-500 font-medium">
+            <td colspan="100%" class="px-6 py-8 text-center text-sm text-slate-500 font-medium">
               No supplies found matching criteria.
             </td>
           </tr>
@@ -52,6 +53,10 @@
             </td>
             <td class="px-6 py-4 text-sm font-bold text-slate-800">{{ item.article }}</td>
             <td v-if="isColumnVisible('category')" class="px-6 py-4 text-xs text-slate-600 font-medium">{{ getCategoryName(item.category) }}</td>
+            <td v-if="isColumnVisible('division_area')" class="px-6 py-4 text-xs" :title="`${getDivisionName(item)} / ${getAreaName(item)}`">
+                <div class="font-semibold text-slate-800">{{ getDivisionName(item) }}</div>
+                <div v-if="getAreaName(item) !== '—'" class="text-[11px] text-slate-500 font-medium">{{ getAreaName(item) }}</div>
+            </td>
             <td v-if="isColumnVisible('description')" class="px-6 py-4 text-xs text-slate-600">{{ item.description }}</td>
             <td v-if="isColumnVisible('stock_number')" class="px-6 py-4 text-xs font-mono font-bold text-blue-700">{{ item.stock_number }}</td>
             <td v-if="isColumnVisible('unit_of_measure')" class="px-6 py-4 text-xs text-slate-600">{{ item.unit_of_measure }}</td>
@@ -140,6 +145,14 @@ const props = defineProps({
         type: Array,
         required: true
     },
+    divisions: {
+        type: Array,
+        default: () => []
+    },
+    areas: {
+        type: Array,
+        default: () => []
+    },
     // Keep these if passed by parent
     isSuperadmin: { type: Boolean, default: false },
     isSecretary: { type: Boolean, default: false },
@@ -183,10 +196,26 @@ const getCategoryName = (catId) => {
     return cat ? cat.name : catId;
 };
 
+const getDivisionName = (item) => {
+    if (item.division?.div_name) return item.division.div_name;
+    if (item.division?.name) return item.division.name;
+    if (item.division_name) return item.division_name;
+    const div = props.divisions?.find(d => String(d.id) === String(item.division_id));
+    return div?.name || div?.div_name || '—';
+};
+
+const getAreaName = (item) => {
+    if (item.area?.area_name) return item.area.area_name;
+    if (item.area?.name) return item.area.name;
+    if (item.area_name) return item.area_name;
+    const area = props.areas?.find(a => String(a.id) === String(item.area_id));
+    return area?.name || area?.area_name || '—';
+};
+
 const userSettings = usePage().props.auth.user?.settings || {};
 const visibleColumns = computed(() => {
     return userSettings.supplies_columns || [
-        'article', 'category', 'description', 'stock_number', 'unit_of_measure', 
+        'article', 'category', 'division_area', 'description', 'stock_number', 'unit_of_measure', 
         'unit_value', 'balance_per_card', 'on_hand_per_count', 'shortage_overage_qty', 
         'shortage_overage_value', 'total_amount', 'status'
     ];

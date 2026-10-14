@@ -49,17 +49,83 @@
         </button>
 
         <!-- Instructions Content -->
-        <div v-show="isInstructionsOpen" class="px-4 pb-4 pt-1 border-t border-slate-200/80 bg-white">
-          <div class="mb-3 mt-2 text-xs text-slate-600 space-y-1 bg-amber-50/70 border border-amber-200/60 p-3 rounded-xl">
+        <div v-show="isInstructionsOpen" class="px-4 pb-4 pt-1 border-t border-slate-200/80 bg-white space-y-3">
+          <!-- Bulk Update & Matching Logic Guide -->
+          <div class="mt-2 rounded-xl border border-blue-200 bg-blue-50/60 p-3.5 text-xs text-slate-700 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-blue-900 flex items-center gap-1.5 text-sm">
+                <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                How Bulk Updating & Matching Works
+              </span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
+                {{ type === 'equipment' ? 'Equipment Matching' : 'Supplies Matching' }}
+              </span>
+            </div>
+
+            <!-- Equipment Matching Guide -->
+            <div v-if="type === 'equipment'" class="space-y-2 text-slate-600">
+              <p class="text-[11px] leading-relaxed">
+                The import automatically determines whether to <strong class="text-slate-800">update</strong> an existing item or <strong class="text-slate-800">create</strong> a new one using three matching tiers:
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div class="p-2.5 rounded-lg bg-white border border-blue-100 shadow-2xs">
+                  <span class="block text-[10px] font-bold uppercase tracking-wider text-blue-700">Priority 1 &bull; Serial No.</span>
+                  <p class="mt-1 text-[11px] text-slate-700">Matches existing record by <code class="font-mono text-blue-800 font-bold">serial_number</code> in your division and area.</p>
+                </div>
+                <div class="p-2.5 rounded-lg bg-white border border-blue-100 shadow-2xs">
+                  <span class="block text-[10px] font-bold uppercase tracking-wider text-indigo-700">Priority 2 &bull; Property No.</span>
+                  <p class="mt-1 text-[11px] text-slate-700">If no serial match, matches by <code class="font-mono text-indigo-800 font-bold">property_number</code> in your division and area.</p>
+                </div>
+                <div class="p-2.5 rounded-lg bg-white border border-blue-100 shadow-2xs">
+                  <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-700">Priority 3 &bull; Fallback Match</span>
+                  <p class="mt-1 text-[11px] text-slate-700">If both numbers are empty or <code class="font-mono font-bold">0</code>, matches by <strong class="text-slate-800">Category + Article + Description</strong>.</p>
+                </div>
+              </div>
+              <ul class="list-disc list-inside space-y-1 text-[11px] text-slate-600 pt-1">
+                <li><strong class="text-slate-800">Adding New Items:</strong> If no existing record matches, or if a new serial/property number is specified that isn't in the database, a new record is created.</li>
+                <li><strong class="text-slate-800">Duplicate Match Protection:</strong> If multiple items in that area share the exact same Category, Article, and Description, the import stops with an error to prevent accidental overwrites. Assign a Serial or Property Number to distinguish them.</li>
+                <li><strong class="text-slate-800">Safe Partial Updates:</strong> Blank optional cells in your CSV will keep their existing database values without overwriting them.</li>
+              </ul>
+            </div>
+
+            <!-- Supplies Matching Guide -->
+            <div v-else class="space-y-2 text-slate-600">
+              <p class="text-[11px] leading-relaxed">
+                The import automatically determines whether to <strong class="text-slate-800">update</strong> an existing supply or <strong class="text-slate-800">create</strong> a new one:
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div class="p-2.5 rounded-lg bg-white border border-blue-100 shadow-2xs">
+                  <span class="block text-[10px] font-bold uppercase tracking-wider text-blue-700">Priority 1 &bull; Stock Number</span>
+                  <p class="mt-1 text-[11px] text-slate-700">Matches existing supply by <code class="font-mono text-blue-800 font-bold">stock_number</code> within your division and area.</p>
+                </div>
+                <div class="p-2.5 rounded-lg bg-white border border-blue-100 shadow-2xs">
+                  <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-700">Priority 2 &bull; Fallback Match</span>
+                  <p class="mt-1 text-[11px] text-slate-700">If <code class="font-mono font-bold">stock_number</code> is left empty, matches by <strong class="text-slate-800">Category + Article + Description</strong> in your area.</p>
+                </div>
+              </div>
+              <ul class="list-disc list-inside space-y-1 text-[11px] text-slate-600 pt-1">
+                <li><strong class="text-slate-800">Adding New Items:</strong> If no existing record matches, or if a new stock number is specified that isn't in the database, a new supply record is created.</li>
+                <li><strong class="text-slate-800">Duplicate Match Protection:</strong> If multiple supplies in that area share the same Category, Article, and Description, the import stops with an error to prevent accidental overwrites. Assign a unique Stock Number to update.</li>
+                <li><strong class="text-slate-800">Safe Partial Updates:</strong> Blank optional cells in your CSV will keep their existing database values without overwriting them.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- General Requirements Notice -->
+          <div class="text-xs text-slate-600 space-y-1.5 bg-amber-50/70 border border-amber-200/60 p-3 rounded-xl">
             <p class="font-semibold text-amber-900 flex items-center gap-1.5">
               <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              Important Instructions:
+              File Formatting Requirements:
             </p>
-            <ul class="list-disc list-inside space-y-0.5 text-amber-800 pl-1">
-              <li>Header row (Line 1) must match the column names listed below exactly.</li>
+            <ul class="list-disc list-inside space-y-1 text-amber-800 pl-1 text-[11px]">
+              <li class="font-bold text-amber-950 bg-amber-100/70 py-0.5 px-1.5 rounded border border-amber-300/60">
+                CRITICAL: Only upload data for your authorized Division and designated Area.
+              </li>
+              <li><strong>Template Editing:</strong> Start entering data from <span class="font-semibold text-slate-900 underline decoration-amber-400">Row 3 and below</span> (Row 1 contains column headers and Row 2 contains hints, both of which are ignored by the system).</li>
+              <li>Header row (Line 1) must match the column names listed in the table below exactly.</li>
               <li>Fields marked as <span class="font-bold text-red-600">Required</span> must not be empty or 0.</li>
-              <li v-if="type === 'equipment'"><strong>Serial / Property Number</strong>: If provided (not 0), matches and updates by number. If both are left empty or 0, matches and updates existing records by Category, Article, and Description; otherwise creates a new record.</li>
-              <li v-else><strong>Stock Number</strong>: If provided, matches and updates by stock number. If left empty, matches and updates existing records by Category, Article, and Description; otherwise creates a new record.</li>
             </ul>
           </div>
 
@@ -267,9 +333,9 @@ const fieldDefinitions = computed(() => {
       { name: 'quantity_per_physical_count', requirement: 'Required', description: 'Physical count inventory. Integer > 0', example: '1' },
       { name: 'division_id', requirement: 'Required', description: 'Numeric ID of assigned Division', example: '1' },
       { name: 'area_id', requirement: 'Required', description: 'Numeric ID of assigned Area', example: '4' },
-      { name: 'article', requirement: 'Optional', description: 'Equipment name / article title', example: 'Infusion Pump' },
-      { name: 'property_number', requirement: 'Optional', description: 'Unique property number identifier. Leave empty or 0 if unassigned.', example: 'PROP-2024-001' },
-      { name: 'serial_number', requirement: 'Optional', description: 'Manufacturer serial number. Leave empty or 0 if unassigned.', example: 'SN-9821382' },
+      { name: 'article', requirement: 'Required', description: 'Equipment name / article title. Combined with Category & Description to match unnumbered items.', example: 'Infusion Pump' },
+      { name: 'property_number', requirement: 'Optional', description: 'Unique property number identifier. Priority 2 match. Leave empty or 0 if unassigned to match by Category, Article & Description.', example: 'PROP-2024-001' },
+      { name: 'serial_number', requirement: 'Optional', description: 'Manufacturer serial number. Priority 1 match. Leave empty or 0 if unassigned to match by Category, Article & Description.', example: 'SN-9821382' },
       { name: 'date_acquired', requirement: 'Optional', description: 'Acquisition date formatted as YYYY-MM-DD', example: '2024-01-15' },
       { name: 'unit_of_measure', requirement: 'Optional', description: 'Unit descriptor (e.g. unit, set, pc)', example: 'unit' },
       { name: 'remarks', requirement: 'Optional', description: 'Physical condition or location notes', example: 'Operational, ICU Room 2' },
@@ -280,15 +346,15 @@ const fieldDefinitions = computed(() => {
 
   return [
     { name: 'category', requirement: 'Required', description: 'Supply category code (e.g. officesup, drmeds, mssup)', example: 'officesup' },
-    { name: 'description', requirement: 'Required', description: 'Detailed item specification and brand', example: 'A4 70gsm 500 sheets/ream' },
+    { name: 'description', requirement: 'Required', description: 'Detailed item specification and brand. Combined with Category & Article to match items without a Stock Number.', example: 'A4 70gsm 500 sheets/ream' },
     { name: 'unit_value', requirement: 'Required', description: 'Numeric price per unit. Must be strictly > 0', example: '250.00' },
     { name: 'balance_per_card', requirement: 'Required', description: 'Card balance inventory. Integer > 0', example: '10' },
     { name: 'on_hand_per_count', requirement: 'Required', description: 'Physical count inventory. Integer > 0', example: '10' },
     { name: 'division_id', requirement: 'Required', description: 'Numeric ID of assigned Division', example: '1' },
     { name: 'area_id', requirement: 'Required', description: 'Numeric ID of assigned Area', example: '4' },
     { name: 'expiry_date', requirement: 'Conditional', description: 'YYYY-MM-DD. Required for Medical/Drugs/Food supplies/Enteral', example: '2027-06-30' },
-    { name: 'stock_number', requirement: 'Optional', description: 'Unique stock code. Updates record if matched; if empty, matches by Category + Article + Description', example: 'STK-00124' },
-    { name: 'article', requirement: 'Optional', description: 'Short item name', example: 'Bond Paper' },
+    { name: 'stock_number', requirement: 'Optional', description: 'Unique stock code. Priority 1 match. If left empty, matches and updates by Category + Article + Description.', example: 'STK-00124' },
+    { name: 'article', requirement: 'Optional', description: 'Short item name. Combined with Category & Description to match items without a Stock Number.', example: 'Bond Paper' },
     { name: 'unit_of_measure', requirement: 'Optional', description: 'Packaging unit (e.g. ream, box, pc, bottle)', example: 'ream' },
     { name: 'status', requirement: 'Optional', description: 'Status (Available, Depleted). Defaults to Available', example: 'Available' },
   ];

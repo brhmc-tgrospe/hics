@@ -9,7 +9,10 @@ class GetEquipmentAction
 {
     public function execute(array $filters = []): LengthAwarePaginator
     {
-        $query = Equipment::query();
+        $query = Equipment::with([
+            'division' => fn($q) => $q->withTrashed()->select('id', 'div_name'),
+            'area' => fn($q) => $q->withTrashed()->select('id', 'area_name', 'division_id'),
+        ]);
 
         if (!empty($filters['division_id'])) {
             $query->where('division_id', $filters['division_id']);

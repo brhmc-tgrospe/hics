@@ -126,6 +126,7 @@
             :data="viewingData"
             :categories="categories"
             :divisions="divisions"
+            :areas="areas"
             @close="isViewing = false"
           />
       </Modal>
@@ -298,6 +299,8 @@
         <SuppliesTable
           :supplies="supplies"
           :categories="categories"
+          :divisions="divisions"
+          :areas="areas"
           :isSuperadmin="isSuperadmin"
           :isSecretary="isSecretary"
           :userDivisionId="authUser?.division_id"

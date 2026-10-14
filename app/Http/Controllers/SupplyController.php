@@ -211,7 +211,7 @@ class SupplyController extends Controller
             'Hint: Category Code (e.g. officesup, drmeds) (Required)',
             'Name of the item (Required)',
             'Detailed description (Required)',
-            'e.g. 12345',
+            'e.g. 12345 (Optional - leave empty to match by Category, Article & Description)',
             'YYYY-MM-DD (Required for Medical and Surgical, Enteral, Drugs and Medicines, Food Supplies)',
             'e.g. box, pc',
             'Numeric value (Required',

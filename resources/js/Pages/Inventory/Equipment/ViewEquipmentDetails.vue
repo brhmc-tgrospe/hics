@@ -17,6 +17,10 @@
         <p class="text-sm font-semibold text-slate-800">{{ getDivisionName(data.division_id) || '-' }}</p>
       </div>
       <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Area</p>
+        <p class="text-sm font-semibold text-slate-800">{{ getAreaName(data.area_id) || '-' }}</p>
+      </div>
+      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Article/Product Name</p>
         <p class="text-sm font-semibold text-slate-800">{{ data.article || '-' }}</p>
       </div>
@@ -99,6 +103,10 @@ const props = defineProps({
   divisions: {
     type: Array,
     required: true
+  },
+  areas: {
+    type: Array,
+    default: () => []
   }
 });
 
@@ -110,7 +118,14 @@ const getCategoryName = (id) => {
 };
 
 const getDivisionName = (id) => {
-  const dept = props.divisions.find(d => d.id === id);
-  return dept ? dept.name : id;
+  if (props.data?.division?.div_name) return props.data.division.div_name;
+  const dept = props.divisions?.find(d => String(d.id) === String(id));
+  return dept ? (dept.name || dept.div_name) : id;
+};
+
+const getAreaName = (id) => {
+  if (props.data?.area?.area_name) return props.data.area.area_name;
+  const area = props.areas?.find(a => String(a.id) === String(id));
+  return area ? (area.name || area.area_name) : (id || '-');
 };
 </script>

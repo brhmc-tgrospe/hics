@@ -14,13 +14,13 @@ const form = useForm({
     email: user.email,
     settings: {
         equipment_columns: currentSettings.equipment_columns || [
-            'article', 'category', 'description', 'date_acquired', 'property_number', 
+            'article', 'category', 'division_area', 'description', 'date_acquired', 'property_number', 
             'serial_number', 'unit_of_measure', 'unit_value', 'quantity_per_property_card', 
             'quantity_per_physical_count', 'shortage_overage_qty', 'shortage_overage_value', 
             'total_value', 'end_user', 'status', 'remarks'
         ],
         supplies_columns: currentSettings.supplies_columns || [
-            'article', 'category', 'description', 'stock_number', 'unit_of_measure', 
+            'article', 'category', 'division_area', 'description', 'stock_number', 'unit_of_measure', 
             'unit_value', 'balance_per_card', 'on_hand_per_count', 'shortage_overage_qty', 
             'shortage_overage_value', 'total_amount', 'status'
         ],
@@ -30,6 +30,7 @@ const form = useForm({
 const equipmentColumns = [
     { key: 'article', label: 'Article' },
     { key: 'category', label: 'Category' },
+    { key: 'division_area', label: 'Division & Area' },
     { key: 'description', label: 'Description' },
     { key: 'date_acquired', label: 'Date Acquired' },
     { key: 'property_number', label: 'Property Number' },
@@ -49,6 +50,7 @@ const equipmentColumns = [
 const suppliesColumns = [
     { key: 'article', label: 'Article' },
     { key: 'category', label: 'Category' },
+    { key: 'division_area', label: 'Division & Area' },
     { key: 'description', label: 'Description' },
     { key: 'stock_number', label: 'Stock Number' },
     { key: 'unit_of_measure', label: 'Unit of Measure' },

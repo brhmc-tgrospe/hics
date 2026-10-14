@@ -17,6 +17,14 @@ const props = defineProps({
         type: Array,
         required: true
     },
+    divisions: {
+        type: Array,
+        default: () => []
+    },
+    areas: {
+        type: Array,
+        default: () => []
+    },
     // The following props are no longer strictly needed but kept if passed from parent
     isSuperadmin: { type: Boolean, default: false },
     isSecretary: { type: Boolean, default: false },
@@ -59,10 +67,26 @@ const getCategoryName = (id, categories) => {
     return cat ? cat.name : id;
 };
 
+const getDivisionName = (item) => {
+    if (item.division?.div_name) return item.division.div_name;
+    if (item.division?.name) return item.division.name;
+    if (item.division_name) return item.division_name;
+    const div = props.divisions?.find(d => String(d.id) === String(item.division_id));
+    return div?.name || div?.div_name || '—';
+};
+
+const getAreaName = (item) => {
+    if (item.area?.area_name) return item.area.area_name;
+    if (item.area?.name) return item.area.name;
+    if (item.area_name) return item.area_name;
+    const area = props.areas?.find(a => String(a.id) === String(item.area_id));
+    return area?.name || area?.area_name || '—';
+};
+
 const userSettings = usePage().props.auth.user?.settings || {};
 const visibleColumns = computed(() => {
     return userSettings.equipment_columns || [
-        'article', 'category', 'description', 'date_acquired', 'property_number', 
+        'article', 'category', 'division_area', 'description', 'date_acquired', 'property_number', 
         'serial_number', 'unit_of_measure', 'unit_value', 'quantity_per_property_card', 
         'quantity_per_physical_count', 'shortage_overage_qty', 'shortage_overage_value', 
         'total_value', 'end_user', 'status', 'remarks'
@@ -96,6 +120,7 @@ const isColumnVisible = (column) => {
                             </button>
                         </th>
                         <th v-if="isColumnVisible('category')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Category</th>
+                        <th v-if="isColumnVisible('division_area')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Division & Area</th>
                         <th v-if="isColumnVisible('description')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Description</th>
                         <th v-if="isColumnVisible('date_acquired')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Date Acquired</th>
                         <th v-if="isColumnVisible('property_number')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Property No.</th>
@@ -115,7 +140,7 @@ const isColumnVisible = (column) => {
                 </thead>
                 <tbody class="divide-y divide-white/40">
                     <tr v-if="equipment.data.length === 0">
-                        <td colspan="8" class="px-6 py-8 text-center text-sm text-slate-500 font-medium">No equipment found matching criteria.</td>
+                        <td colspan="100%" class="px-6 py-8 text-center text-sm text-slate-500 font-medium">No equipment found matching criteria.</td>
                     </tr>
                     <tr v-for="item in equipment.data" :key="item.id" class="hover:bg-white/40 transition-colors">
                         <td class="px-6 py-4 text-center">
@@ -129,6 +154,10 @@ const isColumnVisible = (column) => {
                         </td>
                         <td class="px-6 py-4 text-sm font-bold text-slate-800">{{ item.article }}</td>
                         <td v-if="isColumnVisible('category')" class="px-6 py-4 text-xs text-slate-600 font-medium">{{ getCategoryName(item.category, categories) }}</td>
+                        <td v-if="isColumnVisible('division_area')" class="px-6 py-4 text-xs" :title="`${getDivisionName(item)} / ${getAreaName(item)}`">
+                            <div class="font-semibold text-slate-800">{{ getDivisionName(item) }}</div>
+                            <div v-if="getAreaName(item) !== '—'" class="text-[11px] text-slate-500 font-medium">{{ getAreaName(item) }}</div>
+                        </td>
                         <td v-if="isColumnVisible('description')" class="px-6 py-4 text-xs text-slate-600">{{ item.description }}</td>
                         <td v-if="isColumnVisible('date_acquired')" class="px-6 py-4 text-xs text-slate-600">{{ item.date_acquired }}</td>
                         <td v-if="isColumnVisible('property_number')" class="px-6 py-4 text-xs font-mono font-bold text-blue-700">{{ item.property_number }}</td>

@@ -216,6 +216,7 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                     :data="viewingData"
                     :categories="categories"
                     :divisions="divisions"
+                    :areas="areas"
                     @close="isViewing = false"
                 />
             </Modal>
@@ -359,6 +360,8 @@ const reportYears = Array.from({length: 10}, (_, i) => currentYear - 5 + i);
                 <EquipmentTable 
                     :equipment="equipment"
                     :categories="categories"
+                    :divisions="divisions"
+                    :areas="areas"
                     :isSuperadmin="isSuperadmin"
                     :isSecretary="isSecretary"
                     :userDivisionId="authUser?.division_id"
