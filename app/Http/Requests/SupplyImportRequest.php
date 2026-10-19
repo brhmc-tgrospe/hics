@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class SupplyImportRequest extends FormRequest
@@ -137,6 +138,11 @@ class SupplyImportRequest extends FormRequest
                             $data[$key] = $value;
                         }
 
+                        // Normalize category
+                        if ($key === 'category' && $data[$key] !== null) {
+                            $data[$key] = strtolower(trim($data[$key]));
+                        }
+
                         // Normalize status
                         if ($key === 'status' && $data[$key] !== null) {
                             $lowerStatus = strtolower(trim($data[$key]));
@@ -170,7 +176,11 @@ class SupplyImportRequest extends FormRequest
         return [
             'file' => 'required|file|mimes:csv,txt',
             'rows' => 'required|array|min:1',
-            'rows.*.category' => 'required|string',
+            'rows.*.category' => [
+                'required',
+                'string',
+                Rule::exists('categories', 'code')->where('type', 'supply')->whereNull('deleted_at'),
+            ],
             'rows.*.description' => 'required|string',
             'rows.*.unit_value' => 'required|numeric|gt:0',
             'rows.*.status' => 'nullable|string',
@@ -213,6 +223,19 @@ class SupplyImportRequest extends FormRequest
             'rows.*.balance_per_card' => 'required|integer|min:0',
             'rows.*.on_hand_per_count' => 'required|integer|min:0',
             'rows.*.expiry_date' => 'nullable|date',
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'rows.*.category.required' => 'The category field is required.',
+            'rows.*.category.exists' => 'The selected category code does not exist or is not a valid supply category.',
         ];
     }
 

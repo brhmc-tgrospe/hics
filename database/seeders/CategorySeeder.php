@@ -20,16 +20,20 @@ class CategorySeeder extends Seeder
             ['code' => 'mv', 'name' => 'MOTOR VEHICLES', 'type' => 'equipment'],
             ['code' => 'hhcenter', 'name' => 'HOSPITAL & HEALTH CENTER BUILDING', 'type' => 'equipment'],
             ['code' => 'bldg', 'name' => 'BUILDINGS AND STRUCTURES', 'type' => 'equipment'],
+            ['code' => 'officeeq', 'name' => 'OFFICE EQUIPMENT', 'type' => 'equipment'],
             ['code' => 'ictequip', 'name' => 'INFORMATION AND COMMUNICATION TECHNOLOGY EQUIPMENT', 'type' => 'equipment'],
             ['code' => 'medical', 'name' => 'MEDICAL EQUIPMENT', 'type' => 'equipment'],
+            ['code' => 'semi_expendables', 'name' => 'SEMI-EXPENDABLES', 'type' => 'equipment'],
         ];
 
         $supplies = [
             ['code' => 'ictsupply', 'name' => 'INFORMATION AND COMMUNICATION TECHNOLOGY SUPPLIES', 'type' => 'supply', 'has_expiration_date' => false],
             ['code' => 'mssup', 'name' => 'MEDICAL AND SURGICAL SUPPLIES', 'type' => 'supply', 'has_expiration_date' => true],
+            ['code' => 'officesup', 'name' => 'OFFICE SUPPLIES', 'type' => 'supply', 'has_expiration_date' => false],
             ['code' => 'office', 'name' => 'OFFICE SUPPLIES', 'type' => 'supply', 'has_expiration_date' => false],
             ['code' => 'enteral', 'name' => 'ENTERAL SUPPLIES', 'type' => 'supply', 'has_expiration_date' => true],
             ['code' => 'hksupp', 'name' => 'HOUSEKEEPING SUPPLIES', 'type' => 'supply', 'has_expiration_date' => false],
+            ['code' => 'drmeds', 'name' => 'DRUGS AND MEDICINES', 'type' => 'supply', 'has_expiration_date' => true],
             ['code' => 'foodsupplies', 'name' => 'FOOD SUPPLIES', 'type' => 'supply', 'has_expiration_date' => true],
             ['code' => 'nonfoodsupplies', 'name' => 'NON-FOOD SUPPLIES', 'type' => 'supply', 'has_expiration_date' => false],
             ['code' => 'hardwaresup', 'name' => 'HARDWARE SUPPLIES', 'type' => 'supply', 'has_expiration_date' => false],

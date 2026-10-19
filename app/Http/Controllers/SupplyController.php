@@ -208,7 +208,7 @@ class SupplyController extends Controller
         ];
 
         $hints = [
-            'Hint: Category Code (e.g. officesup, drmeds) (Required)',
+            'Hint: Category Code (e.g. officesup, drmeds, mssup) (Required)',
             'Name of the item (Required)',
             'Detailed description (Required)',
             'e.g. 12345 (Optional - leave empty to match by Category, Article & Description)',

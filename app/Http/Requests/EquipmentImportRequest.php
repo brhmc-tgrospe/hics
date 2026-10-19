@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class EquipmentImportRequest extends FormRequest
@@ -138,6 +139,11 @@ class EquipmentImportRequest extends FormRequest
                             $data[$key] = $value;
                         }
 
+                        // Normalize category
+                        if ($key === 'category' && $data[$key] !== null) {
+                            $data[$key] = strtolower(trim($data[$key]));
+                        }
+
                         // Normalize status
                         if ($key === 'status' && $data[$key] !== null) {
                             $lowerStatus = strtolower(trim($data[$key]));
@@ -171,6 +177,11 @@ class EquipmentImportRequest extends FormRequest
         return [
             'file' => 'required|file|mimes:csv,txt',
             'rows' => 'required|array|min:1',
+            'rows.*.category' => [
+                'required',
+                'string',
+                Rule::exists('categories', 'code')->where('type', 'equipment')->whereNull('deleted_at'),
+            ],
             'rows.*.article' => 'required|string',
             'rows.*.description' => 'required|string',
             'rows.*.division_id' => [
@@ -214,6 +225,19 @@ class EquipmentImportRequest extends FormRequest
             'rows.*.quantity_per_property_card' => 'required|integer|min:0',
             'rows.*.quantity_per_physical_count' => 'required|integer|min:0',
             'rows.*.status' => 'nullable|string',
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'rows.*.category.required' => 'The category field is required.',
+            'rows.*.category.exists' => 'The selected category code does not exist or is not a valid equipment category.',
         ];
     }
 

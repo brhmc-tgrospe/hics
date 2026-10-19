@@ -520,4 +520,23 @@ class EquipmentImportMatchingTest extends TestCase
         $this->assertStringContainsString('Line 2', $error);
         $this->assertStringContainsString('only allowed to upload data for your assigned division', $error);
     }
+
+    public function test_equipment_import_rejects_invalid_category_such_as_medequip(): void
+    {
+        $csvContent = implode("\n", [
+            'category,article,description,unit_value,quantity_per_property_card,quantity_per_physical_count,division_id,area_id,serial_number,property_number',
+            "medequip,Cardiac Monitor,Model CM-100,50000.00,1,1,{$this->division->id},{$this->area->id},SN-123,PROP-123",
+        ]);
+
+        $file = UploadedFile::fake()->createWithContent('equipment_invalid_cat.csv', $csvContent);
+
+        $response = $this->actingAs($this->adminUser)->post(route('equipment.import'), [
+            'file' => $file,
+        ]);
+
+        $response->assertSessionHasErrors('file');
+        $error = session('errors')->first('file');
+        $this->assertStringContainsString('Line 2', $error);
+        $this->assertStringContainsString('valid equipment category', $error);
+    }
 }

@@ -141,7 +141,8 @@ class EquipmentSerialToggleTest extends TestCase
         $response = $this->actingAs($this->adminUser)->get(route('equipment.template'));
 
         $response->assertStatus(200);
-        $this->assertTrue(str_contains($response->streamedContent(), 'Serial Number (Optional)'));
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('Serial Number (Optional', $content);
     }
 
     public function test_csv_import_succeeds_without_serial_number(): void

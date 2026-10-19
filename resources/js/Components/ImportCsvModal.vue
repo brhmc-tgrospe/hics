@@ -326,7 +326,7 @@ const categoriesList = computed(() => props.categories || []);
 const fieldDefinitions = computed(() => {
   if (props.type === 'equipment') {
     return [
-      { name: 'category', requirement: 'Required', description: 'Equipment category code (e.g. medequip, ictequip)', example: 'medequip' },
+      { name: 'category', requirement: 'Required', description: 'Equipment category code (e.g. medical, ictequip)', example: 'medical' },
       { name: 'description', requirement: 'Required', description: 'Detailed equipment specification and model', example: 'Infusion Pump Model IP-200' },
       { name: 'unit_value', requirement: 'Required', description: 'Numeric cost per unit. Must be strictly > 0', example: '35000.00' },
       { name: 'quantity_per_property_card', requirement: 'Required', description: 'Property card balance. Integer > 0', example: '1' },

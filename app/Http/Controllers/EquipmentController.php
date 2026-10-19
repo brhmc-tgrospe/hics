@@ -219,7 +219,7 @@ class EquipmentController extends Controller
         ];
 
         $hints = [
-            'Hint: Category Code (e.g. fandf, ictequip) (Required)',
+            'Hint: Category Code (e.g. fandf, ictequip, medical) (Required)',
             'Name of the item (Required)',
             'Detailed description (Required)',
             'YYYY-MM-DD',

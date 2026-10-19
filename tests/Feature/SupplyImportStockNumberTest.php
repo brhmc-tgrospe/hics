@@ -506,4 +506,21 @@ class SupplyImportStockNumberTest extends TestCase
         $errorMsg = session('errors')->first('file');
         $this->assertStringContainsString('Upload Failed. Line 3: You are only allowed to upload data for your assigned division', $errorMsg);
     }
+
+    public function test_http_csv_import_rejects_invalid_category(): void
+    {
+        $csv = implode("\n", [
+            'category,article,description,stock_number,expiry_date,unit_of_measure,unit_value,balance_per_card,on_hand_per_count,status,division_id,area_id',
+            'Hint: Category Code,Name,Desc,Stock,YYYY-MM-DD,UOM,Val,Card,Count,Status,Div,Area',
+            "invalid_cat,Paper Clips,Vinyl Coated,,,box,25.00,10,10,Available,{$this->division->id},{$this->area->id}",
+        ]);
+
+        $file = UploadedFile::fake()->createWithContent('invalid_cat.csv', $csv);
+        $response = $this->actingAs($this->adminUser)->post(route('supplies.import'), ['file' => $file]);
+
+        $response->assertSessionHasErrors('file');
+        $errorMsg = session('errors')->first('file');
+        $this->assertStringContainsString('Line 3', $errorMsg);
+        $this->assertStringContainsString('valid supply category', $errorMsg);
+    }
 }

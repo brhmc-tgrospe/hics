@@ -63,7 +63,7 @@ class ReportSortingTest extends TestCase
     {
         // Deliberately create items in reverse/mixed order across two different areas
         Equipment::create([
-            'category' => 'medequip',
+            'category' => 'medical',
             'article' => 'Zebra Scanner',
             'description' => 'Model Z',
             'division_id' => $this->division->id,
@@ -71,7 +71,7 @@ class ReportSortingTest extends TestCase
         ]);
 
         Equipment::create([
-            'category' => 'medequip',
+            'category' => 'medical',
             'article' => 'Beta Monitor',
             'description' => 'Screen 2',
             'division_id' => $this->division->id,
@@ -79,7 +79,7 @@ class ReportSortingTest extends TestCase
         ]);
 
         Equipment::create([
-            'category' => 'medequip',
+            'category' => 'medical',
             'article' => 'Beta Monitor',
             'description' => 'Screen 1',
             'division_id' => $this->division->id,
@@ -87,7 +87,7 @@ class ReportSortingTest extends TestCase
         ]);
 
         Equipment::create([
-            'category' => 'medequip',
+            'category' => 'medical',
             'article' => 'Alpha Cart',
             'description' => 'Stainless steel',
             'division_id' => $this->division->id,
@@ -95,7 +95,7 @@ class ReportSortingTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->user)->postJson(route('equipment.report.generate'), [
-            'category' => 'medequip',
+            'category' => 'medical',
             'date_of_accountability' => '2026-09-14',
             'year_of_report' => 2026,
             'report_type' => 'General',
