@@ -37,8 +37,8 @@ class AreaController extends Controller
             }
         }
         
-        // Encoders and Secretaries can only see their specific area
-        if ($user->hasRole(['Encoder', 'Secretary'])) {
+        // Encoders can only see their specific area
+        if ($user->hasRole('Encoder') && !$user->hasRole(['Developer', 'Superadmin', 'Admin', 'Secretary'])) {
             $query->where('id', $user->area_id);
         }
 

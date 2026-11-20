@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Domain\Supplies\Models\Supply;
 use App\Domain\Supplies\DTOs\SupplyDTO;
 use App\Domain\Supplies\Actions\GetSuppliesAction;
+use App\Domain\Supplies\Actions\GetExpiringSuppliesAction;
 use App\Domain\Supplies\Actions\GetSupplyReportDataAction;
 use App\Domain\Supplies\Actions\CreateSupplyAction;
 use App\Domain\Supplies\Actions\UpdateSupplyAction;
@@ -32,8 +33,11 @@ class SupplyController extends Controller
             $missingQuery->where('division_id', $user->division_id);
         }
 
+        $expiringSupplies = app(GetExpiringSuppliesAction::class)->execute($request->user(), $request->all(), false);
+
         return Inertia::render('Inventory/Supplies/Index', [
             'supplies' => $supplies,
+            'expiringSupplies' => $expiringSupplies,
             'filters' => $request->only(['search', 'category', 'my_division_only', 'my_area_only', 'division_id', 'area_id', 'per_page', 'sort_field', 'sort_direction']),
             'categories' => $categories,
             'divisions' => $divisions,
@@ -288,7 +292,18 @@ class SupplyController extends Controller
             'report_type' => 'required|string|in:General,Division,Area',
             'report_period' => 'nullable|string',
             'custom_month' => 'nullable|integer',
-            'scope_id' => 'nullable|integer',
+            'scope_id' => [
+                'nullable',
+                'integer',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->input('report_type') === 'Area' && $value) {
+                        $area = \App\Models\Area::find($value);
+                        if ($area && strtolower(trim($area->area_name)) === 'general area') {
+                            $fail('Reports cannot be generated for the General Area. Please select a designated area.');
+                        }
+                    }
+                },
+            ],
         ]);
 
         $query = \App\Domain\Supplies\Models\Supply::where('category', $validated['category']);
@@ -325,7 +340,44 @@ class SupplyController extends Controller
 
     public function showReport($id, GetSupplyReportDataAction $action)
     {
-        $report = \App\Domain\Supply\Models\SupplyReport::findOrFail($id);
+        $report = \App\Domain\Supply\Models\SupplyReport::with('user')->findOrFail($id);
+
+        if ($report->report_period === 'Expiring Supplies') {
+            $snapshot = [];
+            if ($report->file_path && \Illuminate\Support\Facades\Storage::disk('local')->exists($report->file_path)) {
+                $decoded = json_decode(\Illuminate\Support\Facades\Storage::disk('local')->get($report->file_path), true);
+                if (is_array($decoded)) {
+                    $snapshot = $decoded;
+                }
+            }
+
+            $creator = $report->user;
+            $creatorName = $creator
+                ? trim(($creator->first_name ?? '') . ' ' . ($creator->last_name ?? ''))
+                : '';
+            if ($creatorName === '') {
+                $creatorName = $snapshot['generatedBy'] ?? ($creator?->username ?? 'System');
+            }
+
+            return Inertia::render('Inventory/Supplies/ExpiringReport', [
+                'expiringSupplies' => $snapshot['expiringSupplies'] ?? [
+                    'total_items_count' => 0,
+                    'total_quantity' => 0,
+                    'total_amount' => 0,
+                    'current_date_utc8' => '',
+                    'cutoff_date_utc8' => '',
+                    'categories' => [],
+                ],
+                'categoryName' => $snapshot['categoryName'] ?? ($report->category === 'All' ? 'ALL CATEGORIES' : $report->category),
+                'scopeName' => $snapshot['scopeName'] ?? '',
+                'selectedCategories' => $snapshot['selectedCategories'] ?? [$report->category],
+                'statusFilter' => $snapshot['statusFilter'] ?? 'all',
+                'reportFilters' => $snapshot['reportFilters'] ?? [],
+                'generatedBy' => $creatorName,
+                'generatedAt' => $snapshot['generatedAt'] ?? $report->created_at?->timezone('+08:00')->format('F j, Y h:i A'),
+                'savedReportId' => $report->id,
+            ]);
+        }
         
         $supplies = $action->execute($report);
         
@@ -428,6 +480,211 @@ class SupplyController extends Controller
         }
 
         return redirect()->route('supplies.index')->with('success', $message);
+    }
+
+    public function previewExpiringReport(Request $request)
+    {
+        $payload = $this->buildExpiringReportPayload($request);
+
+        return Inertia::render('Inventory/Supplies/ExpiringReport', [
+            ...$payload,
+            'savedReportId' => null,
+        ]);
+    }
+
+    public function saveExpiringReport(Request $request)
+    {
+        $request->validate([
+            'categories' => 'nullable|array',
+            'categories.*' => 'string',
+            'status_filter' => 'nullable|string|in:all,expired,expiring_soon',
+            'from_supplies_index' => 'nullable|boolean',
+            'division_id' => 'nullable|integer|exists:divisions,id',
+            'area_id' => 'nullable|integer|exists:areas,id',
+            'my_division_only' => 'nullable',
+            'my_area_only' => 'nullable',
+        ]);
+
+        $payload = $this->buildExpiringReportPayload($request);
+
+        $filename = 'expiring_supply_report_' . time() . '_' . uniqid() . '.json';
+        \Illuminate\Support\Facades\Storage::disk('local')->put(
+            "reports/{$filename}",
+            json_encode($payload)
+        );
+
+        $selectedCategories = $payload['selectedCategories'];
+        $categoryCol = (count($selectedCategories) === 1 && $selectedCategories[0] !== 'All')
+            ? $selectedCategories[0]
+            : 'All';
+
+        if ($request->filled('area_id')) {
+            $reportType = 'Area';
+            $scopeId = (int) $request->input('area_id');
+        } elseif ($request->filled('division_id')) {
+            $reportType = 'Division';
+            $scopeId = (int) $request->input('division_id');
+        } else {
+            $reportType = 'General';
+            $scopeId = null;
+        }
+
+        $nowUtc8 = \Carbon\Carbon::now('+08:00');
+
+        $report = \App\Domain\Supply\Models\SupplyReport::create([
+            'category' => $categoryCol,
+            'date_of_accountability' => $nowUtc8->toDateString(),
+            'year_of_report' => (int) $nowUtc8->year,
+            'fund_cluster' => null,
+            'file_path' => "reports/{$filename}",
+            'report_type' => $reportType,
+            'report_period' => 'Expiring Supplies',
+            'custom_month' => null,
+            'scope_id' => $scopeId,
+            'user_id' => \Illuminate\Support\Facades\Auth::id(),
+        ]);
+
+        return response()->json([
+            'id' => $report->id,
+            'message' => 'Expiring supplies report saved to Reports Area.',
+        ]);
+    }
+
+    private function buildExpiringReportPayload(Request $request): array
+    {
+        $user = $request->user();
+        $rawCategories = $request->input('categories', []);
+        if (is_string($rawCategories)) {
+            $rawCategories = explode(',', $rawCategories);
+        }
+
+        $selectedCategories = array_values(array_filter(
+            array_map('trim', (array) $rawCategories),
+            fn($c) => $c !== ''
+        ));
+        $isAllCategories = empty($selectedCategories) || in_array('All', $selectedCategories, true);
+
+        $statusFilter = $request->input('status_filter', 'all');
+        if (!in_array($statusFilter, ['all', 'expired', 'expiring_soon'], true)) {
+            $statusFilter = 'all';
+        }
+
+        $reportFilters = array_filter([
+            'from_supplies_index' => $request->boolean('from_supplies_index') ? 1 : null,
+            'division_id' => $request->input('division_id'),
+            'area_id' => $request->input('area_id'),
+            'my_division_only' => $request->input('my_division_only'),
+            'my_area_only' => $request->input('my_area_only'),
+        ], fn($v) => $v !== null && $v !== '');
+
+        $expiringData = app(GetExpiringSuppliesAction::class)->execute(
+            $user,
+            $request->only(['division_id', 'area_id', 'my_division_only', 'my_area_only']),
+            !$request->boolean('from_supplies_index')
+        );
+
+        $filteredCategories = [];
+        $totalItemsCount = 0;
+        $totalQuantity = 0;
+        $totalAmount = 0.0;
+
+        foreach ($expiringData['categories'] as $cat) {
+            if (!$isAllCategories && !in_array($cat['category_code'], $selectedCategories, true)) {
+                continue;
+            }
+
+            $items = $cat['items'];
+            if ($statusFilter === 'expired') {
+                $items = array_values(array_filter($items, fn($item) => !empty($item['is_expired'])));
+            } elseif ($statusFilter === 'expiring_soon') {
+                $items = array_values(array_filter($items, fn($item) => empty($item['is_expired'])));
+            }
+
+            if (empty($items)) {
+                continue;
+            }
+
+            usort($items, function ($a, $b) {
+                $cmp = strcasecmp((string) ($a['article'] ?? ''), (string) ($b['article'] ?? ''));
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+                return strcasecmp((string) ($a['description'] ?? ''), (string) ($b['description'] ?? ''));
+            });
+
+            $catQty = 0;
+            $catAmount = 0.0;
+            foreach ($items as $item) {
+                $catQty += (int) ($item['on_hand_per_count'] ?? 0);
+                $catAmount += (float) ($item['total_amount'] ?? 0);
+            }
+            $catAmount = round($catAmount, 2);
+
+            $filteredCategories[] = [
+                'category_code' => $cat['category_code'],
+                'category_name' => $cat['category_name'],
+                'items_count' => count($items),
+                'total_quantity' => $catQty,
+                'total_amount' => $catAmount,
+                'items' => $items,
+            ];
+
+            $totalItemsCount += count($items);
+            $totalQuantity += $catQty;
+            $totalAmount += $catAmount;
+        }
+
+        usort($filteredCategories, function ($a, $b) {
+            return strcasecmp((string) ($a['category_name'] ?? ''), (string) ($b['category_name'] ?? ''));
+        });
+
+        $expiringData['categories'] = $filteredCategories;
+        $expiringData['total_items_count'] = $totalItemsCount;
+        $expiringData['total_quantity'] = $totalQuantity;
+        $expiringData['total_amount'] = round($totalAmount, 2);
+
+        if ($isAllCategories) {
+            $categoryName = 'ALL CATEGORIES';
+        } elseif (!empty($filteredCategories)) {
+            $categoryName = implode(', ', array_map(fn($c) => strtoupper($c['category_name']), $filteredCategories));
+        } else {
+            $dbNames = \App\Domain\Shared\Models\Category::where('type', 'supply')
+                ->whereIn('code', $selectedCategories)
+                ->pluck('name', 'code')
+                ->toArray();
+            $categoryName = implode(', ', array_map(fn($code) => strtoupper($dbNames[$code] ?? $code), $selectedCategories));
+        }
+
+        $scopeName = '';
+        if ($request->filled('area_id')) {
+            $area = \App\Models\Area::with('division')->find($request->input('area_id'));
+            if ($area) {
+                $divName = $area->division ? $area->division->div_name : '';
+                $scopeName = $divName !== ''
+                    ? "Division: {$divName} | Area: {$area->area_name}"
+                    : "Area: {$area->area_name}";
+            }
+        } elseif ($request->filled('division_id')) {
+            $division = \App\Models\Division::find($request->input('division_id'));
+            if ($division) {
+                $scopeName = "Division: {$division->div_name}";
+            }
+        }
+
+        $fullName = $user ? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) : '';
+        $generatedBy = $fullName !== '' ? $fullName : ($user?->username ?? $user?->name ?? 'System');
+        $generatedAt = \Carbon\Carbon::now('+08:00')->format('F j, Y h:i A');
+
+        return [
+            'expiringSupplies' => $expiringData,
+            'categoryName' => $categoryName,
+            'scopeName' => $scopeName,
+            'selectedCategories' => $isAllCategories ? ['All'] : $selectedCategories,
+            'statusFilter' => $statusFilter,
+            'reportFilters' => $reportFilters,
+            'generatedBy' => $generatedBy,
+            'generatedAt' => $generatedAt,
+        ];
     }
 }
 

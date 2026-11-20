@@ -76,7 +76,11 @@ const filteredAreas = computed(() => {
     if (!form.value.division_id) {
         return [];
     }
-    return props.areas.filter(a => String(a.division_id) === String(form.value.division_id));
+    return props.areas.filter(a => {
+        const matchesDivision = String(a.division_id) === String(form.value.division_id);
+        const name = (a.name || a.area_name || '').toLowerCase().trim();
+        return matchesDivision && name !== 'general area';
+    });
 });
 
 const handleExport = () => {

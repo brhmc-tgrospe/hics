@@ -239,7 +239,7 @@ const executeBulkDelete = () => {
                     />
                 </div>
                 <div class="flex items-center gap-6">
-                    <div class="flex items-center gap-2" v-if="$page.props.auth.user?.roles?.some(r => ['Admin', 'Superadmin', 'Developer'].includes(r)) && userDivisionId">
+                    <div class="flex items-center gap-2" v-if="$page.props.auth.user?.roles?.some(r => ['Admin', 'Superadmin', 'Developer', 'Secretary'].includes(r)) && userDivisionId">
                         <span class="text-sm text-slate-500 font-medium">My Division Only</span>
                         <Toggle v-model="my_division_only" class="toggle-blue" />
                     </div>

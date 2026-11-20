@@ -13,44 +13,45 @@ Always prefer:
 <RULE[hics_core_development_skills]>
 <!-- BEGIN:hics-core-development-skills-rule -->
 # Mandatory Core Development Skills Protocol for HICS
-Whenever developing, refactoring, modifying, testing, or debugging this system, you **MUST** strictly consult and actively enforce the following core skills based on the active task:
+Whenever developing, refactoring, modifying, testing, or debugging HICS (Hospital Inventory & Control System), you **MUST** strictly consult and actively enforce the following 25 core skills across their respective domains:
 
-1. **Architecture & Backend Patterns**:
-   - `laravel-expert`: Senior Laravel standard conventions, Form Requests for validation, Thin Controllers, Action/Service classes, Eloquent relationships with eager loading, and Model Policies.
-   - `php-pro`: Modern PHP 8.3+ standards (Enums, match expressions, typed properties, and memory-efficient generators for large dataset exports and CSV/Excel batch imports).
-   - `software-architecture`: Clean Architecture & DDD, strict separation of business domain from infrastructure/UI, library-first approach, early return guards, and decomposing functions exceeding 80 lines.
-   - `clean-code`: Meaningful naming, small single-responsibility functions, eliminating side effects.
-   - `cc-skill-backend-patterns`: Clean service/action architecture, RESTful conventions, database optimization, query scoping, transaction wrappers, and robust server-side security.
+### 1. Backend Architecture & Domain Logic (Laravel 13 & PHP 8.3+)
+- [`laravel-expert`](file:///C:/Users/Admin/.gemini/config/skills/laravel-expert/SKILL.md): Keep controllers thin (`EquipmentController`, `SupplyController`), extract domain operations into dedicated Action and Service classes, enforce validation in dedicated Form Requests, eager-load Eloquent relationships, and enforce Model Policies.
+- [`php-pro`](file:///C:/Users/Admin/.gemini/config/skills/php-pro/SKILL.md): Leverage modern PHP 8.3+ idioms (typed properties, Enums, match expressions, and memory-efficient generators for large dataset exports and CSV/Excel batch imports).
+- [`software-architecture`](file:///C:/Users/Admin/.gemini/config/skills/software-architecture/SKILL.md): Enforce Clean Architecture & Domain-Driven Design (DDD), strict separation of domain rules from infrastructure/framework concerns, early return guards, and decompose functions exceeding 80 lines.
+- [`clean-code`](file:///C:/Users/Admin/.gemini/config/skills/clean-code/SKILL.md): Meaningful naming, small single-responsibility functions, eliminating unintended side effects across shared services and inventory transactions.
+- [`cc-skill-backend-patterns`](file:///C:/Users/Admin/.gemini/config/skills/cc-skill-backend-patterns/SKILL.md): RESTful conventions, consistent query filtering/sorting/pagination parameters, database transaction wrappers, and secure service isolation.
 
-2. **Frontend UI & Data Tables (Vue 3, Inertia.js, Tailwind CSS)**:
-   - `cmis-table-patterns`: Standard debounced search (300-350ms) using Inertia router with `preserveState` and `preserveScroll`, reusable `SortableHeader`, dynamic pagination, and exact record count summaries (`Showing {from} to {to} of {total} entries`) across Equipment, Supplies, Reports, and Users.
-   - `cc-skill-frontend-patterns`: Component composition, accessible and responsive UI components, clean Vue 3 / Inertia reactive state management, and resilient asset resolution.
-   - `tailwind-patterns`: Maintainable utility styling, accessible form controls, and consistent token usage.
-   - `frontend-design`: Polished enterprise dashboard interfaces, legible typography, and intuitive workflows.
+### 2. Frontend UI, State & Interactive Tables (Vue 3, Inertia.js 2.0 & Tailwind CSS)
+- [`cmis-table-patterns`](file:///C:/Users/Admin/.gemini/config/skills/cmis-table-patterns/SKILL.md): 300–350ms debounced global search via Inertia router with `{ preserveState: true, replace: true, preserveScroll: true }`, reusable sortable column headers (`SortableHeader`), dynamic pagination controls (`[10, 25, 50, 100]`), and exact record count summaries (`Showing {from} to {to} of {total} entries`) across Equipment, Supplies, Reports, and Users.
+- [`cc-skill-frontend-patterns`](file:///C:/Users/Admin/.gemini/config/skills/cc-skill-frontend-patterns/SKILL.md): Component composition over inheritance, accessible form controls, clean Vue 3 reactive state, and resilient asset resolution in Inertia layouts.
+- [`tailwind-patterns`](file:///C:/Users/Admin/.gemini/config/skills/tailwind-patterns/SKILL.md): Maintainable utility styling, accessible form controls, and consistent token usage across enterprise hospital dashboard views.
+- [`frontend-design`](file:///C:/Users/Admin/.gemini/config/skills/frontend-design/SKILL.md): High-craft enterprise dashboard interfaces, legible typography, responsive layouts, and intuitive workflows for clinical and administrative staff.
 
-3. **Database Architecture, Performance & Data Retention**:
-   - `database-design`: Proper 3NF schema design, foreign keys, index strategies, and soft delete handling (`RecycleBinController`).
-   - `sql-optimization-patterns`: Eager loading relations, eliminating N+1 queries, indexing frequently filtered/joined columns.
-   - `accidental-data-loss-prevention`: Strict prohibition against running commands or queries that wipe out data (`php artisan migrate:fresh`, `php artisan migrate:refresh`, `TRUNCATE`).
+### 3. Database Architecture, Performance & Data Safety
+- [`database-design`](file:///C:/Users/Admin/.gemini/config/skills/database-design/SKILL.md): Clean 3NF schema modeling, foreign key cascades, proper indexing strategies, and soft delete handling (`RecycleBinController`).
+- [`sql-optimization-patterns`](file:///C:/Users/Admin/.gemini/config/skills/sql-optimization-patterns/SKILL.md): Eager load relations to eliminate N+1 queries when loading items with divisions, areas, categories, and audit logs; add composite indexes on high-frequency filter columns.
+- [`accidental-data-loss-prevention`](file:///C:/Users/Admin/.gemini/config/skills/accidental-data-loss-prevention/SKILL.md): Strict ban on catastrophic data wiping commands (`php artisan migrate:fresh`, `php artisan migrate:refresh`, `db:wipe`, direct `TRUNCATE`). Only forward-safe migrations allowed.
 
-4. **Security, RBAC & Audit Trails**:
-   - `laravel-security-audit` & `security-auditor`: Verify Role-Based Access Control (RBAC via Spatie permissions/roles), prevent mass assignment, protect routes/actions, and prevent IDOR.
-   - `web-security-testing`: OWASP-compliant validation, CSRF verification, secure file uploads/imports, and input/output sanitization.
+### 4. Security, RBAC & Audit Trails
+- [`laravel-security-audit`](file:///C:/Users/Admin/.gemini/config/skills/laravel-security-audit/SKILL.md): Validate Spatie role & permission gates (`role:Developer|Superadmin`, etc.), prevent IDOR vulnerabilities, block mass-assignment flaws, and verify CSRF protection.
+- [`security-auditor`](file:///C:/Users/Admin/.gemini/config/skills/security-auditor/SKILL.md): Comprehensive security audits, defense-in-depth reviews, and compliance checks across all application tiers.
+- [`web-security-testing`](file:///C:/Users/Admin/.gemini/config/skills/web-security-testing/SKILL.md): OWASP-compliant validation, secure file upload validation for Excel/CSV imports, input sanitization, and output escaping to prevent XSS.
 
-5. **Testing & Systematic Debugging**:
-   - `tdd-workflow`: Red-Green-Refactor testing cycle with PHPUnit (`php artisan test`).
-   - `systematic-debugging`: Mandate root-cause investigation before proposing any fixes; never apply blind symptom patches.
+### 5. Testing, Systematic Debugging & Verification Gate
+- [`tdd-workflow`](file:///C:/Users/Admin/.gemini/config/skills/tdd-workflow/SKILL.md): Red-Green-Refactor testing cycle with PHPUnit (`php artisan test`), validating domain logic and regression safety before shipping features.
+- [`systematic-debugging`](file:///C:/Users/Admin/.gemini/config/skills/systematic-debugging/SKILL.md): Enforce disciplined root-cause investigation before proposing fixes; ban blind symptom patching and assumptions.
+- [`verification-before-completion`](file:///C:/Users/Admin/.gemini/config/skills/verification-before-completion/SKILL.md): The Iron Law: NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE. Always run and inspect verification commands (`php artisan test`, `npm run build`, `git diff`) before marking any task complete.
 
-6. **Verification & Completion Gate**:
-   - `verification-before-completion`: NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE. Always execute the full verification command (`php artisan test`, `npm run build`, git diff) and inspect the actual output/exit code before claiming any task or phase is complete.
+### 6. Workflow Planning & Execution
+- [`concise-planning`](file:///C:/Users/Admin/.gemini/config/skills/concise-planning/SKILL.md): Produce atomic, actionable checklists before modifying code.
+- [`writing-plans`](file:///C:/Users/Admin/.gemini/config/skills/writing-plans/SKILL.md): Detailed multi-step task specifications with clear checkpoints and risk mitigations.
+- [`subagent-driven-development`](file:///C:/Users/Admin/.gemini/config/skills/subagent-driven-development/SKILL.md): Structure independent tasks across subagent checkpoints with strict review gates.
 
-7. **Planning & Task Orchestration**:
-   - `concise-planning` / `writing-plans`: Create an atomic, reviewable checklist before modifying code.
-   - `subagent-driven-development`: Structure task execution with explicit checkpoints and review gates.
-
-8. **Domain Specifics & Utilities**:
-   - `it-manager-hospital`: Clinical/hospital IT standards, medical equipment and supply tracking, auditability standards, and departmental asset governance.
-   - `xlsx-official`: Excel template generation, zero-formula errors, column structure alignment, and safe data imports/exports.
-   - `windows-shell-reliability` & `powershell-windows`: Safe execution of PowerShell commands, path formatting, and avoiding shell escaping pitfalls on Windows.
+### 7. Domain Specifics & Host Environment Utilities
+- [`it-manager-hospital`](file:///C:/Users/Admin/.gemini/config/skills/it-manager-hospital/SKILL.md): Healthcare/hospital IT governance, clinical equipment lifecycles, asset traceability, and regulatory compliance.
+- [`xlsx-official`](file:///C:/Users/Admin/.gemini/config/skills/xlsx-official/SKILL.md): Excel template generation, zero formula errors (`#REF!`, `#DIV/0!`), column structure alignment, memory-efficient chunked imports, and safe data exports.
+- [`windows-shell-reliability`](file:///C:/Users/Admin/.gemini/config/skills/windows-shell-reliability/SKILL.md): Reliable command execution, proper escaping, and binary path handling on Windows.
+- [`powershell-windows`](file:///C:/Users/Admin/.gemini/config/skills/powershell-windows/SKILL.md): Safe PowerShell scripting, avoiding common pipeline, quoting, and encoding pitfalls.
 <!-- END:hics-core-development-skills-rule -->
 </RULE[hics_core_development_skills]>

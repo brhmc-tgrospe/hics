@@ -299,7 +299,18 @@ class EquipmentController extends Controller
             'date_of_accountability' => 'required|date',
             'year_of_report' => 'required|integer',
             'report_type' => 'required|string|in:General,Division,Area',
-            'scope_id' => 'nullable|integer',
+            'scope_id' => [
+                'nullable',
+                'integer',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->input('report_type') === 'Area' && $value) {
+                        $area = Area::find($value);
+                        if ($area && strtolower(trim($area->area_name)) === 'general area') {
+                            $fail('Reports cannot be generated for the General Area. Please select a designated area.');
+                        }
+                    }
+                },
+            ],
         ]);
 
         $query = Equipment::where('category', $validated['category']);

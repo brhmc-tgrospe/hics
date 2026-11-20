@@ -320,6 +320,7 @@ const formatDateForPicker = (date) => {
                             <tr>
                                 <th class="p-4 w-12 text-center">
                                     <input 
+                                        v-if="reports.data.some(r => r.can_delete)"
                                         type="checkbox" 
                                         v-model="toggleAll"
                                         class="rounded border-slate-300 text-blue-600 shadow-sm focus:ring-blue-500"

@@ -170,6 +170,13 @@
         </div>
       </div>
 
+      <!-- Expiring Supplies (Within 6 Months, UTC+8) -->
+      <ExpiringSuppliesContainer
+        :expiring-supplies="expiringSupplies"
+        :divisions="divisions"
+        :areas="areas"
+      />
+
       <div v-if="divisionTotals && divisionTotals.length > 0" class="bg-white/50 backdrop-blur-xl rounded-3xl border border-white/80 shadow-2xl p-6">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Division Values</h3>
@@ -240,6 +247,7 @@
 import { computed, ref } from 'vue';
 import { PackageIcon, ActivityIcon, HardDriveIcon, ShieldIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-vue-next';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
+import ExpiringSuppliesContainer from '@/Components/ExpiringSuppliesContainer.vue';
 import { formatCurrency } from '@/utils/formatters.js';
 import { router, Link } from '@inertiajs/vue3';
 
@@ -254,6 +262,18 @@ const props = defineProps({
   discrepancyMetrics: {
     type: Object,
     default: () => ({ count: 0, value: 0, items: { data: [], links: [] } })
+  },
+  expiringSupplies: {
+    type: Object,
+    default: () => ({ total_items_count: 0, total_quantity: 0, total_amount: 0, categories: [] })
+  },
+  divisions: {
+    type: Array,
+    default: () => []
+  },
+  areas: {
+    type: Array,
+    default: () => []
   },
   filters: Object,
 });

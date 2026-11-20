@@ -14,6 +14,7 @@ export function useInventoryIndex({
     const authUser = computed(() => page.props.auth.user);
     const userRoles = computed(() => authUser.value?.roles || []);
     const isSuperadmin = computed(() => userRoles.value.includes('Superadmin') || userRoles.value.includes('Developer'));
+    const isSecretary = computed(() => userRoles.value.includes('Secretary'));
 
     // Filters
     const search = ref(props.filters.search || '');
@@ -207,23 +208,26 @@ export function useInventoryIndex({
     });
 
     const availableReportTypes = computed(() => {
-        if (isSuperadmin.value || userRoles.value.includes('Admin')) {
+        if (isSuperadmin.value || isSecretary.value || userRoles.value.includes('Admin')) {
             return ['General', 'Division', 'Area'];
         }
         return ['General', 'Area'];
     });
 
     const reportDivisions = computed(() => {
-        if (isSuperadmin.value) return props.divisions || [];
+        if (isSuperadmin.value || isSecretary.value) return props.divisions || [];
         return (props.divisions || []).filter(d => d.id === authUser.value?.division_id);
     });
 
     const reportAreas = computed(() => {
-        if (isSuperadmin.value) return props.areas || [];
+        const designatedAreas = (props.areas || []).filter(
+            a => (a.name || a.area_name || '').toLowerCase().trim() !== 'general area'
+        );
+        if (isSuperadmin.value || isSecretary.value) return designatedAreas;
         if (userRoles.value.includes('Admin')) {
-            return (props.areas || []).filter(a => a.division_id === authUser.value?.division_id);
+            return designatedAreas.filter(a => a.division_id === authUser.value?.division_id);
         }
-        return (props.areas || []).filter(a => a.id === authUser.value?.area_id);
+        return designatedAreas.filter(a => a.id === authUser.value?.area_id);
     });
 
     watch(() => reportData.value.report_type, (newType) => {

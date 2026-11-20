@@ -38,7 +38,7 @@ export function useInventoryPermissions() {
         return false;
     };
 
-    const canFilterDivisionArea = computed(() => isSuperadmin.value || isAdmin.value);
+    const canFilterDivisionArea = computed(() => isSuperadmin.value || isAdmin.value || isSecretary.value);
 
     return {
         authUser,

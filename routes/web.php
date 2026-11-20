@@ -44,6 +44,8 @@ Route::middleware('auth')->group(function () {
     Route::post('supplies/import', [SupplyController::class, 'import'])->name('supplies.import')->middleware('permission:create_supplies');
     Route::post('supplies/report', [SupplyController::class, 'generateReport'])->name('supplies.report.generate')->middleware('permission:generate_reports');
     Route::get('supplies/report/{id}', [SupplyController::class, 'showReport'])->name('supplies.report.show')->middleware('permission:generate_reports');
+    Route::get('supplies/expiring-report', [SupplyController::class, 'previewExpiringReport'])->name('supplies.expiring_report.preview');
+    Route::post('supplies/expiring-report/save', [SupplyController::class, 'saveExpiringReport'])->name('supplies.expiring_report.save');
     Route::delete('supplies/bulk-delete', [SupplyController::class, 'bulkDestroy'])->name('supplies.bulk_delete')->middleware('permission:delete_supplies');
     Route::get('supplies/bulk-edit-values', [SupplyController::class, 'bulkEditUnitValues'])->name('supplies.bulk_edit_values')->middleware('permission:edit_supplies');
     Route::put('supplies/bulk-update-values', [SupplyController::class, 'bulkUpdateUnitValues'])->name('supplies.bulk_update_values')->middleware('permission:edit_supplies');

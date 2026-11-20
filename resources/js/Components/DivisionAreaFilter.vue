@@ -40,7 +40,11 @@ const getAreaName = (area) => {
 
 const filteredAreas = computed(() => {
     if (!props.divisionId) return [];
-    return props.areas.filter(area => String(area.division_id) === String(props.divisionId));
+    return props.areas.filter(area => {
+        const matchesDivision = String(area.division_id) === String(props.divisionId);
+        const name = (area.name || area.area_name || '').toLowerCase().trim();
+        return matchesDivision && name !== 'general area';
+    });
 });
 
 const onDivisionChange = (event) => {

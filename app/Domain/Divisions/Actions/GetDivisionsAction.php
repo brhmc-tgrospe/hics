@@ -16,7 +16,7 @@ class GetDivisionsAction
         }
 
         $user = auth()->user();
-        if ($user && $user->hasRole(['Encoder', 'Secretary'])) {
+        if ($user && $user->hasRole('Encoder') && !$user->hasRole(['Developer', 'Superadmin', 'Admin', 'Secretary'])) {
             $query->where('id', $user->division_id);
         }
 

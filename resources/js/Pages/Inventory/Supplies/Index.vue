@@ -262,6 +262,20 @@
         </Link>
       </div>
 
+      <!-- Expiring Supplies (Within 6 Months, UTC+8) -->
+      <ExpiringSuppliesContainer
+        :expiring-supplies="expiringSupplies"
+        :divisions="divisions"
+        :areas="areas"
+        :report-filters="{
+          from_supplies_index: 1,
+          division_id: divisionId,
+          area_id: areaId,
+          my_division_only: myDivisionOnly ? '1' : '0',
+          my_area_only: myAreaOnly ? '1' : '0',
+        }"
+      />
+
       <!-- Toolbar & Table Container -->
       <div class="bg-white/50 backdrop-blur-xl rounded-3xl border border-white/80 shadow-2xl overflow-hidden flex flex-col">
         <div class="p-4 border-b border-white/60 bg-slate-900/5 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -331,6 +345,7 @@ import ImportCsvModal from '@/Components/ImportCsvModal.vue';
 import GeneralAreaRestrictionModal from '@/Components/GeneralAreaRestrictionModal.vue';
 import ExportInventoryModal from '@/Components/ExportInventoryModal.vue';
 import DivisionAreaFilter from '@/Components/DivisionAreaFilter.vue';
+import ExpiringSuppliesContainer from '@/Components/ExpiringSuppliesContainer.vue';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 
@@ -339,6 +354,10 @@ import { useInventoryIndex } from '@/Composables/useInventoryIndex';
 
 const props = defineProps({
   supplies: Object,
+  expiringSupplies: {
+    type: Object,
+    default: () => ({ total_items_count: 0, total_quantity: 0, total_amount: 0, categories: [] }),
+  },
   filters: Object,
   categories: Array,
   divisions: Array,
