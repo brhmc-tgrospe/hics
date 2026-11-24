@@ -29,6 +29,7 @@ const props = defineProps({
     health: Object,
     schedule: Object,
     formattedLastRun: String,
+    formattedNextRun: String,
     backupHistories: Array,
     hasActiveBackup: Boolean,
 });
@@ -181,7 +182,7 @@ const filteredTables = computed(() => {
                     </button>
 
                     <button 
-                        @click="createBackup(false)"
+                        @click="createBackup(true)"
                         :disabled="hasActiveBackup || isTriggeringBackup"
                         class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-md shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -435,10 +436,16 @@ const filteredTables = computed(() => {
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-                        <div class="text-xs text-slate-400 flex items-center gap-1.5">
-                            <Clock class="w-4 h-4 text-slate-400" />
-                            <span>Last executed: {{ formattedLastRun || 'Never' }}</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                        <div class="text-xs text-slate-400 flex flex-wrap items-center gap-x-4 gap-y-1">
+                            <span class="inline-flex items-center gap-1.5">
+                                <Clock class="w-4 h-4 text-slate-400" />
+                                <span>Last executed: <strong class="font-medium text-slate-600">{{ formattedLastRun || 'Never' }}</strong></span>
+                            </span>
+                            <span v-if="scheduleForm.is_enabled && formattedNextRun" class="inline-flex items-center gap-1.5">
+                                <Calendar class="w-4 h-4 text-purple-500" />
+                                <span>Next scheduled: <strong class="font-medium text-slate-600">{{ formattedNextRun }}</strong></span>
+                            </span>
                         </div>
 
                         <button 

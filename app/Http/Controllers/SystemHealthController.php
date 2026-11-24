@@ -9,6 +9,7 @@ use App\Services\Backup\BackupArchiveService;
 use App\Services\Backup\SystemHealthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,7 +22,7 @@ class SystemHealthController extends Controller
      */
     public function index(SystemHealthService $healthService): Response
     {
-        $health = $healthService->getHealthSnapshot();
+        BackupHistory::expireStale();
 
         $schedule = BackupSchedule::firstOrCreate([], [
             'is_enabled' => false,
@@ -30,6 +31,16 @@ class SystemHealthController extends Controller
             'day_of_month' => 1,
             'execution_time' => '02:00',
         ]);
+
+        $hasActiveBackup = BackupHistory::whereIn('status', ['pending', 'running'])->exists();
+
+        if ($schedule->isDue() && !$hasActiveBackup) {
+            Artisan::call('backup:run-scheduled');
+            $schedule->refresh();
+            $hasActiveBackup = BackupHistory::whereIn('status', ['pending', 'running'])->exists();
+        }
+
+        $health = $healthService->getHealthSnapshot();
 
         $backupHistories = BackupHistory::with('user:id,first_name,last_name')
             ->orderBy('created_at', 'desc')
@@ -56,12 +67,15 @@ class SystemHealthController extends Controller
             ? $schedule->last_run_at->setTimezone('Asia/Manila')->format('M d, Y h:i A') 
             : null;
 
-        $hasActiveBackup = BackupHistory::whereIn('status', ['pending', 'running'])->exists();
+        $formattedNextRun = $schedule->is_enabled
+            ? $schedule->getNextScheduledSlot()->format('D, M d, Y h:i A')
+            : null;
 
         return Inertia::render('SystemHealth/Index', [
             'health' => $health,
             'schedule' => $schedule,
             'formattedLastRun' => $formattedLastRun,
+            'formattedNextRun' => $formattedNextRun,
             'backupHistories' => $backupHistories,
             'hasActiveBackup' => $hasActiveBackup,
         ]);
@@ -72,13 +86,15 @@ class SystemHealthController extends Controller
      */
     public function storeBackup(Request $request, BackupArchiveService $archiveService): RedirectResponse
     {
+        BackupHistory::expireStale();
+
         $hasActive = BackupHistory::whereIn('status', ['pending', 'running'])->exists();
         if ($hasActive) {
             return back()->with('error', 'A backup operation is already in progress. Please wait for it to complete.');
         }
 
-        // Support direct synchronous execution if requested or fallback
-        if ($request->boolean('sync')) {
+        // Default to synchronous execution so backups complete reliably without a queue worker
+        if ($request->boolean('sync', true)) {
             try {
                 $history = $archiveService->createBackup(auth()->id());
                 activity('backup')
@@ -91,7 +107,7 @@ class SystemHealthController extends Controller
             }
         }
 
-        // Default: asynchronous queued job
+        // Optional: asynchronous queued job
         CreateBackupJob::dispatch(auth()->id());
 
         return back()->with('success', 'Backup job queued. Progress will update automatically on this page.');

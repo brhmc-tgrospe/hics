@@ -4,6 +4,7 @@ import { ref, computed, watch } from 'vue';
 import InventoryLayout from '@/Layouts/InventoryLayout.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import TablePagination from '@/Components/TablePagination.vue';
+import { formatDateTime } from '@/utils/formatters.js';
 import { Trash2, RotateCcw } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -15,10 +16,14 @@ const props = defineProps({
 const per_page = ref(props.filters?.per_page || 10);
 
 watch(per_page, (value) => {
-    router.get(route('recycle-bin.index'), { tab: props.tab, per_page: value }, { preserveState: true, replace: true });
+    router.get(route('recycle-bin.index'), { tab: props.tab, per_page: value }, { preserveState: true, replace: true, preserveScroll: true });
 });
 
 const selectedItems = ref([]);
+
+watch(() => props.data?.data, () => {
+    selectedItems.value = [];
+});
 
 const selectAll = computed({
     get: () => {
@@ -178,6 +183,7 @@ const tabs = [
                                     <th class="py-4 px-6 font-bold text-sm">Division</th>
                                 </template>
                                 <th class="py-4 px-6 font-bold text-sm">Deleted By</th>
+                                <th class="py-4 px-6 font-bold text-sm">Date Deleted</th>
                                 <th class="py-4 px-6 font-bold text-sm text-right w-48">Actions</th>
                             </tr>
                         </thead>
@@ -232,6 +238,10 @@ const tabs = [
                                         </div>
                                         {{ item.deleted_by_name || 'Unknown' }}
                                     </div>
+                                </td>
+
+                                <td class="py-3 px-6 text-sm text-slate-600 font-medium whitespace-nowrap">
+                                    {{ formatDateTime(item.deleted_at) }}
                                 </td>
 
                                 <td class="py-3 px-6 text-right">

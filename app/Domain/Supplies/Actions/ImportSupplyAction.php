@@ -30,7 +30,7 @@ class ImportSupplyAction
 
             $supply = $query->first();
         } else {
-            // Tier 2: Composite fallback match (Category + Article + Description) within Division and Area
+            // Tier 2: Composite fallback match (Category + Article + Description + Expiry Date + Unit Value) within Division and Area
             $query = Supply::where('category', $dto->category);
 
             if (!empty($dto->division_id)) {
@@ -46,12 +46,26 @@ class ImportSupplyAction
             $query->whereRaw('LOWER(TRIM(COALESCE(article, ""))) = ?', [$cleanArticle])
                   ->whereRaw('LOWER(TRIM(COALESCE(description, ""))) = ?', [$cleanDesc]);
 
+            $normalizedExpiry = SupplyDTO::normalizeExpiryDate($dto->expiry_date);
+            if ($normalizedExpiry !== null) {
+                $query->whereDate('expiry_date', $normalizedExpiry);
+            } else {
+                $query->whereNull('expiry_date');
+            }
+
+            $formattedUnitValue = SupplyDTO::formatUnitValue($dto->unit_value);
+            if ($formattedUnitValue !== null) {
+                $query->where('unit_value', $formattedUnitValue);
+            } else {
+                $query->whereNull('unit_value');
+            }
+
             $matches = $query->get();
 
             if ($matches->count() > 1) {
                 $articleDisplay = $dto->article ?: '(No Article)';
                 throw new \DomainException(
-                    "Multiple existing records match Category '{$dto->category}', Article '{$articleDisplay}', and Description in this area. Please assign a unique Stock Number to update."
+                    "Multiple existing records match Category '{$dto->category}', Article '{$articleDisplay}', Description, Expiry Date, and Unit Value in this area. Please assign a unique Stock Number to update."
                 );
             }
 

@@ -48,7 +48,7 @@ class GetEquipmentAction
         $sortField = $filters['sort_field'] ?? 'id';
         $sortDirection = $filters['sort_direction'] ?? 'desc';
 
-        $allowedSortFields = ['id', 'article'];
+        $allowedSortFields = ['id', 'article', 'updated_at'];
         if (!in_array($sortField, $allowedSortFields)) {
             $sortField = 'id';
         }

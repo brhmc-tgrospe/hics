@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
 use App\Services\Backup\BackupArchiveService;
 use Illuminate\Console\Command;
 
@@ -25,9 +26,16 @@ class CreateBackupCommand extends Command
         $this->info("Starting database and system health backup...");
 
         $userId = $this->option('user') ? (int) $this->option('user') : null;
+        $initiator = $userId ? User::find($userId) : null;
 
         try {
             $history = $archiveService->createBackup($userId);
+
+            $logger = activity('backup');
+            if ($initiator) {
+                $logger->causedBy($initiator);
+            }
+            $logger->log("Database and system health backup created via CLI: {$history->filename}");
 
             $this->info("Backup generated successfully!");
             $this->table(
@@ -44,6 +52,12 @@ class CreateBackupCommand extends Command
 
             return self::SUCCESS;
         } catch (\Throwable $e) {
+            $logger = activity('backup');
+            if ($initiator) {
+                $logger->causedBy($initiator);
+            }
+            $logger->log('CLI backup failed: ' . $e->getMessage());
+
             $this->error("Backup failed: " . $e->getMessage());
             return self::FAILURE;
         }

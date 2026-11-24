@@ -102,12 +102,12 @@
                 </div>
                 <div class="p-2.5 rounded-lg bg-white border border-blue-100 shadow-2xs">
                   <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-700">Priority 2 &bull; Fallback Match</span>
-                  <p class="mt-1 text-[11px] text-slate-700">If <code class="font-mono font-bold">stock_number</code> is left empty, matches by <strong class="text-slate-800">Category + Article + Description</strong> in your area.</p>
+                  <p class="mt-1 text-[11px] text-slate-700">If <code class="font-mono font-bold">stock_number</code> is left empty, matches by <strong class="text-slate-800">Category + Article + Description + Expiry Date + Unit Value</strong> in your area so distinct batches or prices stay separate.</p>
                 </div>
               </div>
               <ul class="list-disc list-inside space-y-1 text-[11px] text-slate-600 pt-1">
                 <li><strong class="text-slate-800">Adding New Items:</strong> If no existing record matches, or if a new stock number is specified that isn't in the database, a new supply record is created.</li>
-                <li><strong class="text-slate-800">Duplicate Match Protection:</strong> If multiple supplies in that area share the same Category, Article, and Description, the import stops with an error to prevent accidental overwrites. Assign a unique Stock Number to update.</li>
+                <li><strong class="text-slate-800">Duplicate Match Protection:</strong> If multiple existing supplies in that area—or duplicate rows in the same CSV—share the same Category, Article, Description, Expiry Date, and Unit Value (or the same Stock Number), the import stops with an error to prevent accidental overwrites. Assign a unique Stock Number to distinguish them.</li>
                 <li><strong class="text-slate-800">Safe Partial Updates:</strong> Blank optional cells in your CSV will keep their existing database values without overwriting them.</li>
               </ul>
             </div>
@@ -346,15 +346,15 @@ const fieldDefinitions = computed(() => {
 
   return [
     { name: 'category', requirement: 'Required', description: 'Supply category code (e.g. officesup, drmeds, mssup)', example: 'officesup' },
-    { name: 'description', requirement: 'Required', description: 'Detailed item specification and brand. Combined with Category & Article to match items without a Stock Number.', example: 'A4 70gsm 500 sheets/ream' },
-    { name: 'unit_value', requirement: 'Required', description: 'Numeric price per unit. Must be strictly > 0', example: '250.00' },
+    { name: 'description', requirement: 'Required', description: 'Detailed item specification and brand. Combined with Category, Article, Expiry Date & Unit Value to match items without a Stock Number.', example: 'A4 70gsm 500 sheets/ream' },
+    { name: 'unit_value', requirement: 'Required', description: 'Numeric price per unit. Must be strictly > 0. Used with Expiry Date to distinguish batches when Stock Number is empty.', example: '250.00' },
     { name: 'balance_per_card', requirement: 'Required', description: 'Card balance inventory. Integer > 0', example: '10' },
     { name: 'on_hand_per_count', requirement: 'Required', description: 'Physical count inventory. Integer > 0', example: '10' },
     { name: 'division_id', requirement: 'Required', description: 'Numeric ID of assigned Division', example: '1' },
     { name: 'area_id', requirement: 'Required', description: 'Numeric ID of assigned Area', example: '4' },
-    { name: 'expiry_date', requirement: 'Conditional', description: 'YYYY-MM-DD. Required for Medical/Drugs/Food supplies/Enteral', example: '2027-06-30' },
-    { name: 'stock_number', requirement: 'Optional', description: 'Unique stock code. Priority 1 match. If left empty, matches and updates by Category + Article + Description.', example: 'STK-00124' },
-    { name: 'article', requirement: 'Optional', description: 'Short item name. Combined with Category & Description to match items without a Stock Number.', example: 'Bond Paper' },
+    { name: 'expiry_date', requirement: 'Conditional', description: 'YYYY-MM-DD. Required for Medical/Drugs/Food supplies/Enteral. Distinguishes batches when Stock Number is empty.', example: '2027-06-30' },
+    { name: 'stock_number', requirement: 'Optional', description: 'Unique stock code. Priority 1 match. If left empty, matches and updates by Category + Article + Description + Expiry Date + Unit Value.', example: 'STK-00124' },
+    { name: 'article', requirement: 'Optional', description: 'Short item name. Combined with Category, Description, Expiry Date & Unit Value to match items without a Stock Number.', example: 'Bond Paper' },
     { name: 'unit_of_measure', requirement: 'Optional', description: 'Packaging unit (e.g. ream, box, pc, bottle)', example: 'ream' },
     { name: 'status', requirement: 'Optional', description: 'Status (Available, Depleted). Defaults to Available', example: 'Available' },
   ];

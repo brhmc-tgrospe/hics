@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import TablePagination from '@/Components/TablePagination.vue';
+import StickyTableContainer from '@/Components/StickyTableContainer.vue';
 
 const props = defineProps({
     categories: {
@@ -65,10 +66,10 @@ const isSuppliesTab = computed(() => props.activeTab === 'supplies' || props.act
 
 <template>
     <div class="flex-1 flex flex-col">
-        <div class="overflow-x-auto flex-1">
+        <StickyTableContainer>
             <table class="w-full text-left text-sm whitespace-nowrap">
-                <thead>
-                    <tr class="bg-slate-900/5 border-b border-white/60">
+                <thead class="sticky top-0 z-10 bg-slate-100/95 backdrop-blur-md shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+                    <tr class="border-b border-slate-200/80">
                         <th v-if="isSuperadminOrDeveloper" class="px-6 py-4 w-12 text-center">
                             <input 
                                 type="checkbox" 
@@ -111,7 +112,7 @@ const isSuppliesTab = computed(() => props.activeTab === 'supplies' || props.act
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </StickyTableContainer>
 
         <TablePagination 
             :pagination="categories" 

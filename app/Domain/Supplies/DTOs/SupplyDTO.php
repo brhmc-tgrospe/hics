@@ -2,6 +2,8 @@
 
 namespace App\Domain\Supplies\DTOs;
 
+use Carbon\Carbon;
+
 class SupplyDTO
 {
     public function __construct(
@@ -52,9 +54,45 @@ class SupplyDTO
         };
     }
 
+    /**
+     * Normalize an expiry date input into YYYY-MM-DD format.
+     */
+    public static function normalizeExpiryDate(mixed $expiryDate): ?string
+    {
+        if ($expiryDate === null) {
+            return null;
+        }
+
+        if ($expiryDate instanceof \DateTimeInterface) {
+            return $expiryDate->format('Y-m-d');
+        }
+
+        $trimmed = trim((string) $expiryDate);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($trimmed)->toDateString();
+        } catch (\Throwable) {
+            return $trimmed;
+        }
+    }
+
+    /**
+     * Format a unit value as a fixed 2-decimal string matching DECIMAL(15, 2) storage.
+     */
+    public static function formatUnitValue(?float $unitValue): ?string
+    {
+        return $unitValue !== null
+            ? number_format(round($unitValue, 2), 2, '.', '')
+            : null;
+    }
+
     public static function fromArray(array $data): self
     {
         $unitValue = self::parseNumeric($data['unit_value'] ?? null);
+        $unitValue = $unitValue !== null ? round($unitValue, 2) : null;
         $balancePerCard = self::parseInt($data['balance_per_card'] ?? null);
         $onHandPerCount = self::parseInt($data['on_hand_per_count'] ?? null);
 
@@ -71,6 +109,7 @@ class SupplyDTO
             : (($onHandPerCount !== null && $unitValue !== null) ? round($onHandPerCount * $unitValue, 2) : null);
 
         $status = self::normalizeStatus($data['status'] ?? null);
+        $expiryDate = self::normalizeExpiryDate($data['expiry_date'] ?? null);
 
         return new self(
             $data['category'] ?? null,
@@ -87,7 +126,7 @@ class SupplyDTO
             $status,
             isset($data['division_id']) && $data['division_id'] !== null ? self::parseInt($data['division_id']) : null,
             isset($data['area_id']) && $data['area_id'] !== null ? self::parseInt($data['area_id']) : null,
-            $data['expiry_date'] ?? null
+            $expiryDate
         );
     }
 

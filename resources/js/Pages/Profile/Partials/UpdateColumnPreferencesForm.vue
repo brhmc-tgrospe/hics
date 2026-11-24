@@ -17,12 +17,12 @@ const form = useForm({
             'article', 'category', 'division_area', 'description', 'date_acquired', 'property_number', 
             'serial_number', 'unit_of_measure', 'unit_value', 'quantity_per_property_card', 
             'quantity_per_physical_count', 'shortage_overage_qty', 'shortage_overage_value', 
-            'total_value', 'end_user', 'status', 'remarks'
+            'total_value', 'end_user', 'status', 'remarks', 'updated_at'
         ],
         supplies_columns: currentSettings.supplies_columns || [
             'article', 'category', 'division_area', 'description', 'stock_number', 'unit_of_measure', 
             'unit_value', 'balance_per_card', 'on_hand_per_count', 'shortage_overage_qty', 
-            'shortage_overage_value', 'total_amount', 'status'
+            'shortage_overage_value', 'total_amount', 'status', 'updated_at'
         ],
     }
 });
@@ -45,6 +45,7 @@ const equipmentColumns = [
     { key: 'end_user', label: 'End User' },
     { key: 'status', label: 'Status' },
     { key: 'remarks', label: 'Remarks' },
+    { key: 'updated_at', label: 'Last Updated' },
 ];
 
 const suppliesColumns = [
@@ -61,6 +62,7 @@ const suppliesColumns = [
     { key: 'shortage_overage_value', label: 'Shortage/Overage Value' },
     { key: 'total_amount', label: 'Total Amount' },
     { key: 'status', label: 'Status' },
+    { key: 'updated_at', label: 'Last Updated' },
 ];
 
 const saveSettings = () => {

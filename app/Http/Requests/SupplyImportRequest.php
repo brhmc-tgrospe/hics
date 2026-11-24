@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Domain\Supplies\DTOs\SupplyDTO;
+use App\Domain\Supplies\Services\SupplyCategoryExpirationPolicy;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -248,13 +250,76 @@ class SupplyImportRequest extends FormRequest
             }
 
             $rows = $this->input('rows', []);
+            $seenStockKeys = [];
+            $seenTier2Keys = [];
+
             foreach ($rows as $index => $row) {
                 $category = $row['category'] ?? null;
                 $expiry = $row['expiry_date'] ?? null;
-                
-                if (\App\Domain\Supplies\Services\SupplyCategoryExpirationPolicy::isExpiryRequired($category) && empty($expiry)) {
-                    $line = $row['_line'] ?? ($index + 2);
+                $line = $row['_line'] ?? ($index + 2);
+
+                if (SupplyCategoryExpirationPolicy::isExpiryRequired($category) && empty($expiry)) {
                     $validator->errors()->add("rows.{$index}.expiry_date", "Line {$line}: Expiry date is required for the specified category.");
+                }
+
+                // Skip duplicate checks if any matching-key column already failed primary validation
+                $errors = $validator->errors();
+                $hasKeyError = false;
+                foreach (['category', 'description', 'unit_value', 'expiry_date', 'division_id', 'area_id'] as $keyField) {
+                    if ($errors->has("rows.{$index}.{$keyField}")) {
+                        $hasKeyError = true;
+                        break;
+                    }
+                }
+                if ($hasKeyError) {
+                    continue;
+                }
+
+                $divisionId = (string) ((int) ($row['division_id'] ?? 0));
+                $areaId = (string) ((int) ($row['area_id'] ?? 0));
+                $stockNumber = trim((string) ($row['stock_number'] ?? ''));
+
+                if ($stockNumber !== '') {
+                    $stockKey = json_encode([$divisionId, $areaId, strtolower($stockNumber)], JSON_UNESCAPED_UNICODE);
+                    if (isset($seenStockKeys[$stockKey])) {
+                        $firstLine = $seenStockKeys[$stockKey];
+                        $validator->errors()->add(
+                            "rows.{$index}.stock_number",
+                            "Line {$line}: Duplicate Stock Number '{$stockNumber}' already appears on Line {$firstLine} in this CSV. Each row must have a unique Stock Number to avoid overwriting earlier rows."
+                        );
+                    } else {
+                        $seenStockKeys[$stockKey] = $line;
+                    }
+                    continue;
+                }
+
+                $cleanCategory = strtolower(trim((string) ($category ?? '')));
+                $cleanArticle = strtolower(trim((string) ($row['article'] ?? '')));
+                $cleanDesc = strtolower(trim((string) ($row['description'] ?? '')));
+                $normalizedExpiry = SupplyDTO::normalizeExpiryDate($expiry) ?? '';
+                $formattedUnitValue = SupplyDTO::formatUnitValue(
+                    is_numeric($row['unit_value'] ?? null) ? (float) $row['unit_value'] : null
+                ) ?? '';
+
+                $tier2Key = json_encode([
+                    $cleanCategory,
+                    $divisionId,
+                    $areaId,
+                    $cleanArticle,
+                    $cleanDesc,
+                    $normalizedExpiry,
+                    $formattedUnitValue,
+                ], JSON_UNESCAPED_UNICODE);
+
+                if (isset($seenTier2Keys[$tier2Key])) {
+                    $firstLine = $seenTier2Keys[$tier2Key];
+                    $articleDisplay = trim((string) ($row['article'] ?? '')) ?: '(No Article)';
+                    $validator->errors()->add(
+                        "rows.{$index}.article",
+                        "Line {$line}: Duplicate entry for '{$articleDisplay}' matches Line {$firstLine} (same Category, Article, Description, Expiry Date, and Unit Value). Assign a unique Stock Number to keep both rows separate, or remove the duplicate."
+                    );
+                } else {
+                    $seenTier2Keys[$tier2Key] = $line;
                 }
             }
         });

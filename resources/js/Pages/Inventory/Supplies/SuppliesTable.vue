@@ -1,9 +1,9 @@
 <template>
   <div class="flex-1 flex flex-col">
-    <div class="overflow-x-auto">
+    <StickyTableContainer>
       <table class="w-full text-left text-sm whitespace-nowrap">
-        <thead>
-          <tr class="bg-slate-900/5 border-b border-white/60">
+        <thead class="sticky top-0 z-10 bg-slate-100/95 backdrop-blur-md shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+          <tr class="border-b border-slate-200/80">
             <th class="px-6 py-4 w-12 text-center">
                 <input 
                     type="checkbox" 
@@ -11,10 +11,10 @@
                     class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
             </th>
-            <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <th class="px-6 py-4 w-[220px] min-w-[220px] max-w-[220px] whitespace-normal text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                 <button @click="$emit('sort', 'article')" class="flex items-center gap-1 hover:text-slate-800 focus:outline-none">
                     ARTICLE/PRODUCT NAME
-                    <span class="flex flex-col">
+                    <span class="flex flex-col shrink-0">
                         <svg class="w-2.5 h-2.5 -mb-1" :class="{ 'text-blue-600': sortField === 'article' && sortDirection === 'asc', 'text-slate-400': !(sortField === 'article' && sortDirection === 'asc') }" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
                         <svg class="w-2.5 h-2.5" :class="{ 'text-blue-600': sortField === 'article' && sortDirection === 'desc', 'text-slate-400': !(sortField === 'article' && sortDirection === 'desc') }" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                     </span>
@@ -22,7 +22,7 @@
             </th>
             <th v-if="isColumnVisible('category')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Category</th>
             <th v-if="isColumnVisible('division_area')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Division & Area</th>
-            <th v-if="isColumnVisible('description')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Description</th>
+            <th v-if="isColumnVisible('description')" class="px-6 py-4 w-[300px] min-w-[300px] max-w-[300px] whitespace-normal text-[10px] font-bold text-slate-500 uppercase tracking-widest">Description</th>
             <th v-if="isColumnVisible('stock_number')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Stock No.</th>
             <th v-if="isColumnVisible('unit_of_measure')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">UOM</th>
             <th v-if="isColumnVisible('unit_value')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Unit Val</th>
@@ -32,6 +32,15 @@
             <th v-if="isColumnVisible('shortage_overage_value')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Short/Over Val</th>
             <th v-if="isColumnVisible('total_amount')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Total Amt</th>
             <th v-if="isColumnVisible('status')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+            <th v-if="isColumnVisible('updated_at')" class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                <button @click="$emit('sort', 'updated_at')" class="flex items-center gap-1 hover:text-slate-800 focus:outline-none">
+                    LAST UPDATED
+                    <span class="flex flex-col shrink-0">
+                        <svg class="w-2.5 h-2.5 -mb-1" :class="{ 'text-blue-600': sortField === 'updated_at' && sortDirection === 'asc', 'text-slate-400': !(sortField === 'updated_at' && sortDirection === 'asc') }" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
+                        <svg class="w-2.5 h-2.5" :class="{ 'text-blue-600': sortField === 'updated_at' && sortDirection === 'desc', 'text-slate-400': !(sortField === 'updated_at' && sortDirection === 'desc') }" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </span>
+                </button>
+            </th>
             <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
           </tr>
         </thead>
@@ -51,13 +60,13 @@
                     class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
             </td>
-            <td class="px-6 py-4 text-sm font-bold text-slate-800">{{ item.article }}</td>
+            <td class="px-6 py-4 w-[220px] min-w-[220px] max-w-[220px] whitespace-normal break-words leading-snug text-sm font-bold text-slate-800">{{ item.article }}</td>
             <td v-if="isColumnVisible('category')" class="px-6 py-4 text-xs text-slate-600 font-medium">{{ getCategoryName(item.category) }}</td>
             <td v-if="isColumnVisible('division_area')" class="px-6 py-4 text-xs" :title="`${getDivisionName(item)} / ${getAreaName(item)}`">
                 <div class="font-semibold text-slate-800">{{ getDivisionName(item) }}</div>
                 <div v-if="getAreaName(item) !== '—'" class="text-[11px] text-slate-500 font-medium">{{ getAreaName(item) }}</div>
             </td>
-            <td v-if="isColumnVisible('description')" class="px-6 py-4 text-xs text-slate-600">{{ item.description }}</td>
+            <td v-if="isColumnVisible('description')" class="px-6 py-4 w-[300px] min-w-[300px] max-w-[300px] whitespace-normal break-words leading-snug text-xs text-slate-600">{{ item.description }}</td>
             <td v-if="isColumnVisible('stock_number')" class="px-6 py-4 text-xs font-mono font-bold text-blue-700">{{ item.stock_number }}</td>
             <td v-if="isColumnVisible('unit_of_measure')" class="px-6 py-4 text-xs text-slate-600">{{ item.unit_of_measure }}</td>
             <td v-if="isColumnVisible('unit_value')" class="px-6 py-4 text-xs font-bold text-slate-800 text-right">{{ formatCurrency(item.unit_value) }}</td>
@@ -74,6 +83,7 @@
                 {{ item.status || 'Unknown' }}
               </span>
             </td>
+            <td v-if="isColumnVisible('updated_at')" class="px-6 py-4 text-xs text-slate-600 font-medium">{{ formatDateTime(item.updated_at) }}</td>
             <td class="px-6 py-4 text-right">
               <button @click="$emit('view', item)" class="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors" title="View">
                 <EyeIcon class="w-4 h-4" />
@@ -88,7 +98,7 @@
           </tr>
         </tbody>
       </table>
-    </div>
+    </StickyTableContainer>
 
     <TablePagination 
       :pagination="supplies" 
@@ -129,10 +139,11 @@
 import { Edit2Icon, Trash2Icon, EyeIcon } from 'lucide-vue-next';
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { formatCurrency } from '@/utils/formatters.js';
+import { formatCurrency, formatDateTime } from '@/utils/formatters.js';
 import FloatingBulkDeleteButton from '@/Components/FloatingBulkDeleteButton.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 import TablePagination from '@/Components/TablePagination.vue';
+import StickyTableContainer from '@/Components/StickyTableContainer.vue';
 import { useInventoryPermissions } from '@/Composables/useInventoryPermissions';
 import { useInventoryTable } from '@/Composables/useInventoryTable';
 
@@ -217,7 +228,7 @@ const visibleColumns = computed(() => {
     return userSettings.supplies_columns || [
         'article', 'category', 'division_area', 'description', 'stock_number', 'unit_of_measure', 
         'unit_value', 'balance_per_card', 'on_hand_per_count', 'shortage_overage_qty', 
-        'shortage_overage_value', 'total_amount', 'status'
+        'shortage_overage_value', 'total_amount', 'status', 'updated_at'
     ];
 });
 

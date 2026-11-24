@@ -19,40 +19,48 @@ class RecycleBinController extends Controller
     public function index(Request $request)
     {
         $tab = $request->query('tab', 'categories');
-        $perPage = $request->query('per_page', 10);
+        $perPage = (int) $request->query('per_page', 10);
+        if (!in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
         
         $data = null;
         
+        $formatDeleterName = fn($deleter) => $deleter ? trim($deleter->first_name . ' ' . $deleter->last_name) : 'Unknown';
+
         switch ($tab) {
             case 'categories':
-                $data = Category::with('deleter')->onlyTrashed()->paginate($perPage)->through(fn($item) => [
+                $data = Category::with('deleter')->onlyTrashed()->orderByDesc('deleted_at')->paginate($perPage)->withQueryString()->appends(['tab' => $tab])->through(fn($item) => [
                     'id' => $item->id,
                     'code' => $item->code,
                     'name' => $item->name,
                     'type' => 'categories',
-                    'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
+                    'deleted_at' => $item->deleted_at,
+                    'deleted_by_name' => $formatDeleterName($item->deleter),
                 ]);
                 break;
             case 'equipment':
                 $categories = Category::pluck('name', 'code')->toArray();
-                $data = Equipment::with('deleter')->onlyTrashed()->paginate($perPage)->through(fn($item) => [
+                $data = Equipment::with('deleter')->onlyTrashed()->orderByDesc('deleted_at')->paginate($perPage)->withQueryString()->appends(['tab' => $tab])->through(fn($item) => [
                     'id' => $item->id,
                     'category' => $categories[$item->category] ?? $item->category,
                     'article' => $item->article,
                     'type' => 'equipment',
                     'delete_remarks' => $item->delete_remarks,
-                    'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
+                    'deleted_at' => $item->deleted_at,
+                    'deleted_by_name' => $formatDeleterName($item->deleter),
                 ]);
                 break;
             case 'supplies':
                 $categories = Category::pluck('name', 'code')->toArray();
-                $data = Supply::with('deleter')->onlyTrashed()->paginate($perPage)->through(fn($item) => [
+                $data = Supply::with('deleter')->onlyTrashed()->orderByDesc('deleted_at')->paginate($perPage)->withQueryString()->appends(['tab' => $tab])->through(fn($item) => [
                     'id' => $item->id,
                     'category' => $categories[$item->category] ?? $item->category,
                     'article' => $item->article,
                     'type' => 'supplies',
                     'delete_remarks' => $item->delete_remarks,
-                    'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
+                    'deleted_at' => $item->deleted_at,
+                    'deleted_by_name' => $formatDeleterName($item->deleter),
                 ]);
                 break;
             case 'reports':
@@ -72,7 +80,7 @@ class RecycleBinController extends Controller
                 $wrappedQuery = DB::table(DB::raw("({$query->toSql()}) as reports"))
                     ->mergeBindings($query);
 
-                $paginated = $wrappedQuery->orderBy('deleted_at', 'desc')->paginate($perPage);
+                $paginated = $wrappedQuery->orderBy('deleted_at', 'desc')->paginate($perPage)->withQueryString()->appends(['tab' => $tab]);
 
                 $categoryNames = Category::pluck('name', 'code')->toArray();
                 $divisionNames = Division::pluck('div_name', 'id')->toArray();
@@ -120,36 +128,40 @@ class RecycleBinController extends Controller
                         'created_at' => date('Y-m-d H:i:s', strtotime($report->created_at)),
                         'report_model_type' => $report->report_model_type,
                         'type' => 'reports',
+                        'deleted_at' => $report->deleted_at ? \Carbon\Carbon::parse($report->deleted_at) : null,
                         'deleted_by_name' => trim($report->deleted_by_name) ?: 'Unknown'
                     ];
                 });
                 break;
             case 'users':
-                $data = User::with('deleter')->onlyTrashed()->paginate($perPage)->through(fn($item) => [
+                $data = User::with('deleter')->onlyTrashed()->orderByDesc('deleted_at')->paginate($perPage)->withQueryString()->appends(['tab' => $tab])->through(fn($item) => [
                     'id' => $item->id,
                     'first_name' => $item->first_name,
                     'last_name' => $item->last_name,
                     'username' => $item->username,
                     'type' => 'users',
-                    'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
+                    'deleted_at' => $item->deleted_at,
+                    'deleted_by_name' => $formatDeleterName($item->deleter),
                 ]);
                 break;
             case 'divisions':
-                $data = Division::with('deleter')->onlyTrashed()->paginate($perPage)->through(fn($item) => [
+                $data = Division::with('deleter')->onlyTrashed()->orderByDesc('deleted_at')->paginate($perPage)->withQueryString()->appends(['tab' => $tab])->through(fn($item) => [
                     'id' => $item->id,
                     'code' => $item->div_code,
                     'name' => $item->div_name,
                     'type' => 'divisions',
-                    'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
+                    'deleted_at' => $item->deleted_at,
+                    'deleted_by_name' => $formatDeleterName($item->deleter),
                 ]);
                 break;
             case 'areas':
-                $data = Area::with(['division', 'deleter'])->onlyTrashed()->paginate($perPage)->through(fn($item) => [
+                $data = Area::with(['division', 'deleter'])->onlyTrashed()->orderByDesc('deleted_at')->paginate($perPage)->withQueryString()->appends(['tab' => $tab])->through(fn($item) => [
                     'id' => $item->id,
                     'area_name' => $item->area_name,
                     'division' => $item->division ? $item->division->div_name : '',
                     'type' => 'areas',
-                    'deleted_by_name' => $item->deleter ? trim($item->deleter->first_name . ' ' . $item->deleter->last_name) : 'Unknown',
+                    'deleted_at' => $item->deleted_at,
+                    'deleted_by_name' => $formatDeleterName($item->deleter),
                 ]);
                 break;
         }

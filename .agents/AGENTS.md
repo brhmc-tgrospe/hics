@@ -7,6 +7,10 @@ Always prefer:
 - Standard `php artisan migrate` 
 - Writing new migrations that preserve existing data
 - If data must be reset, you must ask for explicit user permission first.
+
+### Cache & Database Isolation for CLI / Test Scripts
+- **NEVER** run ad-hoc PHP/CLI verification scripts that switch `database.default` to `sqlite` (or another test connection) without also isolating `cache.default` and `permission.cache.store` to `'array'` and re-initializing `Spatie\Permission\PermissionRegistrar`; always prefer `php artisan test` for isolated verification.
+- Never allow test or CLI runs to write to or flush `spatie.permission.cache` in MySQL's `cache` table.
 <!-- END:data-retention-rule -->
 </RULE[project_data_retention]>
 

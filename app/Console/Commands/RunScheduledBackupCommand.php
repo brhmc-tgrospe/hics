@@ -2,9 +2,13 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\CreateBackupJob;
+use App\Models\BackupHistory;
 use App\Models\BackupSchedule;
+use App\Services\Backup\BackupArchiveService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class RunScheduledBackupCommand extends Command
 {
@@ -21,53 +25,64 @@ class RunScheduledBackupCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): int
+    public function handle(BackupArchiveService $archiveService): int
     {
-        $schedule = BackupSchedule::first();
+        $lock = Cache::lock('hics_scheduled_backup_lock', 1800);
 
-        if (!$schedule || (!$schedule->is_enabled && !$this->option('force'))) {
-            $this->line("Automated backup is disabled or not configured.");
+        if (!$lock->get()) {
+            $this->line('Scheduled backup check skipped: another backup run is currently in progress.');
+
             return self::SUCCESS;
         }
 
-        if (!$this->option('force')) {
-            $now = now()->setTimezone('Asia/Manila');
+        try {
+            $schedule = BackupSchedule::first();
 
-            // Prevent running multiple times on the same calendar day in UTC+8
-            $lastRun = $schedule->last_run_at ? $schedule->last_run_at->setTimezone('Asia/Manila') : null;
-            if ($lastRun && $lastRun->isSameDay($now)) {
-                $this->line("Scheduled backup has already executed today (UTC+8).");
+            if (!$schedule || (!$schedule->is_enabled && !$this->option('force'))) {
+                $this->line('Automated backup is disabled or not configured.');
+
                 return self::SUCCESS;
             }
 
-            // Check execution time (matching HH:mm in UTC+8)
-            $currentTime = $now->format('H:i');
-            $targetTime = $schedule->execution_time;
+            BackupHistory::expireStale();
 
-            if ($currentTime !== $targetTime) {
+            if (BackupHistory::whereIn('status', ['pending', 'running'])->exists()) {
+                $this->line('A backup operation is already in progress. Skipping scheduled run.');
+
                 return self::SUCCESS;
             }
 
-            // Check frequency
-            if ($schedule->frequency === 'weekly') {
-                if ($now->dayOfWeek !== (int) $schedule->day_of_week) {
-                    return self::SUCCESS;
-                }
-            } elseif ($schedule->frequency === 'monthly') {
-                if ($now->day !== (int) $schedule->day_of_month) {
-                    return self::SUCCESS;
-                }
+            if (!$this->option('force') && !$schedule->isDue()) {
+                $this->line('Scheduled backup is not due yet.');
+
+                return self::SUCCESS;
             }
+
+            $this->info('Schedule criteria met. Executing backup...');
+
+            $schedule->update(['last_run_at' => now()]);
+
+            $history = $archiveService->createBackup(null);
+
+            activity('backup')
+                ->log("Automated scheduled backup created successfully: {$history->filename}");
+
+            $this->info("Scheduled backup created successfully: {$history->filename}");
+
+            return self::SUCCESS;
+        } catch (Throwable $e) {
+            Log::error('Scheduled backup execution failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            activity('backup')
+                ->log('Automated scheduled backup failed: ' . $e->getMessage());
+
+            $this->error('Scheduled backup failed: ' . $e->getMessage());
+
+            return self::FAILURE;
+        } finally {
+            $lock->release();
         }
-
-        $this->info("Schedule criteria met. Dispatching backup job...");
-
-        $schedule->update(['last_run_at' => now()]);
-
-        // Dispatch queued job
-        CreateBackupJob::dispatch(null);
-
-        $this->info("Backup job dispatched successfully.");
-        return self::SUCCESS;
     }
 }

@@ -44,4 +44,17 @@ class BackupHistory extends Model
 
         return round($bytes, 2) . ' ' . $units[$pow];
     }
+
+    /**
+     * Mark stale pending or running backup records older than $timeoutMinutes as failed.
+     */
+    public static function expireStale(int $timeoutMinutes = 30): int
+    {
+        return static::whereIn('status', ['pending', 'running'])
+            ->where('created_at', '<=', now()->subMinutes($timeoutMinutes))
+            ->update([
+                'status' => 'failed',
+                'error_message' => 'Backup operation timed out.',
+            ]);
+    }
 }

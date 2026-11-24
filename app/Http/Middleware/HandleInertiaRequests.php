@@ -2,7 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\BackupSchedule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -29,6 +33,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $this->checkScheduledBackup($request);
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -58,5 +64,29 @@ class HandleInertiaRequests extends Middleware
                 'message' => fn () => $request->session()->get('message'),
             ],
         ];
+    }
+
+    /**
+     * Opportunistically trigger overdue automated backups at most once per minute.
+     */
+    protected function checkScheduledBackup(Request $request): void
+    {
+        if (!$request->user()) {
+            return;
+        }
+
+        try {
+            if (!Cache::add('hics_backup_schedule_check', true, 60)) {
+                return;
+            }
+
+            if (BackupSchedule::first()?->isDue()) {
+                app()->terminating(function (): void {
+                    Artisan::call('backup:run-scheduled');
+                });
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Opportunistic scheduled backup check failed: ' . $e->getMessage());
+        }
     }
 }
